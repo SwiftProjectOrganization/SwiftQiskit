@@ -45,14 +45,14 @@ SwiftQiskit/
 │           └── QuantumCircuit.swift
 ├── Examples/
 │   └── main.swift
-├── Playgoundss/
+├── Playgounds/
 │   └── 00TOC (tbd)
 │   └── 01BellExample
 │   └── 02Lecture_01
 │   └── ...
 └── References (tbd)
 └── Package.swift
-````
+```
 
 ---
 
@@ -63,6 +63,8 @@ SwiftQiskit/
 * Swift **5.9+**
 * macOS **13+**
   *(iOS 16+ planned for future UI integration)*
+
+This forked repository is developed using Swift 6.3+ and MacOS 27+.
 
 ---
 
