@@ -5,6 +5,7 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 >  This project is **experimental and educational**, but grounded in real quantum mechanics principles.
 
+***Note: The main difference between this repository and its parent is the usage of Xcode playgounds.***
 ---
 
 ##  Features
