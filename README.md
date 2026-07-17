@@ -3,9 +3,9 @@
 **SwiftQiskit** is a lightweight **quantum computing simulator** written entirely in **Swift**.  
 It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong focus on **clarity**, **correctness**, and **future GUI integration**.
 
->  This project is **experimental and educational**, but grounded in real quantum mechanics principles.
+>  This project is **experimental and educational**, but grounded in real quantum mechanics principles
 
-***Note: The main difference between this repository and its parent is the usage of Xcode playgounds.***
+> The main difference between this repository and it's parent is the usage of Xcode playgounds.
 ---
 
 ##  Features
