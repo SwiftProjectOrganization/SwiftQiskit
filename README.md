@@ -45,6 +45,12 @@ SwiftQiskit/
 │           └── QuantumCircuit.swift
 ├── Examples/
 │   └── main.swift
+├── Playgoundss/
+│   └── 00TOC (tbd)
+│   └── 01BellExample
+│   └── 02Lecture_01
+│   └── ...
+└── References (tbd)
 └── Package.swift
 ````
 
