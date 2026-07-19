@@ -54,14 +54,18 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `01BellExample` — annotated Bell-state walkthrough (circuit, state vector, probabilities, shots).
 - `02Lecture_01`, `03Lecture_03`, `04Lecture_04`, … — per-lecture pages, numbered with an
   ordering prefix; follow this `NNName` naming when adding pages.
-- `05BlochSphere` — Bloch-sphere visualization of single-qubit states (|0⟩, |1⟩, |+⟩, |−⟩)
-  via a SwiftUI Canvas live view; Bloch math is inline in the page, not in Core.
+- `05BlochSphere`, `06BlochSphere_02` — Bloch-sphere visualizations of single-qubit states
+  via SwiftUI Canvas live views, built on the shared types in
+  `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
 
 Playground notes:
 
 - Pages `import SwiftQiskitCore` and set `buildActiveScheme='true'`, so the **SwiftQiskit scheme
   must build** for pages to run — keep the library compiling at all times.
 - Pages are linked sequentially with `//: [Previous](@previous)` / `//: [Next](@next)` markers.
+- Code shared by multiple pages lives in `Playgrounds.playground/Sources/` — an auxiliary
+  module auto-imported by every page; declarations there must be `public` (including
+  explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current API.
 - Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
 
 ## Conventions & Gotchas

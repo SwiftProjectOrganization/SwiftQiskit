@@ -45,11 +45,14 @@ SwiftQiskit/
 │           └── QuantumCircuit.swift
 ├── Examples/
 │   └── main.swift
-├── Playgounds/
-│   └── 00TOC (tbd)
-│   └── 01BellExample
-│   └── 02Lecture_01
-│   └── ...
+├── Playgrounds.playground/
+│   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
+│   └── Pages/
+│       ├── 01BellExample
+│       ├── 02Lecture_01
+│       ├── ...
+│       ├── 05BlochSphere
+│       └── 06BlochSphere_02
 └── References (tbd)
 └── Package.swift
 ```
@@ -125,6 +128,65 @@ for _ in 0..<10 {
 >  States **01** and **10** never appear —
 > this confirms **quantum entanglement**.
 > Measurement outputs are probabilistic and may vary per run.
+
+---
+
+##  Playgrounds
+
+`Playgrounds.playground` (at the repo root, macOS target) contains interactive, lecture-style
+explorations of the library. Open it in Xcode — pages build against the `SwiftQiskit` scheme
+and are linked sequentially with Previous/Next markers.
+
+Code shared by multiple pages (the Bloch-sphere types and views) lives in the playground's
+`Sources/` folder — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for how that works and
+what is available.
+
+### 01BellExample
+
+Annotated walkthrough of the Bell state |Φ⁺⟩: builds the circuit (`h` + `cx`), inspects the
+resulting state vector and its amplitudes/probabilities, and runs a 1000-shot measurement.
+
+### 02Lecture_01
+
+Minimal Bell-state circuit: run, print amplitudes, and measure 1024 shots.
+
+### 03Lecture_03
+
+Introduces `StateVector` directly and its `probabilities` property.
+
+### 04Lecture_04
+
+Building custom gates from raw `Matrix`/`Complex` values (Identity and a hand-rolled Pauli-X)
+and applying them via `circuit.apply(_:)`.
+
+### 05BlochSphere
+
+Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` live view.
+
+- **Bloch vector math** — maps a state |ψ⟩ = α|0⟩ + β|1⟩ to sphere coordinates
+  (x = 2·Re(ᾱβ), y = 2·Im(ᾱβ), z = |α|² − |β|²) plus the spherical angles θ and φ,
+  reusing the `Complex` arithmetic from `SwiftQiskitCore`.
+- **Rendering** — a 2D orthographic projection of the sphere with axes, drawn by the
+  shared `BlochSphereView`, each sphere accompanied by a numeric readout.
+- **Gallery** — four canonical states built with real circuits and shown side by side:
+  |0⟩ (north pole), |1⟩ via Pauli-X (south pole), |+⟩ via Hadamard (+x axis), and
+  |−⟩ via Hadamard + Pauli-Z (−x axis). The same vectors are also printed to the console.
+
+### 06BlochSphere_02
+
+A *general* single-qubit state, tilted off the equator of the Bloch sphere (45° from x,
+60° from y and z), explored in depth.
+
+- **Ket definition** — derives |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩ from direction
+  cosines and builds the state directly from its amplitudes with `StateVector`.
+- **Console readout** — amplitudes, magnitudes, probabilities, and a round-trip check
+  recovering the Bloch vector from the amplitudes.
+- **Live view** — the state on a large Bloch sphere plus two **plane projections**
+  (x–y seen from +z, z–y seen from +x) drawn by the shared `BlochProjectionView`.
+
+The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`) are
+shared between these pages via the playground's `Sources/` folder (not part of Core) —
+see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
 
 ---
 
