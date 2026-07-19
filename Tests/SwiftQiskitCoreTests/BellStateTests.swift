@@ -1,10 +1,11 @@
-import XCTest
+import Foundation
+import Testing
 @testable import SwiftQiskitCore
 
-final class BellStateTests: XCTestCase {
+struct BellStateTests {
 
     /// Test that Bell state |Φ+⟩ is created correctly
-    func testBellStateVector() {
+    @Test func `Bell state produces correct amplitudes`() {
         let qc = QuantumCircuit(qubits: 2)
         qc.h(0)
         qc.cx(0, 1)
@@ -21,15 +22,15 @@ final class BellStateTests: XCTestCase {
         let expected = 1.0 / sqrt(2.0)
         let tolerance = 1e-10
 
-        XCTAssertEqual(amp00.real, expected, accuracy: tolerance)
-        XCTAssertEqual(amp11.real, expected, accuracy: tolerance)
+        #expect(abs(amp00.real - expected) < tolerance)
+        #expect(abs(amp11.real - expected) < tolerance)
 
-        XCTAssertEqual(amp01.magnitude, 0.0, accuracy: tolerance)
-        XCTAssertEqual(amp10.magnitude, 0.0, accuracy: tolerance)
+        #expect(amp01.magnitude < tolerance)
+        #expect(amp10.magnitude < tolerance)
     }
 
     /// Test measurement statistics of Bell state
-    func testBellStateMeasurementCounts() {
+    @Test func `Bell state measurement yields only 00 and 11`() {
         let qc = QuantumCircuit(qubits: 2)
         qc.h(0)
         qc.cx(0, 1)
@@ -43,14 +44,14 @@ final class BellStateTests: XCTestCase {
         let count10 = result.counts["10", default: 0]
 
         // Bell state should only produce 00 or 11
-        XCTAssertEqual(count01, 0)
-        XCTAssertEqual(count10, 0)
+        #expect(count01 == 0)
+        #expect(count10 == 0)
 
         // Expect roughly 50/50 distribution
         let ratio00 = Double(count00) / Double(shots)
         let ratio11 = Double(count11) / Double(shots)
 
-        XCTAssert(ratio00 > 0.4 && ratio00 < 0.6)
-        XCTAssert(ratio11 > 0.4 && ratio11 < 0.6)
+        #expect(ratio00 > 0.4 && ratio00 < 0.6)
+        #expect(ratio11 > 0.4 && ratio11 < 0.6)
     }
 }
