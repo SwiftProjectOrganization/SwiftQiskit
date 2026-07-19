@@ -5,7 +5,10 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 >  This project is **experimental and educational**, but grounded in real quantum mechanics principles
 
-> The main difference between this repository and it's parent is the usage of Xcode playgounds.
+Differences between this repository and its parent are:
+1. The usage of Xcode playgrounds
+2. Showing of Bloch spheres (in live playgrounds)
+3. Using Swift Testing.
 ---
 
 ##  Features
