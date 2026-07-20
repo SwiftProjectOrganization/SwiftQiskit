@@ -5,10 +5,11 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 >  This project is **experimental and educational**, but grounded in real quantum mechanics principles
 
-Differences between this repository and its parent are:
+Differences between this forked repository ("**fork**") and its parent are:
 1. The usage of Xcode playgrounds
 2. Showing of Bloch spheres (in live playgrounds)
 3. Using Swift Testing.
+
 ---
 
 ##  Features
@@ -28,7 +29,25 @@ Differences between this repository and its parent are:
 
 ---
 
-##  Project Structure
+##  Design Philosophy
+
+* No hidden magic — everything is **explicit and readable**
+* Mathematical correctness over shortcuts
+* Modular architecture (**Core / Examples / GUI-ready**)
+* Designed for **learning**, **experimentation**, and **extension**
+
+---
+
+##  Final Note
+
+**SwiftQiskit** is not just a simulator —
+it’s an attempt to make **quantum computing accessible, visual, and native** on Apple platforms.
+
+Enjoy exploring the quantum world 
+
+---
+
+##  Project Structure for this fork
 
 ```text
 SwiftQiskit/
@@ -63,30 +82,29 @@ SwiftQiskit/
 
 ---
 
-##  Getting Started
+##  Getting Started with this fork
 
 ### Requirements
 
-* Swift **5.9+**
-* macOS **13+**
-  *(iOS 16+ planned for future UI integration)*
+* Swift **6.3+**
+* macOS **27+**
+- Xcode 27.0  
 
-This forked repository is developed using Swift 6.3+ and MacOS 27+.
+This forked repository is developed using Swift 6.3+ and MacOS 27.0-beta
 
 ---
 
 ### Clone the Repository
 
-```bash
-git clone https://github.com/a360n/SwiftQiskit.git
-cd SwiftQiskit
-```
+Open Xcode, go to `Integrate` and clone "https://github.com/SwiftProjectOrganization/SwiftQiskit".
 
 ### Run the Bell State Example
 
 ```bash
 swift run SwiftQiskitExamples
 ```
+
+Note: This will not work yet in Xcode 27.0-beta, please use playground 01BellExample for now.
 
 ---
 
@@ -212,16 +230,6 @@ The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionVie
 
 ---
 
-##  Design Philosophy
-
-* No hidden magic — everything is **explicit and readable**
-* Mathematical correctness over shortcuts
-* Modular architecture (**Core / Examples / GUI-ready**)
-* Designed for **learning**, **experimentation**, and **extension**
-
-
----
-
 ##  Contributing
 
 Contributions, ideas, and discussions are welcome.
@@ -238,15 +246,6 @@ Project status, what works in v0.1, and the roadmap live in
 ##  License
 
 **MIT License** © 2025 **Ali Nasser**
-
----
-
-##  Final Note
-
-**SwiftQiskit** is not just a simulator —
-it’s an attempt to make **quantum computing accessible, visual, and native** on Apple platforms.
-
-Enjoy exploring the quantum world 
 
 ---
 
