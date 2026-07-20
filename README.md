@@ -55,7 +55,8 @@ SwiftQiskit/
 │       ├── 02Lecture_01
 │       ├── ...
 │       ├── 05BlochSphere
-│       └── 06BlochSphere_02
+│       ├── 06BlochSphere_02
+│       └── 07BlochSphere3D
 └── References (tbd)
 └── Package.swift
 ```
@@ -187,9 +188,27 @@ A *general* single-qubit state, tilted off the equator of the Bloch sphere (45°
 - **Live view** — the state on a large Bloch sphere plus two **plane projections**
   (x–y seen from +z, z–y seen from +x) drawn by the shared `BlochProjectionView`.
 
-The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`) are
-shared between these pages via the playground's `Sources/` folder (not part of Core) —
-see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
+### 07BlochSphere3D
+
+An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure SwiftUI
+`Canvas` (no SceneKit/RealityKit), plus live sliders for the spherical angles.
+
+- **3D rendering** — latitude/longitude circles are perspective-projected through an
+  orbit camera; drag the canvas to rotate. The far hemisphere is drawn dimmer as a
+  depth cue, and dashed drop lines connect the state vector to the equator plane.
+- **θ/φ sliders** — rebuild |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩ on every change.
+  The two sliders are independent because the parametrization keeps
+  |α|² + |β|² = cos²(θ/2) + sin²(θ/2) = 1 identically — every slider position is a
+  valid normalized state, shown live in the numeric readout.
+- **Xcode 27 beta note** — running SwiftUI playground pages on the Xcode 27 beta
+  currently needs two workarounds, described in
+  [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds): a shim
+  `libcups.dylib` in DerivedData, and keeping `@State`-based views in the playground's
+  `Sources/` folder (which is why the slider view `BlochExplorerView` lives there).
+
+The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
+`Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's
+`Sources/` folder (not part of Core) — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
 
 ---
 
@@ -209,35 +228,10 @@ Contributions, ideas, and discussions are welcome.
 This project is built **step by step** and open for exploration.
 
 ---
-##  Project Status
+##  Status & Roadmap
 
- **SwiftQiskit is currently in an early experimental stage (v0.1).**
-
-- Core quantum simulation is implemented
-- API is subject to change
-- Performance is not yet optimized
-- GUI tools are optional and under development
-
-The project is actively evolving, and major features are planned.
----
-## ✅ What Works (v0.1)
-
-- QuantumCircuit abstraction
-- Single-qubit gates: H, X, Z
-- Two-qubit entanglement (CNOT – limited v0.1)
-- StateVector simulation
-- Measurement with shots & counts
-- Bell State example
-- Unit tests for correctness
----
-##  Roadmap
-
-- [ ] General multi-qubit CNOT support
-- [ ] Additional gates (Y, Phase, Rotation gates)
-- [ ] Circuit visualization (ASCII / SwiftUI)
-- [ ] Noise models
-- [ ] Performance optimizations
-- [ ] Stable public API (v1.0)
+Project status, what works in v0.1, and the roadmap live in
+[STATUSandTODO.md](STATUSandTODO.md), together with this fork's working TODO list.
 
 ---
 

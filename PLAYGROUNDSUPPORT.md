@@ -12,12 +12,15 @@ Playgrounds.playground/
 ├── Sources/                  ← shared code (this document)
 │   ├── BlochVector.swift
 │   ├── BlochSphereView.swift
-│   └── BlochProjectionView.swift
+│   ├── BlochProjectionView.swift
+│   ├── Bloch3DView.swift
+│   └── BlochExplorerView.swift
 └── Pages/
     ├── 01BellExample.xcplaygroundpage
     ├── ...
     ├── 05BlochSphere.xcplaygroundpage
-    └── 06BlochSphere_02.xcplaygroundpage
+    ├── 06BlochSphere_02.xcplaygroundpage
+    └── 07BlochSphere3D.xcplaygroundpage
 ```
 
 Xcode compiles `Sources/` into an auxiliary module that every page imports
@@ -84,12 +87,81 @@ public init(
 Set `verticalPointsDown` when the positive vertical axis should point down on the
 canvas (e.g. the x-axis when looking down from +z).
 
+### `Bloch3DView.swift`
+
+SwiftUI view drawing the Bloch sphere as a rotatable 3D wireframe: latitude/longitude
+circles are perspective-projected through an orbit camera (azimuth/elevation held in
+`@State`), the far hemisphere is drawn dimmer as a depth cue, and dragging the canvas
+orbits the camera. Shows axes, the state vector arrow with dashed drop lines to the
+equator plane, and the same numeric readout as `BlochSphereView`.
+
+```swift
+public init(label: String, bloch: BlochVector, size: CGFloat = 300)
+```
+
+### `BlochExplorerView.swift`
+
+Interactive wrapper around `Bloch3DView`: live sliders for θ ∈ [0, π] and φ ∈ [0, 2π)
+rebuild |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩ on every change, with a numeric readout
+that includes |α|² + |β|² (identically 1 — the parametrization keeps the state
+normalized, which is why the two sliders are independent).
+
+```swift
+public init()   // starts at θ = 60°, φ = 45°
+```
+
+Unlike the other views, this one is in Sources out of necessity, not reuse: the
+Xcode 27 beta playground evaluator cannot expand the SDK 27 `@State` macro in page
+code, while the Sources module is compiled by the regular build system, where the
+macro works — see "Xcode 27 beta workarounds" below.
+
 ## Which pages use what
 
 | Page | Shared code used |
 |---|---|
 | `05BlochSphere` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
 | `06BlochSphere_02` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
+| `07BlochSphere3D` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
+
+## Xcode 27 beta workarounds
+
+As of Xcode 27.0 beta (27A5209h, July 2026), the playground expression evaluator has two
+bugs that break SwiftUI pages. Both are toolchain issues, not project issues; remove the
+workarounds once a fixed Xcode ships.
+
+### 1. `Failed to load linked library cups of module SwiftUI`
+
+The macOS 27 SDK's `CUPS` clang module declares `link "cups"`, and the evaluator tries to
+`dlopen` a literal `libcups.dylib` — which only exists inside the dyld shared cache (as
+`libcups.2.dylib`), not on disk, so every page importing SwiftUI fails to run.
+
+**Workaround:** build a shim dylib that re-exports the real library and drop it into the
+playground product directories in DerivedData (which are on the evaluator's search path):
+
+```bash
+echo '' > /tmp/empty.c
+xcrun clang -dynamiclib /tmp/empty.c -o /tmp/libcups.dylib -Wl,-reexport-lcups
+DD=~/Library/Developer/Xcode/DerivedData/SwiftQiskit-*/Build/Intermediates.noindex
+cp /tmp/libcups.dylib $DD/Playgrounds/Playgrounds/Products/Debug/
+cp /tmp/libcups.dylib $DD/Playgrounds/Products/Debug/
+cp /tmp/libcups.dylib $DD/Playgrounds/Products/Debug/PackageFrameworks/
+```
+
+**Clean Build Folder deletes the shim** — rerun the copies if the error comes back. If the
+same error names a different library (`z` and `resolv` are also cache-only), the identical
+recipe works with `-reexport-l<name>`.
+
+### 2. `plugin for module 'SwiftUIMacros' not found`
+
+In SDK 27, SwiftUI's `@State` is a macro implemented in a compiler plugin, and the
+evaluator cannot load that plugin for code typed directly in a *page*. Code in `Sources/`
+is compiled by the regular build system, where the macro expands fine.
+
+**Workaround:** any view using `@State` (or other SwiftUI macros) must live in `Sources/`
+as a `public` type; the page only instantiates it. This is why `BlochExplorerView` is in
+`Sources/` even though only page `07BlochSphere3D` uses it. Also note the SDK 27 `@State`
+init pattern: if a view sets `@State` values in its `init`, drop the initial value at the
+declaration and assign only in the `init`.
 
 ## Adding shared code
 

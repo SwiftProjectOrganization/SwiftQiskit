@@ -57,6 +57,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `05BlochSphere`, `06BlochSphere_02` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
+- `07BlochSphere3D` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
+  no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
+  `BlochExplorerView`.
 
 Playground notes:
 
@@ -67,6 +70,10 @@ Playground notes:
   module auto-imported by every page; declarations there must be `public` (including
   explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current API.
 - Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
+- **Xcode 27 beta:** two evaluator bugs break SwiftUI pages — a missing `libcups.dylib`
+  (needs a shim in DerivedData, wiped by clean builds) and `@State` macro expansion
+  failing in page code (stateful views must live in `Sources/`). Workarounds and the
+  shim recipe are in `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds".
 
 ## Conventions & Gotchas
 
@@ -86,5 +93,6 @@ Playground notes:
 
 ## Status & Roadmap
 
-v0.1 — see README for the roadmap (general multi-qubit CNOT, Y/phase/rotation gates,
-circuit visualization, noise models, performance work).
+v0.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
+(general multi-qubit CNOT, Y/phase/rotation gates, circuit visualization, noise models,
+performance work), and the fork's working TODO list.
