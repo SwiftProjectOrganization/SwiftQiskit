@@ -5,9 +5,9 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 >  This project is **experimental and educational**, but grounded in real quantum mechanics principles
 
-Differences between this forked repository ("**fork**") and its parent are:
-1. The usage of Xcode playgrounds
-2. Showing of Bloch spheres (in live playgrounds)
+Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
+1. The usage of Xcode playgrounds.
+2. Showing of Bloch spheres (in live playgrounds).
 3. Using Swift Testing.
 
 ---
@@ -73,8 +73,8 @@ SwiftQiskit/
 │       ├── 01BellExample
 │       ├── 02Lecture_01
 │       ├── ...
-│       ├── 05BlochSphere
-│       ├── 06BlochSphere_02
+│       ├── 05BlochSphere2D
+│       ├── 06BlochSphere2D+Projections
 │       └── 07BlochSphere3D
 └── References (tbd)
 └── Package.swift
@@ -170,18 +170,18 @@ resulting state vector and its amplitudes/probabilities, and runs a 1000-shot me
 
 ### 02Lecture_01
 
-Minimal Bell-state circuit: run, print amplitudes, and measure 1024 shots.
+Minimal Bell-state circuit: run, print amplitudes, and measure 1024 shots. TBD.
 
 ### 03Lecture_03
 
-Introduces `StateVector` directly and its `probabilities` property.
+Introduces `StateVector` directly and its `probabilities` property. TBD.
 
 ### 04Lecture_04
 
 Building custom gates from raw `Matrix`/`Complex` values (Identity and a hand-rolled Pauli-X)
-and applying them via `circuit.apply(_:)`.
+and applying them via `circuit.apply(_:)`. TBD.
 
-### 05BlochSphere
+### 05BlochSphere2D
 
 Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` live view.
 
@@ -194,7 +194,7 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
   |0⟩ (north pole), |1⟩ via Pauli-X (south pole), |+⟩ via Hadamard (+x axis), and
   |−⟩ via Hadamard + Pauli-Z (−x axis). The same vectors are also printed to the console.
 
-### 06BlochSphere_02
+### 06BlochSphere2D+Projections
 
 A *general* single-qubit state, tilted off the equator of the Bloch sphere (45° from x,
 60° from y and z), explored in depth.

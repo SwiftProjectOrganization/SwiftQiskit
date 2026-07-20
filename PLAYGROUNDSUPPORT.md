@@ -18,8 +18,8 @@ Playgrounds.playground/
 └── Pages/
     ├── 01BellExample.xcplaygroundpage
     ├── ...
-    ├── 05BlochSphere.xcplaygroundpage
-    ├── 06BlochSphere_02.xcplaygroundpage
+    ├── 05BlochSphere2D.xcplaygroundpage
+    ├── 06BlochSphere2D+Projections.xcplaygroundpage
     └── 07BlochSphere3D.xcplaygroundpage
 ```
 
@@ -119,8 +119,8 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 | Page | Shared code used |
 |---|---|
-| `05BlochSphere` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
-| `06BlochSphere_02` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
+| `05BlochSphere2D` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
+| `06BlochSphere2D+Projections` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
 | `07BlochSphere3D` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
 
 ## Xcode 27 beta workarounds

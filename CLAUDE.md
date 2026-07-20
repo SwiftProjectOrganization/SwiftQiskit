@@ -54,7 +54,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `01BellExample` — annotated Bell-state walkthrough (circuit, state vector, probabilities, shots).
 - `02Lecture_01`, `03Lecture_03`, `04Lecture_04`, … — per-lecture pages, numbered with an
   ordering prefix; follow this `NNName` naming when adding pages.
-- `05BlochSphere`, `06BlochSphere_02` — Bloch-sphere visualizations of single-qubit states
+- `05BlochSphere2D`, `06BlochSphere2D+Projections` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
 - `07BlochSphere3D` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
