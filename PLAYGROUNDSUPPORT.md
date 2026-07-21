@@ -127,13 +127,45 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 As of Xcode 27.0 beta (27A5209h, July 2026), the playground expression evaluator has two
 bugs that break SwiftUI pages. Both are toolchain issues, not project issues; remove the
-workarounds once a fixed Xcode ships.
+workarounds once a fixed Xcode ships. **Both bugs verified still present in beta 4
+(27A5228h) on 2026-07-20** — by running page 05 with the shims removed (bug 1) and a page
+with an inline `@State` view (bug 2).
+
+**The bugs appear to be machine-specific.** On 2026-07-20 a fresh clone on an M3 Mac with
+the same Xcode 27 beta 4 and macOS 27 beta 4 ran the SwiftUI pages with no shim at all
+(bug 1 absent; bug 2 untested there — page 07 uses the `Sources/` view, so it does not
+exercise inline `@State`). The affected machine is an A18-based Mac that had earlier
+Xcode 27 betas installed.
+
+**Cache-wipe result (2026-07-20, affected machine):** deleting the project's DerivedData,
+`ModuleCache.noindex`, and `~/Library/Caches/com.apple.dt.Xcode` (then restarting Xcode)
+*narrowed* bug 1 rather than fixing it. Shim-free, pages that import SwiftUI and only
+instantiate `Sources/` views now run; but a page that *declares a View type inline*
+still fails with the cups error at the evaluator's link stage. The shim fixes that case
+too — the error's search-path trace explicitly lists the three DerivedData product
+directories, confirming the shim locations.
+
+Bug 2 also survives the wipe, with a **changed symptom**: instead of "plugin for module
+'SwiftUIMacros' not found", an inline `@State` view now fails with
+`left side of mutating operator isn't mutable: 'self' is immutable` at the mutation site
+(e.g. `taps += 1` in a Button action). The evaluator expands the property as plain
+storage without State's nonmutating setter — same conclusion, stateful views must stay
+in `Sources/`.
+
+Note the wipe brought the affected machine to parity with the M3 on everything tested on
+both (Bloch pages, shim-free). The residual failures only involve *inline page code*,
+which was never exercised on the M3 — so they may be universal Xcode 27 beta 4 evaluator
+bugs, not machine-specific ones. To find out, run a page with an inline `@State` view on
+another Mac; if it fails there too, this belongs in a Feedback to Apple.
 
 ### 1. `Failed to load linked library cups of module SwiftUI`
 
 The macOS 27 SDK's `CUPS` clang module declares `link "cups"`, and the evaluator tries to
 `dlopen` a literal `libcups.dylib` — which only exists inside the dyld shared cache (as
-`libcups.2.dylib`), not on disk, so every page importing SwiftUI fails to run.
+`libcups.2.dylib`), not on disk, so every page importing SwiftUI fails to run. Note the bug
+is specific to the evaluator's loading path: a plain-process `dlopen("libcups.dylib")`
+succeeds via the shared cache, so a dlopen test outside the evaluator does not prove the
+bug is fixed — only an actual page run does.
 
 **Workaround:** build a shim dylib that re-exports the real library and drop it into the
 playground product directories in DerivedData (which are on the evaluator's search path):
@@ -147,7 +179,8 @@ cp /tmp/libcups.dylib $DD/Playgrounds/Products/Debug/
 cp /tmp/libcups.dylib $DD/Playgrounds/Products/Debug/PackageFrameworks/
 ```
 
-**Clean Build Folder deletes the shim** — rerun the copies if the error comes back. If the
+**Clean Build Folder deletes the shim**, and playground rebuilds can regenerate the whole
+products tree (which also removes it) — rerun the copies whenever the error comes back. If the
 same error names a different library (`z` and `resolv` are also cache-only), the identical
 recipe works with `-reexport-l<name>`.
 
