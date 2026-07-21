@@ -104,8 +104,6 @@ Open Xcode, go to `Integrate` and clone "https://github.com/SwiftProjectOrganiza
 swift run SwiftQiskitExamples
 ```
 
-Note: This will not work yet in Xcode 27.0-beta, please use playground 01BellExample for now.
-
 ---
 
 ## 🔗 Bell State Example (Entanglement)
