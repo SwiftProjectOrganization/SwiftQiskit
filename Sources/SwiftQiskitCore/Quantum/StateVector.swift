@@ -99,6 +99,27 @@ public extension StateVector {
     }
 }
 
+// MARK: - Tensor Product
+public extension StateVector {
+
+    /// Tensor product |ψ⟩ ⊗ |φ⟩ combining two registers into one.
+    /// Qubit 0 is most-significant, so `self` occupies the high-order bits.
+    func tensor(_ other: StateVector) -> StateVector {
+        var combined = Array(repeating: Complex.zero, count: dimension * other.dimension)
+        for i in 0..<dimension {
+            for j in 0..<other.dimension {
+                combined[i * other.dimension + j] = amplitudes[i] * other.amplitudes[j]
+            }
+        }
+        return StateVector(combined)
+    }
+
+    /// Tensor product: `lhs ⊗ rhs`
+    static func ⊗ (lhs: StateVector, rhs: StateVector) -> StateVector {
+        lhs.tensor(rhs)
+    }
+}
+
 // MARK: - CustomStringConvertible
 extension StateVector: CustomStringConvertible {
     public var description: String {

@@ -16,6 +16,8 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 
 - ✅ Complex number arithmetic  
 - ✅ Matrix operations (including Kronecker products)  
+- ✅ Tensor products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`  
+- ✅ Dirac (bra–ket) notation: `Ket`/`Bra`, postfix `†` (dagger), inner & outer products  
 - ✅ State vector simulation  
 - ✅ Quantum gates:
   - Hadamard (H)
@@ -57,7 +59,9 @@ SwiftQiskit/
 │       │   ├── Complex.swift
 │       │   └── Matrix.swift
 │       ├── Quantum/
-│       │   └── StateVector.swift
+│       │   ├── StateVector.swift
+│       │   ├── Dirac.swift
+│       │   └── SimulationResult.swift
 │       ├── Gates/
 │       │   ├── Hadamard.swift
 │       │   ├── PauliX.swift
@@ -67,6 +71,13 @@ SwiftQiskit/
 │           └── QuantumCircuit.swift
 ├── Examples/
 │   └── main.swift
+├── Tests/
+│   └── SwiftQiskitCoreTests/
+│       ├── BellStateTests.swift
+│       ├── TensorProductTests.swift
+│       └── DiracNotationTests.swift
+├── Docs/
+│   └── TENSORPLAN.md
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
 │   └── Pages/
@@ -75,7 +86,9 @@ SwiftQiskit/
 │       ├── ...
 │       ├── 05BlochSphere2D
 │       ├── 06BlochSphere2D+Projections
-│       └── 07BlochSphere3D
+│       ├── 07BlochSphere3D
+│       ├── 08BraKet
+│       └── 09Tensor
 └── References (tbd)
 └── Package.swift
 ```
@@ -221,6 +234,31 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
   [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds): a shim
   `libcups.dylib` in DerivedData, and keeping `@State`-based views in the playground's
   `Sources/` folder (which is why the slider view `BlochExplorerView` lives there).
+
+### 08BraKet
+
+Dirac-notation walkthrough of `Quantum/Dirac.swift`:
+
+- **Bras and kets** — basis kets via `Ket("01")` and the named states
+  `.zero/.one/.plus/.minus/.plusI/.minusI`; the postfix dagger `†` turns a `Ket`
+  into a `Bra` (and gives `Matrix.adjoint`).
+- **Products** — inner products `Bra * Ket` (orthonormality checks) and outer
+  products `Ket * Bra` (projectors, completeness).
+- **Expectation values** — recovers the page-07 initial qubit's Bloch coordinates
+  as the Pauli expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static
+  `Bloch3DView`.
+
+### 09Tensor
+
+Tensor-product walkthrough (console only), mirroring
+`Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section:
+
+- `tensor(_:)` / `⊗` on `Matrix` and `StateVector`, and the mixed-product
+  identity (A ⊗ B)(C ⊗ D) = (AC) ⊗ (BD).
+- **Gate embedding** — building H ⊗ I by hand and checking it matches what
+  `circuit.h(0)` applies across a 2-qubit register.
+- **Entanglement** — why the Bell state cannot be factored as a tensor product
+  of single-qubit states.
 
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's

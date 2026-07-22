@@ -110,23 +110,6 @@ public extension QuantumCircuit {
     }
 
 }
-// MARK: - Kronecker Utilities (file-private)
-private func kron(_ a: Matrix, _ b: Matrix) -> Matrix {
-    var result = Matrix(rows: a.rows * b.rows, cols: a.cols * b.cols)
-    for i in 0..<a.rows {
-        for j in 0..<a.cols {
-            for k in 0..<b.rows {
-                for l in 0..<b.cols {
-                    result[i * b.rows + k, j * b.cols + l] = a[i, j] * b[k, l]
-                }
-            }
-        }
-    }
-    return result
-}
-private func identity(_ size: Int) -> Matrix {
-    Matrix.identity(size: size)
-}
 /// Embed a single-qubit gate into an n-qubit system at a specific qubit index.
 /// Qubit indexing: 0 = most-significant (leftmost)
 private func embedSingleQubitGate(
@@ -139,11 +122,11 @@ private func embedSingleQubitGate(
     var result: Matrix? = nil
 
     for i in 0..<qubits {
-        let factor: Matrix = (i == target) ? gate : identity(2)
+        let factor: Matrix = (i == target) ? gate : Matrix.identity(size: 2)
         if result == nil {
             result = factor
         } else {
-            result = kron(result!, factor)
+            result = result! ⊗ factor
         }
     }
 

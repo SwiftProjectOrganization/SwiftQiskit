@@ -107,6 +107,35 @@ public extension Matrix {
     }
 }
 
+// MARK: - Tensor Product
+
+/// Kronecker (tensor) product operator.
+infix operator ⊗ : MultiplicationPrecedence
+
+public extension Matrix {
+
+    /// Kronecker (tensor) product A ⊗ B.
+    /// Result is (rows·other.rows) × (cols·other.cols); any dimensions are valid.
+    func tensor(_ other: Matrix) -> Matrix {
+        var result = Matrix(rows: rows * other.rows, cols: cols * other.cols)
+        for i in 0..<rows {
+            for j in 0..<cols {
+                for k in 0..<other.rows {
+                    for l in 0..<other.cols {
+                        result[i * other.rows + k, j * other.cols + l] = self[i, j] * other[k, l]
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    /// Kronecker (tensor) product: `lhs ⊗ rhs`
+    static func ⊗ (lhs: Matrix, rhs: Matrix) -> Matrix {
+        lhs.tensor(rhs)
+    }
+}
+
 // MARK: - CustomStringConvertible
 extension Matrix: CustomStringConvertible {
     public var description: String {

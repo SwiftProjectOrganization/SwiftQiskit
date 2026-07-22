@@ -35,16 +35,22 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 ## Architecture (bottom-up)
 
 - `Math/Complex.swift` — value-type complex numbers (`+ - * /`, scalar mul, `.zero/.one/.i`).
-- `Math/Matrix.swift` — row-major complex matrix; `*`, `multiply(by:)` (matrix × vector), `identity(size:)`.
+- `Math/Matrix.swift` — row-major complex matrix; `*`, `multiply(by:)` (matrix × vector),
+  `identity(size:)`, Kronecker product `tensor(_:)` / `⊗` (the `⊗` operator is declared here).
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
-  `measure()` is probabilistic and **collapses (mutates) the state**.
+  `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
+  combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention).
 - `Gates/*.swift` — each gate is a `public enum` exposing `static let matrix: Matrix`
   (`HadamardGate`, `PauliXGate`, `PauliZGate`, `CNOTGate`). Follow this pattern for new gates.
 - `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices. Single-qubit
-  gates are embedded across the register via Kronecker products (file-private
-  `embedSingleQubitGate` / `kron`). API: `h/x/z/cx`, `apply(_:)`, `run()`, `runAndMeasure()`,
+  gates are embedded across the register via `Matrix.tensor(_:)` (file-private
+  `embedSingleQubitGate`). API: `h/x/z/cx`, `apply(_:)`, `run()`, `runAndMeasure()`,
   `measure(shots:)`.
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string.
+- `Quantum/Dirac.swift` — Dirac notation: `Ket` (typealias of `StateVector`), `Bra`
+  (conjugated row vector), postfix `†` (dagger; also `Matrix.adjoint`), `*` overloads for
+  inner (`Bra * Ket`) / outer (`Ket * Bra`) products, basis kets `Ket("01")` /
+  `.zero/.one/.plus/.minus/.plusI/.minusI`.
 
 ## Xcode Playgrounds
 
@@ -60,6 +66,13 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `07BlochSphere3D` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView`.
+- `08BraKet` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
+  projectors, adjoints, and the page-07 initial qubit's Bloch coordinates as Pauli
+  expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`.
+- `09Tensor` — tensor-product walkthrough (console only) mirroring
+  `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
+  `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
+  why the Bell state does not factor (entanglement).
 
 Playground notes:
 
@@ -87,7 +100,8 @@ Playground notes:
 
 ## Testing
 
-- Tests live in `Tests/SwiftQiskitCoreTests/` (currently `BellStateTests.swift`).
+- Tests live in `Tests/SwiftQiskitCoreTests/` (`BellStateTests.swift`,
+  `TensorProductTests.swift`, `DiracNotationTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - Measurement tests are statistical (e.g. 40–60% tolerance over 1000 shots) — expect

@@ -21,6 +21,10 @@ The project is actively evolving, and major features are planned.
 - Two-qubit entanglement (CNOT – limited v0.1)
 - StateVector simulation
 - Measurement with shots & counts
+- Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
+  (see `Docs/TENSORPLAN.md`)
+- Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
+  (`Quantum/Dirac.swift`, demonstrated in playground page `08BraKet`)
 - Bell State example
 - Unit tests for correctness
 
@@ -45,3 +49,13 @@ The project is actively evolving, and major features are planned.
       rendered state vector interactively.
       → page `07BlochSphere3D`; the θ/φ parametrization keeps |α|² + |β|² = 1
       for every slider position, so the two sliders are independent.
+
+## Bra/ket & tensor-product additions (this fork)
+
+- [x] Dirac notation in Core (`Quantum/Dirac.swift`): `Ket`/`Bra`, postfix `†`,
+      inner/outer products, basis kets — with `DiracNotationTests.swift` and
+      playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`).
+- [x] Tensor (Kronecker) products in Core: `tensor(_:)` / `⊗` on `Matrix` and
+      `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
+      — with `TensorProductTests.swift`, playground page `09Tensor`, and the
+      design notes in `Docs/TENSORPLAN.md`.
