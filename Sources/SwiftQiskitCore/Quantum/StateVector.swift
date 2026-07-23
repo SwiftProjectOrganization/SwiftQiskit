@@ -52,6 +52,11 @@ public struct StateVector: Equatable {
         let norm = sqrt(amplitudes.reduce(0.0) { $0 + $1.magnitudeSquared })
         precondition(norm > 0, "Cannot normalize a zero state")
 
+        // Skip rescaling when already normalized: multiplying by 1/norm when
+        // norm ≈ 1 only injects rounding error, and skipping it makes the
+        // dagger a true involution — (|ψ⟩†)† == |ψ⟩ exactly.
+        guard abs(norm - 1.0) > 1e-12 else { return }
+
         amplitudes = amplitudes.map { $0 * (1.0 / norm) }
     }
 

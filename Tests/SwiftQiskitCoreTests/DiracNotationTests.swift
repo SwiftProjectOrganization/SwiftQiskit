@@ -48,13 +48,12 @@ struct DiracNotationTests {
         }
     }
 
-    /// Test that dagger is an involution: (ψ†)† = ψ
+    /// Test that dagger is an involution: (ψ†)† = ψ, exactly —
+    /// conjugation is exact and re-normalizing a normalized state is a no-op
     @Test func `Double dagger returns the original ket`() {
         let psi = Ket([Complex(0.6, 0.3), Complex(-0.2, 0.7)])
-        let roundTrip = (psi†)†
-        for i in 0..<psi.dimension {
-            #expect((roundTrip[i] - psi[i]).magnitude < tolerance)
-        }
+        #expect((psi†)† == psi)
+        #expect((Ket.plus†)† == Ket.plus)
     }
 
     /// Test Pauli-Z expectation values ⟨ψ|Z|ψ⟩
@@ -96,9 +95,6 @@ struct DiracNotationTests {
     @Test func `Bra tensor product matches daggered ket tensor product`() {
         let lhs = Ket.plus† ⊗ Ket.one†
         let rhs = (Ket.plus ⊗ Ket.one)†
-        #expect(lhs.dimension == rhs.dimension)
-        for (l, r) in zip(lhs.amplitudes, rhs.amplitudes) {
-            #expect((l - r).magnitude < tolerance)
-        }
+        #expect(lhs == rhs)
     }
 }

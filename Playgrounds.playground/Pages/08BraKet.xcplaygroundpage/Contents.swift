@@ -43,6 +43,7 @@ print("⟨+|0⟩ = \(Ket.plus† * Ket.zero)")
 
 // Any normalized state has ⟨φ|φ⟩ = 1
 let ketPhi = Ket([Complex(0.6), Complex(0.8)])
+
 print("⟨φ|φ⟩ = \(ketPhi† * ketPhi)")
 // Expected: 1.0
 
@@ -107,17 +108,11 @@ print("H†H =\n\(HadamardGate.matrix† * HadamardGate.matrix)")
 print("\n|01⟩ == |0⟩ ⊗ |1⟩ → \(Ket("01") == Ket.zero ⊗ Ket.one)")
 // Expected: true
 
-// Conjugation distributes over ⊗, so (|a⟩ ⊗ |b⟩)† = ⟨a| ⊗ ⟨b|.
-// Compare with a tolerance — the two sides differ by ~1 ULP of
-// floating-point rounding, like the statistical tests in
-// DiracNotationTests.
-let braTensor = Ket.plus† ⊗ Ket.one†
-let daggered = (Ket.plus ⊗ Ket.one)†
-let maxDiff = zip(braTensor.amplitudes, daggered.amplitudes)
-    .map { ($0 - $1).magnitude }
-    .max() ?? 0
-print("max |⟨+|⊗⟨1| − (|+⟩⊗|1⟩)†| = \(maxDiff)")
-// Expected: ~1e-16 — equal up to rounding
+// Conjugation distributes over ⊗, so (|a⟩ ⊗ |b⟩)† = ⟨a| ⊗ ⟨b|
+// — exactly: conjugation doesn't touch the doubles, and
+// re-normalizing an already-normalized state is a no-op.
+print("⟨+|⊗⟨1| == (|+⟩⊗|1⟩)† → \(Ket.plus† ⊗ Ket.one† == (Ket.plus ⊗ Ket.one)†)")
+// Expected: true
 
 // A Bell-state amplitude as a bra–ket product (circuit from page 01):
 let bellCircuit = QuantumCircuit(qubits: 2)
