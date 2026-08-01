@@ -3,17 +3,21 @@
 import Foundation
 import SwiftQiskitCore
 
-var qc0 = QuantumCircuit(qubits: 2)
-qc0
+let ket1 = Ket([Complex(0.8660254037844387), Complex(0.35355339059327373, 0.3535533905932737)])
 
-qc0.h(0)
-qc0.cx(0, 1)
+ket1.dimension.magnitude
 
-let qc0State = qc0.run()
-print(qc0State.amplitudes.description)
+ket1.amplitudes
 
-qc0.measure(shots: 2000)
-qc0State.probabilities
-print(qc0State.probabilities.description)
+ket1.probabilities
+
+ket1† * ket1
+
+ket1 ⊗ ket1
+
+(ket1†)†
+
+ket1 * ket1†
+
 
 //: [Next](@next)
