@@ -42,7 +42,36 @@ for (state, count) in result.sortedCounts {
 // Expected: ~500 × |00⟩, ~500 × |11⟩ — no |01⟩ or |10⟩
 
 // ============================================================
-// Section 4 — Single-qubit gates on a 1-qubit circuit
+// Section 4 — GHZ State  |GHZ⟩ = (|000⟩ + |111⟩) / √2
+// ============================================================
+// The Bell recipe, one qubit further: entangle a third qubit by
+// adding a second CNOT from the same control. `cx(control, target)`
+// works on any distinct pair of an n-qubit register — note that
+// cx(0, 2) spans non-adjacent qubits, skipping over qubit 1.
+
+let ghzCircuit = QuantumCircuit(qubits: 3)
+ghzCircuit.h(0)         // |000⟩ → (|000⟩ + |100⟩) / √2
+ghzCircuit.cx(0, 1)     // → (|000⟩ + |110⟩) / √2
+ghzCircuit.cx(0, 2)     // → (|000⟩ + |111⟩) / √2
+
+let ghzState = ghzCircuit.run()
+print("\nGHZ state amplitudes:")
+print(ghzState)
+// Expected: |000⟩ ≈ 0.707, |111⟩ ≈ 0.707, others 0
+
+print("\nGHZ probabilities: \(ghzState.probabilities)")
+// Expected: [0.5, 0, 0, 0, 0, 0, 0, 0.5]
+
+let ghzResult = ghzCircuit.measure(shots: 1000)
+print("\nGHZ measurement counts (1000 shots):")
+for (state, count) in ghzResult.sortedCounts {
+    print("  |\(state)⟩ : \(count)")
+}
+// Expected: ~500 × |000⟩, ~500 × |111⟩ — all three qubits always
+// agree, never any other outcome.
+
+// ============================================================
+// Section 5 — Single-qubit gates on a 1-qubit circuit
 // ============================================================
 
 // Pauli-X (bit flip): |0⟩ → |1⟩
@@ -75,7 +104,7 @@ print("\nBell state via apply(CNOTGate.matrix) probabilities: \(bellState2.proba
 // Expected: [0.5, 0.0, 0.0, 0.5]
 
 // ============================================================
-// Section 5 — Complex and Matrix types
+// Section 6 — Complex and Matrix types
 // ============================================================
 
 // Complex arithmetic

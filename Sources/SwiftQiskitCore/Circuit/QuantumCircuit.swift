@@ -70,14 +70,11 @@ public final class QuantumCircuit {
         return state.measure()
     }
 }
-// MARK: - Single-Qubit Gates
+// MARK: - Gate API
 public extension QuantumCircuit {
-    /// Apply CNOT gate (control -> target)
+    /// Apply CNOT gate (control -> target); any distinct pair of qubits.
     func cx(_ control: Int, _ target: Int) {
-        precondition(qubits == 2, "cx currently supports only 2-qubit circuits")
-        precondition(control == 0 && target == 1, "Only cx(0,1) supported in v0.1")
-
-        apply(CNOTGate.matrix)
+        apply(CNOTGate.matrix(qubits: qubits, control: control, target: target))
     }
 
     /// Apply Hadamard gate to a specific qubit

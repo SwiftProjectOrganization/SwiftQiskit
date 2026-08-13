@@ -3,17 +3,16 @@
 import Foundation
 import SwiftQiskitCore
 
-var sv0 = StateVector(qubits: 3)
-sv0.probabilities
-
-var qc0 = QuantumCircuit(qubits: 3)
+var qc0 = QuantumCircuit(qubits: 2)
 qc0
 
 qc0.h(0)
-//qc0.cx(0, 1)
+
+qc0.cx(0, 1)
 
 let qc0State = qc0.run()
 print(qc0State.amplitudes.description)
+print(qc0State.probabilities)
 
 qc0.measure(shots: 2000)
 qc0State.probabilities

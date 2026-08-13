@@ -42,6 +42,8 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
   combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention).
 - `Gates/*.swift` — each gate is a `public enum` exposing `static let matrix: Matrix`
   (`HadamardGate`, `PauliXGate`, `PauliZGate`, `CNOTGate`). Follow this pattern for new gates.
+  `CNOTGate` additionally offers `matrix(qubits:control:target:)` — the full 2ⁿ×2ⁿ CNOT for
+  any distinct control/target pair, built as a basis-state permutation.
 - `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices. Single-qubit
   gates are embedded across the register via `Matrix.tensor(_:)` (file-private
   `embedSingleQubitGate`). API: `h/x/z/cx`, `apply(_:)`, `run()`, `runAndMeasure()`,
@@ -57,7 +59,8 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 `Playgrounds.playground` at the repo root (macOS target) is this fork's main addition: interactive,
 lecture-style explorations of the library. Pages live in `Playgrounds.playground/Pages/`:
 
-- `01BellExample` — annotated Bell-state walkthrough (circuit, state vector, probabilities, shots).
+- `01BellExample` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
+  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits.
 - `02Lecture_01`, `03Lecture_03`, `04Lecture_04`, … — per-lecture pages, numbered with an
   ordering prefix; follow this `NNName` naming when adding pages.
 - `05BlochSphere2D`, `06BlochSphere2D+Projections` — Bloch-sphere visualizations of single-qubit states
@@ -73,6 +76,15 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
   `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
   why the Bell state does not factor (entanglement).
+- `10DeutschExample` — Deutsch's algorithm (console only): the four 1-bit oracles from
+  `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, deterministic
+  constant-vs-balanced verdicts from a single query, and shot statistics
+  (plan in `Docs/DEUTSCHPLAN.md`, user guide in `Docs/DEUTSCHHELP.md`).
+- `11GroverExample` — Grover's search (console only): CZ built as `h(1);cx(0,1);h(1)`,
+  X-conjugated phase oracles, an inversion-about-the-mean walkthrough, exact 1-iteration
+  success on 2 qubits, over-rotation, the diffusion operator as 2|s⟩⟨s|−I via the Dirac
+  outer product, and a 3-qubit finale using a hand-built CCZ through `apply(_:)`
+  (plan in `Docs/GROVERPLAN.md`, user guide in `Docs/GROVERHELP.md`).
 
 Playground notes:
 
@@ -93,7 +105,8 @@ Playground notes:
 ## Conventions & Gotchas
 
 - **Qubit indexing:** qubit 0 is the most-significant (leftmost) bit.
-- **`cx` v0.1 limitation:** only 2-qubit circuits and only `cx(0, 1)` — enforced by preconditions.
+- **`cx` is general:** `cx(control, target)` works for any distinct pair of qubits on an
+  n-qubit circuit, via `CNOTGate.matrix(qubits:control:target:)` (permutation-matrix construction).
 - Invariants are guarded with `precondition(...)` throughout; keep doing this when extending.
 - Measurement result strings are zero-padded binary via `String.leftPadding` (`Utils/String+Padding.swift`).
 - Style: 4-space indent, PascalCase types, camelCase members, no force unwrapping.
@@ -101,7 +114,7 @@ Playground notes:
 ## Testing
 
 - Tests live in `Tests/SwiftQiskitCoreTests/` (`BellStateTests.swift`,
-  `TensorProductTests.swift`, `DiracNotationTests.swift`).
+  `TensorProductTests.swift`, `DiracNotationTests.swift`, `CNOTTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - Measurement tests are statistical (e.g. 40–60% tolerance over 1000 shots) — expect
@@ -110,5 +123,5 @@ Playground notes:
 ## Status & Roadmap
 
 v0.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
-(general multi-qubit CNOT, Y/phase/rotation gates, circuit visualization, noise models,
-performance work), and the fork's working TODO list.
+(Y/phase/rotation gates, circuit visualization, noise models, performance work), and the
+fork's working TODO list.

@@ -167,3 +167,5 @@ let crossSide = phiPlus[1] * phiPlus[2]
 print("\n|Φ⁺⟩: α₀₀·α₁₁ = \(productSide), α₀₁·α₁₀ = \(crossSide)")
 print("factors as a tensor product → \((productSide - crossSide).magnitude < tolerance)")
 // Expected: 0.5 vs 0.0 → false — |Φ⁺⟩ is entangled
+
+//: [Next](@next)

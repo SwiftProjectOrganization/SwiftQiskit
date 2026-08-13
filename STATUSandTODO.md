@@ -18,7 +18,8 @@ The project is actively evolving, and major features are planned.
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Z
-- Two-qubit entanglement (CNOT – limited v0.1)
+- General multi-qubit CNOT: `cx(control, target)` for any distinct pair of qubits
+  (`CNOTGate.matrix(qubits:control:target:)`, tested in `CNOTTests.swift`)
 - StateVector simulation
 - Measurement with shots & counts
 - Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
@@ -30,7 +31,7 @@ The project is actively evolving, and major features are planned.
 
 ## Roadmap
 
-- [ ] General multi-qubit CNOT support
+- [x] General multi-qubit CNOT support
 - [ ] Additional gates (Y, Phase, Rotation gates)
 - [ ] Circuit visualization (ASCII / SwiftUI)
 - [ ] Noise models
