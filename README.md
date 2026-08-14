@@ -38,8 +38,8 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all four test suites; playground pages 01, 03, 05, 08–11 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 01, 05, 08–11 |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all four test suites; playground pages 01, 03, 05, 08–12 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 01, 05, 08–12 |
 | Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`; pages 01, 04, 05, 08 |
 | CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 01, 03, 08–11 |
 
@@ -53,6 +53,8 @@ phase/rotation gates are on the roadmap (see [STATUSandTODO.md](STATUSandTODO.md
 | Identity / hand-rolled X | raw `Matrix`/`Complex` values | page 04 |
 | CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator) |
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
+| Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
+| QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
 
 ---
 
@@ -108,7 +110,9 @@ SwiftQiskit/
 │   ├── DEUTSCHPLAN.md
 │   ├── DEUTSCHHELP.md
 │   ├── GROVERPLAN.md
-│   └── GROVERHELP.md
+│   ├── GROVERHELP.md
+│   ├── SHORPLAN.md
+│   └── SHORHELP.md
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
 │   └── Pages/
@@ -121,7 +125,8 @@ SwiftQiskit/
 │       ├── 08BraKet
 │       ├── 09Tensor
 │       ├── 10DeutschExample
-│       └── 11GroverExample
+│       ├── 11GroverExample
+│       └── 12ShorExample
 └── References (tbd)
 └── Package.swift
 ```
@@ -326,6 +331,27 @@ fewer oracle queries:
   `apply(_:)`, with the theoretical success probability after each iteration.
 
 Design notes in `Docs/GROVERPLAN.md`; user guide in `Docs/GROVERHELP.md`.
+
+### 12ShorExample
+
+Compiled Shor's algorithm (console only) — factoring 15 by quantum order finding,
+with a 3-qubit counting register and a 4-qubit work register:
+
+- **Factoring reduces to order finding** — the classical gcd reduction, plus the
+  "lucky guess" cases where no quantum computer is needed at all.
+- **Modular multiplication as permutation matrices** — U_a |w⟩ = |a·w mod 15⟩ and its
+  controlled powers hand-built (one `.one` per column) and applied via `apply(_:)`,
+  with the orbit |1⟩ → |7⟩ → |4⟩ → |13⟩ → |1⟩ exposing the order geometrically.
+- **A hand-built QFT†** — the 8×8 inverse DFT constructed entrywise on the register's
+  integer index (no bit-reversal bookkeeping), checked against Hadamard and unitarity.
+- **Phase estimation stage by stage** — superposed counts, the entangled orbit, then
+  exact peaks at y = 8·s/r; shot statistics sampled from one `run()` (with a note on
+  why `measure(shots:)` is too slow at dimension 128).
+- **Classical post-processing** — measured phase → lowest terms → verified order →
+  gcd factors, then a sweep of every coprime base including the instructive a = 14
+  failure (a^(r/2) ≡ −1).
+
+Design notes in `Docs/SHORPLAN.md`; user guide in `Docs/SHORHELP.md`.
 
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's

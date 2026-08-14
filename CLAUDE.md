@@ -86,6 +86,12 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   success on 2 qubits, over-rotation, the diffusion operator as 2|s⟩⟨s|−I via the Dirac
   outer product, and a 3-qubit finale using a hand-built CCZ through `apply(_:)`
   (plan in `Docs/GROVERPLAN.md`, user guide in `Docs/GROVERHELP.md`).
+- `12ShorExample` — compiled Shor factoring of 15 (console only): modular multiplication
+  and its controlled powers as hand-built permutation matrices via `apply(_:)`, an
+  entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the order r,
+  classical gcd post-processing, shots sampled from one `run()` (per-shot
+  `measure(shots:)` replay is too slow at dimension 128), and a base sweep including the
+  a = 14 failure case (plan in `Docs/SHORPLAN.md`, user guide in `Docs/SHORHELP.md`).
 
 Playground notes:
 

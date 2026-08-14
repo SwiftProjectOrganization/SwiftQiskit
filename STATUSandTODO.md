@@ -60,3 +60,22 @@ The project is actively evolving, and major features are planned.
       `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
       — with `TensorProductTests.swift`, playground page `09Tensor`, the
       design notes in `Docs/TENSORPLAN.md`, and the user guide `Docs/TENSORHELP.md`.
+
+## Algorithm playground pages (this fork)
+
+Console-only walkthroughs of the canonical quantum algorithms, each with design
+notes (`Docs/*PLAN.md`) and a user guide (`Docs/*HELP.md`):
+
+- [x] Deutsch's algorithm — page `10DeutschExample`: the four 1-bit oracles from
+      `x(1)`/`cx(0,1)`, phase kickback stage by stage, and deterministic
+      constant-vs-balanced verdicts from a single query
+      (`Docs/DEUTSCHPLAN.md`, `Docs/DEUTSCHHELP.md`).
+- [x] Grover's search — page `11GroverExample`: CZ built as `h(1); cx(0,1); h(1)`,
+      X-conjugated phase oracles, inversion about the mean, the diffusion operator
+      as 2|s⟩⟨s| − I via the Dirac outer product, and a 3-qubit finale with a
+      hand-built CCZ (`Docs/GROVERPLAN.md`, `Docs/GROVERHELP.md`).
+- [x] Shor's algorithm (compiled, N = 15) — page `12ShorExample`: modular
+      multiplication and its controlled powers as hand-built permutation matrices,
+      an entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the
+      order r, classical gcd post-processing, and a base sweep including the
+      a = 14 failure case (`Docs/SHORPLAN.md`, `Docs/SHORHELP.md`).
