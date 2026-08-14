@@ -75,7 +75,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `09Tensor` — tensor-product walkthrough (console only) mirroring
   `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
   `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
-  why the Bell state does not factor (entanglement).
+  why the Bell state does not factor (entanglement)
+  (design notes in `Docs/TENSORPLAN.md`, user guide in `Docs/TENSORHELP.md`).
 - `10DeutschExample` — Deutsch's algorithm (console only): the four 1-bit oracles from
   `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, deterministic
   constant-vs-balanced verdicts from a single query, and shot statistics

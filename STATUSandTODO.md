@@ -23,7 +23,7 @@ The project is actively evolving, and major features are planned.
 - StateVector simulation
 - Measurement with shots & counts
 - Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
-  (see `Docs/TENSORPLAN.md`)
+  (see `Docs/TENSORPLAN.md` and the user guide `Docs/TENSORHELP.md`)
 - Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
   (`Quantum/Dirac.swift`, demonstrated in playground page `08BraKet`)
 - Bell State example
@@ -58,5 +58,5 @@ The project is actively evolving, and major features are planned.
       playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`).
 - [x] Tensor (Kronecker) products in Core: `tensor(_:)` / `⊗` on `Matrix` and
       `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
-      — with `TensorProductTests.swift`, playground page `09Tensor`, and the
-      design notes in `Docs/TENSORPLAN.md`.
+      — with `TensorProductTests.swift`, playground page `09Tensor`, the
+      design notes in `Docs/TENSORPLAN.md`, and the user guide `Docs/TENSORHELP.md`.

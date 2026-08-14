@@ -19,7 +19,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 - ✅ Tensor products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`  
 - ✅ Dirac (bra–ket) notation: `Ket`/`Bra`, postfix `†` (dagger), inner & outer products  
 - ✅ State vector simulation  
-- ✅ Quantum gates:
+- ✅ Quantum gates (see the gate tables below):
   - Hadamard (H)
   - Pauli-X (X)
   - Pauli-Z (Z)
@@ -28,6 +28,31 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 - ✅ Quantum circuit abstraction  
 - ✅ Measurement & state collapse  
 - ✅ Bell State (Entanglement) example  
+
+---
+
+##  Quantum Gates
+
+**Built-in gates** — each is a `public enum` in `Sources/SwiftQiskitCore/Gates/` exposing
+`static let matrix: Matrix`, with a matching convenience method on `QuantumCircuit`:
+
+| Gate | Circuit API | Type | Used in |
+|------|-------------|------|---------|
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all four test suites; playground pages 01, 03, 05, 08–11 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 01, 05, 08–11 |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`; pages 01, 04, 05, 08 |
+| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 01, 03, 08–11 |
+
+**Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
+compositions and applied with `circuit.apply(_:)`; not (yet) part of Core. Pauli-Y and
+phase/rotation gates are on the roadmap (see [STATUSandTODO.md](STATUSandTODO.md)):
+
+| Gate | Built from | Where |
+|------|------------|-------|
+| Pauli-Y (Y) | raw 2×2 `Matrix` | page 08 (expectation value ⟨ψ\|Y\|ψ⟩); `DiracNotationTests` (adjoint of a non-symmetric matrix) |
+| Identity / hand-rolled X | raw `Matrix`/`Complex` values | page 04 |
+| CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator) |
+| CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 
 ---
 
@@ -75,9 +100,15 @@ SwiftQiskit/
 │   └── SwiftQiskitCoreTests/
 │       ├── BellStateTests.swift
 │       ├── TensorProductTests.swift
-│       └── DiracNotationTests.swift
+│       ├── DiracNotationTests.swift
+│       └── CNOTTests.swift
 ├── Docs/
-│   └── TENSORPLAN.md
+│   ├── TENSORPLAN.md
+│   ├── TENSORHELP.md
+│   ├── DEUTSCHPLAN.md
+│   ├── DEUTSCHHELP.md
+│   ├── GROVERPLAN.md
+│   └── GROVERHELP.md
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
 │   └── Pages/
@@ -88,7 +119,9 @@ SwiftQiskit/
 │       ├── 06BlochSphere2D+Projections
 │       ├── 07BlochSphere3D
 │       ├── 08BraKet
-│       └── 09Tensor
+│       ├── 09Tensor
+│       ├── 10DeutschExample
+│       └── 11GroverExample
 └── References (tbd)
 └── Package.swift
 ```
@@ -259,6 +292,40 @@ Tensor-product walkthrough (console only), mirroring
   `circuit.h(0)` applies across a 2-qubit register.
 - **Entanglement** — why the Bell state cannot be factored as a tensor product
   of single-qubit states.
+
+Design notes in `Docs/TENSORPLAN.md`; user guide in `Docs/TENSORHELP.md`.
+
+### 10DeutschExample
+
+Deutsch's algorithm (console only) — deciding whether a black-box function
+f: {0,1} → {0,1} is constant or balanced with a *single* oracle query:
+
+- **The four oracles** — every 1-bit function's oracle U_f built from gates the
+  library already has: identity, `x(1)`, `cx(0,1)`, and `cx(0,1)` + `x(1)`.
+- **Phase kickback** — a stage-by-stage state-vector walkthrough showing how the
+  |−⟩ ancilla turns the oracle into a phase (−1)^f(x) on the input qubit.
+- **Deterministic verdict** — the final Hadamard maps the phase to qubit 0, so one
+  measurement reads off constant (0) vs balanced (1) with certainty, confirmed for
+  all four oracles and backed by shot statistics.
+
+Design notes in `Docs/DEUTSCHPLAN.md`; user guide in `Docs/DEUTSCHHELP.md`.
+
+### 11GroverExample
+
+Grover's search (console only) — finding a marked basis state with quadratically
+fewer oracle queries:
+
+- **CZ from existing gates** — the controlled-Z built as `h(1); cx(0,1); h(1)`, then
+  conjugated by X gates to make a phase oracle for *any* marked state |w⟩.
+- **Inversion about the mean** — an amplitude-by-amplitude walkthrough of one Grover
+  iteration, with exact 1-iteration success on 2 qubits and what happens when you
+  over-rotate by iterating further.
+- **The diffusion operator in Dirac notation** — 2|s⟩⟨s| − I assembled directly from
+  the outer product in `Quantum/Dirac.swift` and checked against the gate construction.
+- **3-qubit finale** — Grover on 8 states using a hand-built CCZ matrix applied via
+  `apply(_:)`, with the theoretical success probability after each iteration.
+
+Design notes in `Docs/GROVERPLAN.md`; user guide in `Docs/GROVERHELP.md`.
 
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's
