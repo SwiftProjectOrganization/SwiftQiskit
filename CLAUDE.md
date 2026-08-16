@@ -71,7 +71,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   `BlochExplorerView`.
 - `08BraKet` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
   projectors, adjoints, and the page-07 initial qubit's Bloch coordinates as Pauli
-  expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`.
+  expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`
+  (user guide in `Docs/DIRACHELP.md`).
 - `09Tensor` — tensor-product walkthrough (console only) mirroring
   `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
   `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and

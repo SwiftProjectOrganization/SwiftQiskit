@@ -25,7 +25,8 @@ The project is actively evolving, and major features are planned.
 - Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
   (see `Docs/TENSORPLAN.md` and the user guide `Docs/TENSORHELP.md`)
 - Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
-  (`Quantum/Dirac.swift`, demonstrated in playground page `08BraKet`)
+  (`Quantum/Dirac.swift`, demonstrated in playground page `08BraKet`;
+  user guide `Docs/DIRACHELP.md`)
 - Bell State example
 - Unit tests for correctness
 
@@ -54,8 +55,9 @@ The project is actively evolving, and major features are planned.
 ## Bra/ket & tensor-product additions (this fork)
 
 - [x] Dirac notation in Core (`Quantum/Dirac.swift`): `Ket`/`Bra`, postfix `†`,
-      inner/outer products, basis kets — with `DiracNotationTests.swift` and
-      playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`).
+      inner/outer products, basis kets — with `DiracNotationTests.swift`,
+      playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`),
+      and the user guide `Docs/DIRACHELP.md`.
 - [x] Tensor (Kronecker) products in Core: `tensor(_:)` / `⊗` on `Matrix` and
       `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
       — with `TensorProductTests.swift`, playground page `09Tensor`, the

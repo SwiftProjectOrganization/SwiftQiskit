@@ -105,6 +105,7 @@ SwiftQiskit/
 │       ├── DiracNotationTests.swift
 │       └── CNOTTests.swift
 ├── Docs/
+│   ├── DIRACHELP.md
 │   ├── TENSORPLAN.md
 │   ├── TENSORHELP.md
 │   ├── DEUTSCHPLAN.md
@@ -285,6 +286,8 @@ Dirac-notation walkthrough of `Quantum/Dirac.swift`:
 - **Expectation values** — recovers the page-07 initial qubit's Bloch coordinates
   as the Pauli expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static
   `Bloch3DView`.
+
+User guide in `Docs/DIRACHELP.md`.
 
 ### 09Tensor
 

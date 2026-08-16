@@ -34,6 +34,10 @@ print("\n(|+⟩†)† == |+⟩ → \((plus†)† == plus)")
 // Bra * Ket is the inner product — a single Complex amplitude
 // measuring the overlap of two states.
 
+Bra("0")
+Ket("0")
+Bra("0") * Ket("0")
+
 print("\n⟨0|0⟩ = \(Bra("0") * Ket("0"))")
 // Expected: 1.0 — basis states are normalized …
 print("⟨0|1⟩ = \(Bra("0") * Ket("1"))")

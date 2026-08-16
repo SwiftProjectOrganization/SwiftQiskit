@@ -27,7 +27,8 @@ let tolerance = 1e-10
 // is exactly 0 or 1.
 
 let i2 = Matrix.identity(size: 2)
-print("I₂ ⊗ I₂ == I₄ → \(i2 ⊗ i2 == Matrix.identity(size: 4))")
+let i4 = Matrix.identity(size: 4)
+print("I₂ ⊗ I₂ == I₄ → \(i2 ⊗ i2 == i4)")
 // Expected: true
 
 // ============================================================
