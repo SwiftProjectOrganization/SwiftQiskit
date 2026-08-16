@@ -66,6 +66,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `05BlochSphere2D`, `06BlochSphere2D+Projections` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
+  (User guide for page 05 in `Docs/BLOCH2DHELP.md`, which also documents the general
+  live-view recipe for playground pages.)
 - `07BlochSphere3D` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView`.

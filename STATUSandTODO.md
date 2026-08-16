@@ -51,6 +51,10 @@ The project is actively evolving, and major features are planned.
       rendered state vector interactively.
       → page `07BlochSphere3D`; the θ/φ parametrization keeps |α|² + |β|² = 1
       for every slider position, so the two sliders are independent.
+- [x] User guide for the 2D Bloch sphere page — `Docs/BLOCH2DHELP.md`: the Bloch map
+      α, β → (x, y, z), page walkthrough and exact expected output, how the oblique
+      projection reads, and the general recipe for putting a SwiftUI live view on a
+      playground page (explicit root frame, stateless-inline vs. `@State`-in-`Sources/`).
 
 ## Bra/ket & tensor-product additions (this fork)
 

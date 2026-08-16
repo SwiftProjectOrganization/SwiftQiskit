@@ -105,6 +105,7 @@ SwiftQiskit/
 │       ├── DiracNotationTests.swift
 │       └── CNOTTests.swift
 ├── Docs/
+│   ├── BLOCH2DHELP.md
 │   ├── DIRACHELP.md
 │   ├── TENSORPLAN.md
 │   ├── TENSORHELP.md
@@ -243,6 +244,9 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
 - **Gallery** — four canonical states built with real circuits and shown side by side:
   |0⟩ (north pole), |1⟩ via Pauli-X (south pole), |+⟩ via Hadamard (+x axis), and
   |−⟩ via Hadamard + Pauli-Z (−x axis). The same vectors are also printed to the console.
+
+User guide in `Docs/BLOCH2DHELP.md`, including the general recipe for putting a SwiftUI
+live view on a playground page.
 
 ### 06BlochSphere2D+Projections
 
