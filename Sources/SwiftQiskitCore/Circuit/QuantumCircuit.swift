@@ -96,10 +96,100 @@ public extension QuantumCircuit {
         )
         apply(full)
     }
+    /// Apply Pauli-Y gate to a specific qubit
+    func y(_ qubit: Int) {
+        let full = embedSingleQubitGate(
+            PauliYGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
     /// Apply Pauli-Z gate to a specific qubit
     func z(_ qubit: Int) {
         let full = embedSingleQubitGate(
             PauliZGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply S gate (phase π/2) to a specific qubit
+    func s(_ qubit: Int) {
+        let full = embedSingleQubitGate(
+            SGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply S† gate (phase -π/2) to a specific qubit
+    func sdg(_ qubit: Int) {
+        let full = embedSingleQubitGate(
+            SDaggerGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply T gate (phase π/4) to a specific qubit
+    func t(_ qubit: Int) {
+        let full = embedSingleQubitGate(
+            TGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply T† gate (phase -π/4) to a specific qubit
+    func tdg(_ qubit: Int) {
+        let full = embedSingleQubitGate(
+            TDaggerGate.matrix,
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply phase gate P(θ) to a specific qubit
+    func p(_ theta: Double, _ qubit: Int) {
+        let full = embedSingleQubitGate(
+            PhaseGate.matrix(theta: theta),
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply rotation RX(θ) about the X axis to a specific qubit
+    func rx(_ theta: Double, _ qubit: Int) {
+        let full = embedSingleQubitGate(
+            RXGate.matrix(theta: theta),
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply rotation RY(θ) about the Y axis to a specific qubit
+    func ry(_ theta: Double, _ qubit: Int) {
+        let full = embedSingleQubitGate(
+            RYGate.matrix(theta: theta),
+            qubits: qubits,
+            target: qubit
+        )
+        apply(full)
+    }
+
+    /// Apply rotation RZ(θ) about the Z axis to a specific qubit
+    func rz(_ theta: Double, _ qubit: Int) {
+        let full = embedSingleQubitGate(
+            RZGate.matrix(theta: theta),
             qubits: qubits,
             target: qubit
         )

@@ -17,7 +17,9 @@ The project is actively evolving, and major features are planned.
 ## What Works (v0.1)
 
 - QuantumCircuit abstraction
-- Single-qubit gates: H, X, Z
+- Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and
+  rotations RX(θ)/RY(θ)/RZ(θ) — circuit methods `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz`
+  (tested in `AdditionalGatesTests.swift`)
 - General multi-qubit CNOT: `cx(control, target)` for any distinct pair of qubits
   (`CNOTGate.matrix(qubits:control:target:)`, tested in `CNOTTests.swift`)
 - StateVector simulation
@@ -33,7 +35,10 @@ The project is actively evolving, and major features are planned.
 ## Roadmap
 
 - [x] General multi-qubit CNOT support
-- [ ] Additional gates (Y, Phase, Rotation gates)
+- [x] Additional gates (Y, Phase, Rotation gates)
+      → `Gates/PauliY.swift`, `Gates/Phase.swift` (P(θ), S, S†, T, T†),
+      `Gates/Rotation.swift` (RX/RY/RZ); circuit API `y/s/sdg/t/tdg/p/rx/ry/rz`,
+      tested in `AdditionalGatesTests.swift`
 - [ ] Circuit visualization (ASCII / SwiftUI)
 - [ ] Noise models
 - [ ] Performance optimizations
