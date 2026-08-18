@@ -34,6 +34,25 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 
 ---
 
+##  Special Qubit States
+
+Named single-qubit basis kets, defined as `Ket` (= `StateVector`) constants in
+`Sources/SwiftQiskitCore/Quantum/Dirac.swift`:
+
+| Constant | State | Definition | Bloch sphere |
+|----------|-------|------------|--------------|
+| `.zero` | \|0⟩ | (1, 0) | +z (north pole) |
+| `.one` | \|1⟩ | (0, 1) | −z (south pole) |
+| `.plus` | \|+⟩ | (\|0⟩ + \|1⟩)/√2 | +x |
+| `.minus` | \|−⟩ | (\|0⟩ − \|1⟩)/√2 | −x |
+| `.plusI` | \|i⟩ | (\|0⟩ + i\|1⟩)/√2 | +y |
+| `.minusI` | \|−i⟩ | (\|0⟩ − i\|1⟩)/√2 | −y |
+
+Multi-qubit basis kets come from the binary-label initializer, e.g. `Ket("01")` = |01⟩
+(qubit 0 is the most-significant bit), with `Bra("01")` as the matching bra.
+
+---
+
 ##  Quantum Gates
 
 **Built-in gates** — each is a `public enum` in `Sources/SwiftQiskitCore/Gates/` exposing
