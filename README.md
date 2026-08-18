@@ -85,6 +85,32 @@ compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 
 ---
 
+##  Special Operators
+
+Custom operators on the quantum types (`Ket` = `StateVector`): the postfix dagger `†` is
+declared in `Sources/SwiftQiskitCore/Quantum/Dirac.swift`, and the infix tensor product `⊗`
+(at `MultiplicationPrecedence`) in `Sources/SwiftQiskitCore/Math/Matrix.swift`:
+
+| Operator | Expression | Result | Meaning | Defined in |
+|----------|------------|--------|---------|------------|
+| `†` | `Ket†` | `Bra` | ⟨ψ\| = (\|ψ⟩)† | `Quantum/Dirac.swift` |
+| `†` | `Bra†` | `Ket` | \|ψ⟩ = (⟨ψ\|)† | `Quantum/Dirac.swift` |
+| `†` | `Matrix†` | `Matrix` | adjoint U† (also `Matrix.adjoint`) | `Quantum/Dirac.swift` |
+| `⊗` | `Matrix ⊗ Matrix` | `Matrix` | Kronecker product A ⊗ B (also `tensor(_:)`) | `Math/Matrix.swift` |
+| `⊗` | `Ket ⊗ Ket` | `Ket` | \|a⟩ ⊗ \|b⟩ — combines registers, lhs in the high-order bits (also `tensor(_:)`) | `Quantum/StateVector.swift` |
+| `⊗` | `Bra ⊗ Bra` | `Bra` | ⟨a\| ⊗ ⟨b\| (also `tensor(_:)`) | `Quantum/Dirac.swift` |
+| `⊗` | `Ket ⊗ Bra` | `Matrix` | mixed product = the outer product \|a⟩⟨b\| | `Quantum/Dirac.swift` |
+| `⊗` | `Bra ⊗ Ket` | `Matrix` | mixed product ⟨a\| ⊗ \|b⟩ = \|b⟩⟨a\| | `Quantum/Dirac.swift` |
+| `*` | `Bra * Ket` | `Complex` | inner product ⟨φ\|ψ⟩ | `Quantum/Dirac.swift` |
+| `*` | `Ket * Bra` | `Matrix` | outer product \|ψ⟩⟨φ\| | `Quantum/Dirac.swift` |
+| `*` | `Bra * Matrix` | `Bra` | ⟨ψ\|U — enables expectation values `ψ† * U * ψ` | `Quantum/Dirac.swift` |
+| `*` | `Matrix * Matrix` | `Matrix` | matrix product AB | `Math/Matrix.swift` |
+
+Scalar `Complex` arithmetic (`+ - * /` and `Double` scaling) lives in `Math/Complex.swift`
+and is not listed here — it acts on numbers, not on qubit states or gates.
+
+---
+
 ##  Design Philosophy
 
 * No hidden magic — everything is **explicit and readable**
