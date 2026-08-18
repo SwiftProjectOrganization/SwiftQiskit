@@ -34,6 +34,13 @@ The identities the page demonstrates:
   Hermitian (U† = U), which is why their expectation values ⟨ψ|U|ψ⟩ are real numbers.
 - **Dagger distributes over ⊗** — (|a⟩ ⊗ |b⟩)† = ⟨a| ⊗ ⟨b|, exactly (conjugation doesn't
   touch the doubles, and re-normalizing a normalized state is a no-op).
+- **Mixed tensor products are outer products** — |a⟩ ⊗ ⟨b| = |a⟩⟨b| and ⟨a| ⊗ |b⟩ = |b⟩⟨a|.
+  Both `Ket ⊗ Bra` and `Bra ⊗ Ket` return the outer-product `Matrix`. This is not a
+  convention choice but the literal Kronecker product: a column (m×1) ⊗ a row (1×n) is an
+  m×n matrix with entries aᵢb̄ⱼ — exactly |a⟩⟨b| — while a row ⊗ a column puts the ket back
+  in the columns, which is why the operands swap in ⟨a| ⊗ |b⟩ = |b⟩⟨a|. The operands may
+  live in registers of different sizes, so the result need not be square
+  (e.g. `Ket("10") ⊗ Bra("0")` is 4×2).
 
 ## The page's sections
 
@@ -131,9 +138,13 @@ Reading notes:
 - **The last four lines agree by construction** — ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩ are the Bloch
   coordinates, and `BlochVector` (shared playground `Sources/`) computes the same point from
   the amplitudes directly: x = 2·Re(ᾱβ), y = 2·Im(ᾱβ), z = |α|² − |β|².
-- Section 2 also has three bare expression lines (`Bra("0")`, `Ket("0")`,
-  `Bra("0") * Ket("0")`) whose values appear only in the playground results sidebar, not
-  the console.
+- Section 2 also has six bare expression lines (`Bra("0")`, `Ket("0")`, and the products
+  `Bra("0") * Ket("0")`, `Ket("0") * Bra("0")`, `Bra("0") ⊗ Bra("0")`,
+  `Ket("0") ⊗ Bra("0")`) whose values appear only in the playground results sidebar, not
+  the console. The last line previews the mixed tensor product: `Ket ⊗ Bra` produces the
+  same `Matrix` as the outer product `Ket * Bra` directly above it (mirrored by the
+  `Ket tensor Bra equals the outer product` / `Bra tensor Ket swaps the outer product` /
+  `Mixed tensor product allows different dimensions` unit tests).
 
 ## Using Dirac notation in your own code
 
@@ -150,6 +161,8 @@ let p0 = (Bra("0") * psi).magnitudeSquared  // Born rule: P(0) = |⟨0|ψ⟩|²
 
 // Projectors from outer products
 let projector = Ket.zero * Ket.zero†        // |0⟩⟨0| — a Matrix
+let sameThing = Ket.zero ⊗ Ket.zero†        // column ⊗ row is the outer product
+                                            // (Bra ⊗ Ket also works: ⟨a|⊗|b⟩ = |b⟩⟨a|)
 
 // Expectation values read like the math (Bra * Matrix returns a Bra)
 let expZ = psi† * PauliZGate.matrix * psi   // ⟨ψ|Z|ψ⟩ — real for Hermitian Z
@@ -178,7 +191,10 @@ and ⊗ concatenates labels with the left operand in the high-order bits.
   as a postfix operator in `Quantum/Dirac.swift`. ASCII equivalents: `Bra(ket)` for `ket†`,
   `bra.ket` for `bra†`, and `matrix.adjoint` for `matrix†`.
 - **Can't type `⊗`** — U+2297 (circled times), declared in `Math/Matrix.swift`; the method
-  spelling is `a.tensor(b)` (also available on `Bra`).
+  spelling is `a.tensor(b)` (also available on `Bra`). The mixed `Ket ⊗ Bra` / `Bra ⊗ Ket`
+  overloads live in `Quantum/Dirac.swift` and have no `tensor` method spelling — use the
+  equivalent outer product (`ket * bra`, or `ket * bra` with the operands swapped for
+  `Bra ⊗ Ket`).
 - **`Ket("2")` traps** — labels must be non-empty binary strings; the initializer guards
   this with a `precondition`.
 - **⟨ψ|U looks wrong when printed** — after `Bra * Matrix` the row vector is generally not

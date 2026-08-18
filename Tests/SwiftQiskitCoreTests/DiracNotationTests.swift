@@ -97,4 +97,22 @@ struct DiracNotationTests {
         let rhs = (Ket.plus ⊗ Ket.one)†
         #expect(lhs == rhs)
     }
+
+    /// Test |a⟩ ⊗ ⟨b| = |a⟩⟨b| — column ⊗ row is the outer product
+    @Test func `Ket tensor Bra equals the outer product`() {
+        #expect(Ket("0") ⊗ Bra("0") == Ket.zero * Ket.zero†)
+        #expect(Ket.plus ⊗ Ket.minusI† == Ket.plus * Ket.minusI†)
+    }
+
+    /// Test ⟨a| ⊗ |b⟩ = |b⟩⟨a| — row ⊗ column puts the ket back in the columns
+    @Test func `Bra tensor Ket swaps the outer product`() {
+        #expect(Ket.plus† ⊗ Ket.one == Ket.one * Ket.plus†)
+    }
+
+    /// Test mixed tensor products of different register sizes have the right shape
+    @Test func `Mixed tensor product allows different dimensions`() {
+        let outer = Ket("10") ⊗ Bra("0")
+        #expect(outer.rows == 4)
+        #expect(outer.cols == 2)
+    }
 }

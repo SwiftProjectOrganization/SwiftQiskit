@@ -184,6 +184,21 @@ public extension Bra {
     static func ⊗ (lhs: Bra, rhs: Bra) -> Bra {
         lhs.tensor(rhs)
     }
+
+    /// Mixed tensor product ⟨a| ⊗ |b⟩ = |b⟩⟨a| — the Kronecker product of a
+    /// row vector with a column vector puts the ket back in the columns.
+    static func ⊗ (lhs: Bra, rhs: StateVector) -> Matrix {
+        rhs * lhs
+    }
+}
+
+public extension StateVector {
+
+    /// Mixed tensor product |a⟩ ⊗ ⟨b| — the Kronecker product of a column
+    /// vector with a row vector, i.e. exactly the outer product |a⟩⟨b|.
+    static func ⊗ (lhs: StateVector, rhs: Bra) -> Matrix {
+        lhs * rhs
+    }
 }
 
 // MARK: - CustomStringConvertible

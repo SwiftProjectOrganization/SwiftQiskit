@@ -37,6 +37,10 @@ print("\n(|+⟩†)† == |+⟩ → \((plus†)† == plus)")
 Bra("0")
 Ket("0")
 Bra("0") * Ket("0")
+Ket("0") * Bra("0")
+Bra("0") ⊗ Bra("0")
+Ket("0") ⊗ Bra("0")
+
 
 print("\n⟨0|0⟩ = \(Bra("0") * Ket("0"))")
 // Expected: 1.0 — basis states are normalized …

@@ -51,7 +51,8 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string.
 - `Quantum/Dirac.swift` — Dirac notation: `Ket` (typealias of `StateVector`), `Bra`
   (conjugated row vector), postfix `†` (dagger; also `Matrix.adjoint`), `*` overloads for
-  inner (`Bra * Ket`) / outer (`Ket * Bra`) products, basis kets `Ket("01")` /
+  inner (`Bra * Ket`) / outer (`Ket * Bra`) products, mixed `⊗` overloads (`Ket ⊗ Bra` /
+  `Bra ⊗ Ket`, both returning the outer-product `Matrix`), basis kets `Ket("01")` /
   `.zero/.one/.plus/.minus/.plusI/.minusI`.
 
 ## Xcode Playgrounds
