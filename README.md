@@ -22,7 +22,10 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 - ✅ Quantum gates (see the gate tables below):
   - Hadamard (H)
   - Pauli-X (X)
+  - Pauli-Y (Y)
   - Pauli-Z (Z)
+  - Phase gates: S, S†, T, T†, and the general P(θ)
+  - Rotations: RX(θ), RY(θ), RZ(θ)
   - CNOT (Controlled-NOT)
 - ✅ Single-qubit gate embedding  
 - ✅ Quantum circuit abstraction  
@@ -34,23 +37,28 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 ##  Quantum Gates
 
 **Built-in gates** — each is a `public enum` in `Sources/SwiftQiskitCore/Gates/` exposing
-`static let matrix: Matrix`, with a matching convenience method on `QuantumCircuit`:
+`static let matrix: Matrix` (parameterized gates expose `static func matrix(theta:)`),
+with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all four test suites; playground pages 01, 03, 05, 08–12 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 01, 05, 08–12 |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`; pages 01, 04, 05, 08 |
-| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 01, 03, 08–11 |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 02, 05, 07–12 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 02, 07–12 |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; page 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩) |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`; pages 02, 06–08 |
+| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; page 02 (the \|±i⟩ states) |
+| T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests` |
+| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests` |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests` |
+| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11 |
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
-compositions and applied with `circuit.apply(_:)`; not (yet) part of Core. Pauli-Y and
-phase/rotation gates are on the roadmap (see [STATUSandTODO.md](STATUSandTODO.md)):
+compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 
 | Gate | Built from | Where |
 |------|------------|-------|
-| Pauli-Y (Y) | raw 2×2 `Matrix` | page 08 (expectation value ⟨ψ\|Y\|ψ⟩); `DiracNotationTests` (adjoint of a non-symmetric matrix) |
-| Identity / hand-rolled X | raw `Matrix`/`Complex` values | page 04 |
+| Pauli-Y (Y) | raw 2×2 `Matrix` | `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`) |
+| Identity / hand-rolled X | raw `Matrix`/`Complex` values | page 06 |
 | CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator) |
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
@@ -105,25 +113,27 @@ SwiftQiskit/
 │       ├── DiracNotationTests.swift
 │       └── CNOTTests.swift
 ├── Docs/
-│   ├── BLOCH2DHELP.md
-│   ├── DIRACHELP.md
-│   ├── TENSORPLAN.md
-│   ├── TENSORHELP.md
-│   ├── DEUTSCHPLAN.md
-│   ├── DEUTSCHHELP.md
-│   ├── GROVERPLAN.md
-│   ├── GROVERHELP.md
-│   ├── SHORPLAN.md
-│   └── SHORHELP.md
+│   ├── 02BLOCH2DHELP.md
+│   ├── 08DIRACHELP.md
+│   ├── 09TENSORPLAN.md
+│   ├── 09TENSORHELP.md
+│   ├── 10DEUTSCHPLAN.md
+│   ├── 10DEUTSCHHELP.md
+│   ├── 11GROVERPLAN.md
+│   ├── 11GROVERHELP.md
+│   ├── 12SHORPLAN.md
+│   └── 12SHORHELP.md
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
 │   └── Pages/
-│       ├── 01BellExample
-│       ├── 02Lecture_01
-│       ├── ...
-│       ├── 05BlochSphere2D
-│       ├── 06BlochSphere2D+Projections
-│       ├── 07BlochSphere3D
+│       ├── 00TOC
+│       ├── 01Qubits
+│       ├── 02Bloch2d
+│       ├── 03Bloch2dProjection
+│       ├── 04Bloch3d
+│       ├── 05Gates
+│       ├── 06Superposition
+│       ├── 07Entanglement
 │       ├── 08BraKet
 │       ├── 09Tensor
 │       ├── 10DeutschExample
@@ -214,25 +224,18 @@ Code shared by multiple pages (the Bloch-sphere types and views) lives in the pl
 `Sources/` folder — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for how that works and
 what is available.
 
-### 01BellExample
+### 00TOC
 
-Annotated walkthrough of the Bell state |Φ⁺⟩: builds the circuit (`h` + `cx`), inspects the
-resulting state vector and its amplitudes/probabilities, and runs a 1000-shot measurement.
+Clickable table of contents (markdown only): links to every page with a one-line
+description, plus pointers to the guides in `Docs/`.
 
-### 02Lecture_01
+### 01Qubits
 
-Minimal Bell-state circuit: run, print amplitudes, and measure 1024 shots. TBD.
+First look at qubit states through the Dirac API, shown in the results sidebar (no
+console output): building `Ket`s from amplitudes, the dagger `†`, inner and outer
+products, probabilities, and tensoring a ket with itself. Content provisional.
 
-### 03Lecture_03
-
-Introduces `StateVector` directly and its `probabilities` property. TBD.
-
-### 04Lecture_04
-
-Building custom gates from raw `Matrix`/`Complex` values (Identity and a hand-rolled Pauli-X)
-and applying them via `circuit.apply(_:)`. TBD.
-
-### 05BlochSphere2D
+### 02Bloch2d
 
 Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` live view.
 
@@ -241,14 +244,15 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
   reusing the `Complex` arithmetic from `SwiftQiskitCore`.
 - **Rendering** — a 2D orthographic projection of the sphere with axes, drawn by the
   shared `BlochSphereView`, each sphere accompanied by a numeric readout.
-- **Gallery** — four canonical states built with real circuits and shown side by side:
-  |0⟩ (north pole), |1⟩ via Pauli-X (south pole), |+⟩ via Hadamard (+x axis), and
-  |−⟩ via Hadamard + Pauli-Z (−x axis). The same vectors are also printed to the console.
+- **Gallery** — six canonical states built with real circuits and shown side by side:
+  |0⟩ (north pole), |1⟩ via Pauli-X (south pole), |+⟩ via Hadamard (+x axis),
+  |−⟩ via Hadamard + Pauli-Z (−x axis), |+i⟩ via Hadamard + S (+y axis), and
+  |−i⟩ via Hadamard + S† (−y axis). The same vectors are also printed to the console.
 
-User guide in `Docs/BLOCH2DHELP.md`, including the general recipe for putting a SwiftUI
+User guide in `Docs/02BLOCH2DHELP.md`, including the general recipe for putting a SwiftUI
 live view on a playground page.
 
-### 06BlochSphere2D+Projections
+### 03Bloch2dProjection
 
 A *general* single-qubit state, tilted off the equator of the Bloch sphere (45° from x,
 60° from y and z), explored in depth.
@@ -260,7 +264,7 @@ A *general* single-qubit state, tilted off the equator of the Bloch sphere (45°
 - **Live view** — the state on a large Bloch sphere plus two **plane projections**
   (x–y seen from +z, z–y seen from +x) drawn by the shared `BlochProjectionView`.
 
-### 07BlochSphere3D
+### 04Bloch3d
 
 An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure SwiftUI
 `Canvas` (no SceneKit/RealityKit), plus live sliders for the spherical angles.
@@ -278,6 +282,24 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
   `libcups.dylib` in DerivedData, and keeping `@State`-based views in the playground's
   `Sources/` folder (which is why the slider view `BlochExplorerView` lives there).
 
+### 05Gates
+
+The Bell circuit built step by step in the results sidebar: `QuantumCircuit(qubits: 2)`,
+`h(0)`, `cx(0, 1)`, then the `run()` state's amplitudes and probabilities and a
+2000-shot measurement. Content provisional.
+
+### 06Superposition
+
+Building custom gates from raw `Matrix`/`Complex` values (Identity and a hand-rolled Pauli-X)
+and applying them via `circuit.apply(_:)`. Content provisional.
+
+### 07Entanglement
+
+Annotated walkthrough of the Bell state |Φ⁺⟩: builds the circuit (`h` + `cx`), inspects the
+resulting state vector and its amplitudes/probabilities, and runs a 1000-shot measurement.
+A GHZ section extends the recipe to 3 qubits — `cx(0, 2)` spans non-adjacent qubits — and
+the page closes with single-qubit gate demos and a tour of the `Complex`/`Matrix` types.
+
 ### 08BraKet
 
 Dirac-notation walkthrough of `Quantum/Dirac.swift`:
@@ -287,11 +309,11 @@ Dirac-notation walkthrough of `Quantum/Dirac.swift`:
   into a `Bra` (and gives `Matrix.adjoint`).
 - **Products** — inner products `Bra * Ket` (orthonormality checks) and outer
   products `Ket * Bra` (projectors, completeness).
-- **Expectation values** — recovers the page-07 initial qubit's Bloch coordinates
+- **Expectation values** — recovers the page-04 initial qubit's Bloch coordinates
   as the Pauli expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static
   `Bloch3DView`.
 
-User guide in `Docs/DIRACHELP.md`.
+User guide in `Docs/08DIRACHELP.md`.
 
 ### 09Tensor
 
@@ -305,7 +327,7 @@ Tensor-product walkthrough (console only), mirroring
 - **Entanglement** — why the Bell state cannot be factored as a tensor product
   of single-qubit states.
 
-Design notes in `Docs/TENSORPLAN.md`; user guide in `Docs/TENSORHELP.md`.
+Design notes in `Docs/09TENSORPLAN.md`; user guide in `Docs/09TENSORHELP.md`.
 
 ### 10DeutschExample
 
@@ -320,7 +342,7 @@ f: {0,1} → {0,1} is constant or balanced with a *single* oracle query:
   measurement reads off constant (0) vs balanced (1) with certainty, confirmed for
   all four oracles and backed by shot statistics.
 
-Design notes in `Docs/DEUTSCHPLAN.md`; user guide in `Docs/DEUTSCHHELP.md`.
+Design notes in `Docs/10DEUTSCHPLAN.md`; user guide in `Docs/10DEUTSCHHELP.md`.
 
 ### 11GroverExample
 
@@ -337,7 +359,7 @@ fewer oracle queries:
 - **3-qubit finale** — Grover on 8 states using a hand-built CCZ matrix applied via
   `apply(_:)`, with the theoretical success probability after each iteration.
 
-Design notes in `Docs/GROVERPLAN.md`; user guide in `Docs/GROVERHELP.md`.
+Design notes in `Docs/11GROVERPLAN.md`; user guide in `Docs/11GROVERHELP.md`.
 
 ### 12ShorExample
 
@@ -358,7 +380,7 @@ with a 3-qubit counting register and a 4-qubit work register:
   gcd factors, then a sweep of every coprime base including the instructive a = 14
   failure (a^(r/2) ≡ −1).
 
-Design notes in `Docs/SHORPLAN.md`; user guide in `Docs/SHORHELP.md`.
+Design notes in `Docs/12SHORPLAN.md`; user guide in `Docs/12SHORHELP.md`.
 
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's

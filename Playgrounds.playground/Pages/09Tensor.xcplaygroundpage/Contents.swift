@@ -10,7 +10,7 @@ import SwiftQiskitCore
 // composite systems: matrices combine into multi-qubit gates, and
 // state vectors combine into multi-qubit registers. Core exposes it
 // as `tensor(_:)` / `⊗` on both Matrix and StateVector (design notes
-// in Docs/TENSORPLAN.md).
+// in Docs/09TENSORPLAN.md).
 //
 // Each section below mirrors one test in
 // Tests/SwiftQiskitCoreTests/TensorProductTests.swift, turning its
@@ -154,7 +154,7 @@ print("max amplitude difference vs circuit h(0): \(maxStateDiff)")
 //
 //   α₀₀·α₁₁ = α₀₁·α₁₀     (both equal abcd)
 //
-// The Bell state |Φ⁺⟩ from page 01 violates this — no choice of
+// The Bell state |Φ⁺⟩ from page 07 violates this — no choice of
 // single-qubit states tensors into it. That is entanglement, and it
 // is why cx (unlike h/x/z) cannot be embedded one qubit at a time.
 

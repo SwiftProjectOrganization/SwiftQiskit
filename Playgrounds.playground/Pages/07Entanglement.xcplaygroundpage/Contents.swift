@@ -1,3 +1,5 @@
+//: [Previous](@previous)
+
 import SwiftQiskitCore
 
 // ============================================================
@@ -134,3 +136,5 @@ let xCircuit2 = QuantumCircuit(qubits: 1)
 xCircuit2.apply(customX)
 print("\nCustom X gate applied to |0⟩ → probabilities: \(xCircuit2.run().probabilities)")
 // Expected: [0.0, 1.0]
+
+//: [Next](@next)

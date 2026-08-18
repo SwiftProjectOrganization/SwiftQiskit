@@ -25,10 +25,10 @@ The project is actively evolving, and major features are planned.
 - StateVector simulation
 - Measurement with shots & counts
 - Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
-  (see `Docs/TENSORPLAN.md` and the user guide `Docs/TENSORHELP.md`)
+  (see `Docs/09TENSORPLAN.md` and the user guide `Docs/09TENSORHELP.md`)
 - Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
   (`Quantum/Dirac.swift`, demonstrated in playground page `08BraKet`;
-  user guide `Docs/DIRACHELP.md`)
+  user guide `Docs/08DIRACHELP.md`)
 - Bell State example
 - Unit tests for correctness
 
@@ -50,13 +50,13 @@ The project is actively evolving, and major features are planned.
       SwiftUI Canvas) as an alternative to the current 2D projections in
       `Playgrounds.playground/Sources/BlochSphereView.swift`.
       → `Bloch3DView` (perspective-projected SwiftUI Canvas with drag-to-orbit),
-      used by page `07BlochSphere3D`.
+      used by page `04Bloch3d`.
 - [x] Add constrained live sliders for the spherical angles θ and φ to the
       Bloch sphere live display (θ ∈ [0, π], φ ∈ [0, 2π)), updating the
       rendered state vector interactively.
-      → page `07BlochSphere3D`; the θ/φ parametrization keeps |α|² + |β|² = 1
+      → page `04Bloch3d`; the θ/φ parametrization keeps |α|² + |β|² = 1
       for every slider position, so the two sliders are independent.
-- [x] User guide for the 2D Bloch sphere page — `Docs/BLOCH2DHELP.md`: the Bloch map
+- [x] User guide for the 2D Bloch sphere page — `Docs/02BLOCH2DHELP.md`: the Bloch map
       α, β → (x, y, z), page walkthrough and exact expected output, how the oblique
       projection reads, and the general recipe for putting a SwiftUI live view on a
       playground page (explicit root frame, stateless-inline vs. `@State`-in-`Sources/`).
@@ -66,11 +66,11 @@ The project is actively evolving, and major features are planned.
 - [x] Dirac notation in Core (`Quantum/Dirac.swift`): `Ket`/`Bra`, postfix `†`,
       inner/outer products, basis kets — with `DiracNotationTests.swift`,
       playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`),
-      and the user guide `Docs/DIRACHELP.md`.
+      and the user guide `Docs/08DIRACHELP.md`.
 - [x] Tensor (Kronecker) products in Core: `tensor(_:)` / `⊗` on `Matrix` and
       `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
       — with `TensorProductTests.swift`, playground page `09Tensor`, the
-      design notes in `Docs/TENSORPLAN.md`, and the user guide `Docs/TENSORHELP.md`.
+      design notes in `Docs/09TENSORPLAN.md`, and the user guide `Docs/09TENSORHELP.md`.
 
 ## Algorithm playground pages (this fork)
 
@@ -80,13 +80,13 @@ notes (`Docs/*PLAN.md`) and a user guide (`Docs/*HELP.md`):
 - [x] Deutsch's algorithm — page `10DeutschExample`: the four 1-bit oracles from
       `x(1)`/`cx(0,1)`, phase kickback stage by stage, and deterministic
       constant-vs-balanced verdicts from a single query
-      (`Docs/DEUTSCHPLAN.md`, `Docs/DEUTSCHHELP.md`).
+      (`Docs/10DEUTSCHPLAN.md`, `Docs/10DEUTSCHHELP.md`).
 - [x] Grover's search — page `11GroverExample`: CZ built as `h(1); cx(0,1); h(1)`,
       X-conjugated phase oracles, inversion about the mean, the diffusion operator
       as 2|s⟩⟨s| − I via the Dirac outer product, and a 3-qubit finale with a
-      hand-built CCZ (`Docs/GROVERPLAN.md`, `Docs/GROVERHELP.md`).
+      hand-built CCZ (`Docs/11GROVERPLAN.md`, `Docs/11GROVERHELP.md`).
 - [x] Shor's algorithm (compiled, N = 15) — page `12ShorExample`: modular
       multiplication and its controlled powers as hand-built permutation matrices,
       an entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the
       order r, classical gcd post-processing, and a base sweep including the
-      a = 14 failure case (`Docs/SHORPLAN.md`, `Docs/SHORHELP.md`).
+      a = 14 failure case (`Docs/12SHORPLAN.md`, `Docs/12SHORHELP.md`).

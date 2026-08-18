@@ -69,8 +69,8 @@ checks with `// Expected:` annotations; no SwiftUI live view). Structure:
 ### 2. Docs
 
 - `CLAUDE.md`: add the `11GroverExample` bullet to the playground page list.
-- `Docs/GROVERHELP.md`: user-facing guide (companion to `DEUTSCHHELP.md`).
-- This file (`Docs/GROVERPLAN.md`) records the plan.
+- `Docs/11GROVERHELP.md`: user-facing guide (companion to `10DEUTSCHHELP.md`).
+- This file (`Docs/11GROVERPLAN.md`) records the plan.
 
 ## Explicitly not doing
 

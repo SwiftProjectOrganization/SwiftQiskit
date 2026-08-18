@@ -64,42 +64,52 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 `Playgrounds.playground` at the repo root (macOS target) is this fork's main addition: interactive,
 lecture-style explorations of the library. Pages live in `Playgrounds.playground/Pages/`:
 
-- `01BellExample` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
-  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits.
-- `02Lecture_01`, `03Lecture_03`, `04Lecture_04`, … — per-lecture pages, numbered with an
-  ordering prefix; follow this `NNName` naming when adding pages.
-- `05BlochSphere2D`, `06BlochSphere2D+Projections` — Bloch-sphere visualizations of single-qubit states
+- `00TOC` — clickable table of contents (markdown only): links to every page with a
+  one-line description, plus pointers to the `Docs/` guides. Pages are numbered with an
+  ordering prefix (page order is alphabetical); follow this `NNName` naming when adding pages.
+- `01Qubits` — first look at qubit states via the Dirac API, results-sidebar style
+  (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`
+  (content provisional; formerly `02Lecture_01`).
+- `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
-  (User guide for page 05 in `Docs/BLOCH2DHELP.md`, which also documents the general
+  (User guide for page 02 in `Docs/02BLOCH2DHELP.md`, which also documents the general
   live-view recipe for playground pages.)
-- `07BlochSphere3D` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
+- `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView`.
+- `05Gates` — the Bell circuit built step by step in the results sidebar:
+  `QuantumCircuit(qubits: 2)`, `h(0)`, `cx(0, 1)`, `run()`, `measure(shots:)`
+  (content provisional; formerly `03Lecture_02`).
+- `06Superposition` — custom 1-qubit gates (Identity, a hand-rolled Pauli-X) from raw
+  `Matrix`/`Complex` values, applied via `apply(_:)`
+  (content provisional; formerly `04Lecture_03`).
+- `07Entanglement` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
+  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits.
 - `08BraKet` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
-  projectors, adjoints, and the page-07 initial qubit's Bloch coordinates as Pauli
+  projectors, adjoints, and the page-04 initial qubit's Bloch coordinates as Pauli
   expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`
-  (user guide in `Docs/DIRACHELP.md`).
+  (user guide in `Docs/08DIRACHELP.md`).
 - `09Tensor` — tensor-product walkthrough (console only) mirroring
   `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
   `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
   why the Bell state does not factor (entanglement)
-  (design notes in `Docs/TENSORPLAN.md`, user guide in `Docs/TENSORHELP.md`).
+  (design notes in `Docs/09TENSORPLAN.md`, user guide in `Docs/09TENSORHELP.md`).
 - `10DeutschExample` — Deutsch's algorithm (console only): the four 1-bit oracles from
   `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, deterministic
   constant-vs-balanced verdicts from a single query, and shot statistics
-  (plan in `Docs/DEUTSCHPLAN.md`, user guide in `Docs/DEUTSCHHELP.md`).
+  (plan in `Docs/10DEUTSCHPLAN.md`, user guide in `Docs/10DEUTSCHHELP.md`).
 - `11GroverExample` — Grover's search (console only): CZ built as `h(1);cx(0,1);h(1)`,
   X-conjugated phase oracles, an inversion-about-the-mean walkthrough, exact 1-iteration
   success on 2 qubits, over-rotation, the diffusion operator as 2|s⟩⟨s|−I via the Dirac
   outer product, and a 3-qubit finale using a hand-built CCZ through `apply(_:)`
-  (plan in `Docs/GROVERPLAN.md`, user guide in `Docs/GROVERHELP.md`).
+  (plan in `Docs/11GROVERPLAN.md`, user guide in `Docs/11GROVERHELP.md`).
 - `12ShorExample` — compiled Shor factoring of 15 (console only): modular multiplication
   and its controlled powers as hand-built permutation matrices via `apply(_:)`, an
   entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the order r,
   classical gcd post-processing, shots sampled from one `run()` (per-shot
   `measure(shots:)` replay is too slow at dimension 128), and a base sweep including the
-  a = 14 failure case (plan in `Docs/SHORPLAN.md`, user guide in `Docs/SHORHELP.md`).
+  a = 14 failure case (plan in `Docs/12SHORPLAN.md`, user guide in `Docs/12SHORHELP.md`).
 
 Playground notes:
 

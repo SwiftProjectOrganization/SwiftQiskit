@@ -1,7 +1,7 @@
 # Grover's algorithm — help & usage guide
 
 User-facing guide to the `11GroverExample` playground page. The implementation plan is in
-`GROVERPLAN.md`.
+`11GROVERPLAN.md`.
 
 ## What the algorithm does
 

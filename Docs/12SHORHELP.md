@@ -1,7 +1,7 @@
 # Shor's algorithm — help & usage guide
 
 User-facing guide to the `12ShorExample` playground page. The implementation plan is in
-`SHORPLAN.md`.
+`12SHORPLAN.md`.
 
 ## What the algorithm does
 

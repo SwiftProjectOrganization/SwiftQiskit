@@ -1,7 +1,7 @@
 # Tensor products — help & usage guide
 
 User-facing guide to the `09Tensor` playground page. The API design and implementation plan is
-in `TENSORPLAN.md`.
+in `09TENSORPLAN.md`.
 
 ## What the tensor product does
 

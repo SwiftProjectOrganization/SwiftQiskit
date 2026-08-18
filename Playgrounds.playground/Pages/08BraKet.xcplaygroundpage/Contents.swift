@@ -95,13 +95,8 @@ print("⟨φ|0⟩⟨0|φ⟩ = \(born)  vs  probabilities[0] = \(ketPhi.probabili
 print("\nH† == H → \(HadamardGate.matrix† == HadamardGate.matrix)")
 // Expected: true
 
-// Core has no Pauli-Y gate yet (see the roadmap) — build it inline:
-//   Y = [[0, −i], [i, 0]]
-let pauliY = Matrix([
-    [.zero, Complex(0, -1)],
-    [.i, .zero]
-])
-print("Y† == Y → \(pauliY† == pauliY)")
+// Pauli-Y from Core (Gates/PauliY.swift): Y = [[0, −i], [i, 0]]
+print("Y† == Y → \(PauliYGate.matrix† == PauliYGate.matrix)")
 // Expected: true
 
 print("H†H =\n\(HadamardGate.matrix† * HadamardGate.matrix)")
@@ -122,7 +117,7 @@ print("\n|01⟩ == |0⟩ ⊗ |1⟩ → \(Ket("01") == Ket.zero ⊗ Ket.one)")
 print("⟨+|⊗⟨1| == (|+⟩⊗|1⟩)† → \(Ket.plus† ⊗ Ket.one† == (Ket.plus ⊗ Ket.one)†)")
 // Expected: true
 
-// A Bell-state amplitude as a bra–ket product (circuit from page 01):
+// A Bell-state amplitude as a bra–ket product (circuit from page 07):
 let bellCircuit = QuantumCircuit(qubits: 2)
 bellCircuit.h(0)
 bellCircuit.cx(0, 1)
@@ -131,9 +126,9 @@ print("⟨11|Φ⁺⟩ = \(Bra("11") * bellState)")
 // Expected: 0.7071 = 1/√2
 
 // ============================================================
-// Section 6 — The initial qubit from page 07
+// Section 6 — The initial qubit from page 04
 // ============================================================
-// Page 07's Bloch sphere starts at θ = 60°, φ = 45°, using the
+// Page 04's Bloch sphere starts at θ = 60°, φ = 45°, using the
 // parametrization
 //
 //   |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩
@@ -141,7 +136,7 @@ print("⟨11|Φ⁺⟩ = \(Bra("11") * bellState)")
 // Its console readout *labelled* the amplitudes α = ⟨0|ψ⟩ and
 // β = ⟨1|ψ⟩; with bras those are now real expressions.
 
-/// Build |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩ (as on page 07)
+/// Build |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}·sin(θ/2)|1⟩ (as on page 04)
 func makeState(theta: Double, phi: Double) -> StateVector {
     StateVector([
         Complex(cos(theta / 2)),
@@ -158,7 +153,7 @@ print("\nα = ⟨0|ψ⟩ = \(Bra("0") * psi)")
 print("β = ⟨1|ψ⟩ = \(Bra("1") * psi)")
 // Expected: 0.3536 + 0.3536i = 0.5·e^{iπ/4}
 
-// The Bloch coordinates drawn on page 07 are exactly the Pauli
+// The Bloch coordinates drawn on page 04 are exactly the Pauli
 // expectation values of |ψ⟩:
 //
 //   x = ⟨ψ|X|ψ⟩ = sin θ cos φ
@@ -168,7 +163,7 @@ print("β = ⟨1|ψ⟩ = \(Bra("1") * psi)")
 // Each is real because X, Y, Z are Hermitian (Section 4).
 
 let expectX = psi† * PauliXGate.matrix * psi
-let expectY = psi† * pauliY * psi
+let expectY = psi† * PauliYGate.matrix * psi
 let expectZ = psi† * PauliZGate.matrix * psi
 
 print(String(format: "⟨ψ|X|ψ⟩ = %.4f   (sin θ cos φ = %.4f)",
@@ -189,7 +184,7 @@ print(String(format: "BlochVector: x %.4f  y %.4f  z %.4f",
 // ============================================================
 // Section 7 — |ψ⟩ on the 3D Bloch sphere
 // ============================================================
-// The same Bloch3DView as page 07, frozen at the initial qubit:
+// The same Bloch3DView as page 04, frozen at the initial qubit:
 // its x/y/z readout shows the three expectation values from
 // Section 6. Drag to rotate. (No @State in page code — the view's
 // interaction state lives in Sources, per the Xcode 27 beta

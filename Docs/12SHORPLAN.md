@@ -4,7 +4,7 @@
 
 `10DeutschExample` and `11GroverExample` built the playground's algorithm arc; Shor's
 algorithm is its natural finale — the polynomial-time factoring algorithm that made
-quantum computing famous, and the destination `DEUTSCHHELP.md` already promised. The page
+quantum computing famous, and the destination `10DEUTSCHHELP.md` already promised. The page
 is a **compiled** Shor: N = 15 is fixed, and it fits the v0.1 API with **no changes to
 `SwiftQiskitCore`**:
 
@@ -86,8 +86,8 @@ with `// Expected:` annotations; no SwiftUI live view). Structure:
 ### 2. Docs
 
 - `CLAUDE.md`: add the `12ShorExample` bullet to the playground page list.
-- `Docs/SHORHELP.md`: user-facing guide (companion to `GROVERHELP.md`).
-- This file (`Docs/SHORPLAN.md`) records the plan.
+- `Docs/12SHORHELP.md`: user-facing guide (companion to `11GROVERHELP.md`).
+- This file (`Docs/12SHORPLAN.md`) records the plan.
 - `README.md`: extend the gate tables (Hadamard/Pauli-X "Used in" now 08–12; new
   hand-built rows for U_a and QFT†), the project tree, and a `### 12ShorExample` section.
 

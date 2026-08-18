@@ -41,11 +41,23 @@ let minusCircuit = QuantumCircuit(qubits: 1)
 minusCircuit.h(0)
 minusCircuit.z(0)
 
+// |+i⟩ = (|0⟩ + i|1⟩)/√2 — Hadamard then S (the phase gate √Z)
+let plusICircuit = QuantumCircuit(qubits: 1)
+plusICircuit.h(0)
+plusICircuit.s(0)
+
+// |−i⟩ = (|0⟩ − i|1⟩)/√2 — Hadamard then S†
+let minusICircuit = QuantumCircuit(qubits: 1)
+minusICircuit.h(0)
+minusICircuit.sdg(0)
+
 let states: [(name: String, bloch: BlochVector)] = [
     ("|0⟩", BlochVector(zeroCircuit.run())),
     ("|1⟩", BlochVector(oneCircuit.run())),
     ("|+⟩", BlochVector(plusCircuit.run())),
-    ("|−⟩", BlochVector(minusCircuit.run()))
+    ("|−⟩", BlochVector(minusCircuit.run())),
+    ("|+i⟩", BlochVector(plusICircuit.run())),
+    ("|−i⟩", BlochVector(minusICircuit.run()))
 ]
 
 // Console readout
@@ -59,10 +71,12 @@ for state in states {
     )
 }
 // Expected:
-//   |0⟩ → (0, 0, +1)   north pole
-//   |1⟩ → (0, 0, −1)   south pole
-//   |+⟩ → (+1, 0, 0)   +x axis
-//   |−⟩ → (−1, 0, 0)   −x axis
+//   |0⟩  → (0, 0, +1)   north pole
+//   |1⟩  → (0, 0, −1)   south pole
+//   |+⟩  → (+1, 0, 0)   +x axis
+//   |−⟩  → (−1, 0, 0)   −x axis
+//   |+i⟩ → (0, +1, 0)   +y axis
+//   |−i⟩ → (0, −1, 0)   −y axis
 
 // ============================================================
 // Section 3 — Live view
@@ -83,7 +97,7 @@ struct BlochGalleryView: View {
 
 PlaygroundPage.current.setLiveView(
     BlochGalleryView(states: states)
-        .frame(width: 560, height: 640)
+        .frame(width: 560, height: 940)
 )
 
 //: [Next](@next)

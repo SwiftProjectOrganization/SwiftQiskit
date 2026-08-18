@@ -52,19 +52,19 @@ turning their `#expect` assertions into printed checks:
 | 1 — Kets, bras, † | `Double dagger returns the original ket` | \|+⟩ printed as ket and bra; (\|+⟩†)† == \|+⟩ exactly |
 | 2 — Inner products | `Computational basis kets are orthonormal`, `Plus state overlaps zero state with amplitude one over root two`, `Inner product of a normalized state with itself is one`, `Inner product has conjugate symmetry` | ⟨0\|0⟩ = 1, ⟨0\|1⟩ = 0, ⟨+\|0⟩ = 1/√2, ⟨φ\|φ⟩ = 1, ⟨φ\|ψ⟩ = ⟨ψ\|φ⟩* |
 | 3 — Outer products | `Basis projectors sum to the identity` | \|0⟩⟨0\| and \|1⟩⟨1\| as matrices; the Born rule ⟨φ\|0⟩⟨0\|φ⟩ = P(0) |
-| 4 — Matrix adjoints | `Hadamard is its own adjoint`, `Adjoint conjugates and transposes entries` | H† == H, an inline Pauli-Y with Y† == Y, and H†H ≈ I |
+| 4 — Matrix adjoints | `Hadamard is its own adjoint`, `Adjoint conjugates and transposes entries` | H† == H, Y† == Y via `PauliYGate`, and H†H ≈ I |
 | 5 — Multi-qubit | `Ket from binary label is the matching basis state`, `Bra tensor product matches daggered ket tensor product` | \|01⟩ == \|0⟩ ⊗ \|1⟩; † distributes over ⊗; a Bell amplitude ⟨11\|Φ⁺⟩ |
-| 6 — Expectation values | `Pauli Z expectation values match theory` (Z only) | the page-07 qubit's Bloch coordinates as ⟨ψ\|X\|ψ⟩, ⟨ψ\|Y\|ψ⟩, ⟨ψ\|Z\|ψ⟩, cross-checked against `BlochVector` |
+| 6 — Expectation values | `Pauli Z expectation values match theory` (Z only) | the page-04 qubit's Bloch coordinates as ⟨ψ\|X\|ψ⟩, ⟨ψ\|Y\|ψ⟩, ⟨ψ\|Z\|ψ⟩, cross-checked against `BlochVector` |
 | 7 — Live view | — | the same state on a static, rotatable `Bloch3DView` |
 
-Section 4 builds Pauli-Y inline as `Matrix([[.zero, Complex(0, -1)], [.i, .zero]])` — Core
-has no `PauliYGate` yet (see the roadmap in `STATUSandTODO.md`). Section 6 reuses that
-matrix for ⟨ψ|Y|ψ⟩; the X and Y expectation values have no unit-test counterpart.
+Section 4 checks Y† == Y with `PauliYGate.matrix` from Core (the mirrored unit test
+predates the gate and still builds the matrix inline). Section 6 reuses it for ⟨ψ|Y|ψ⟩;
+the X and Y expectation values have no unit-test counterpart.
 
 ## Running the page
 
 1. Open `Playgrounds.playground` in Xcode and select the **`08BraKet`** page
-   (or follow the `[Next]` link from `07BlochSphere3D` / `[Previous]` from `09Tensor`).
+   (or follow the `[Next]` link from `07Entanglement` / `[Previous]` from `09Tensor`).
 2. Make sure the **SwiftQiskit** scheme is active and builds — pages set
    `buildActiveScheme` and won't run otherwise.
 3. Run the page. Console output is annotated inline with `// Expected:` comments, and

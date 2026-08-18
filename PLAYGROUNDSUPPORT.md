@@ -16,11 +16,12 @@ Playgrounds.playground/
 │   ├── Bloch3DView.swift
 │   └── BlochExplorerView.swift
 └── Pages/
-    ├── 01BellExample.xcplaygroundpage
-    ├── ...
-    ├── 05BlochSphere2D.xcplaygroundpage
-    ├── 06BlochSphere2D+Projections.xcplaygroundpage
-    └── 07BlochSphere3D.xcplaygroundpage
+    ├── 00TOC.xcplaygroundpage
+    ├── 01Qubits.xcplaygroundpage
+    ├── 02Bloch2d.xcplaygroundpage
+    ├── 03Bloch2dProjection.xcplaygroundpage
+    ├── 04Bloch3d.xcplaygroundpage
+    └── ...
 ```
 
 Xcode compiles `Sources/` into an auxiliary module that every page imports
@@ -67,7 +68,7 @@ vector arrow, and a numeric readout.
 public init(label: String, bloch: BlochVector, size: CGFloat = 220)
 ```
 
-`size` is the side length of the square canvas — page 05 uses the default, page 06
+`size` is the side length of the square canvas — page 02 uses the default, page 03
 uses `300`.
 
 ### `BlochProjectionView.swift`
@@ -119,21 +120,21 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 | Page | Shared code used |
 |---|---|
-| `05BlochSphere2D` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
-| `06BlochSphere2D+Projections` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
-| `07BlochSphere3D` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
+| `02Bloch2d` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
+| `03Bloch2dProjection` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
+| `04Bloch3d` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
 
 ## Xcode 27 beta workarounds
 
 As of Xcode 27.0 beta (27A5209h, July 2026), the playground expression evaluator has two
 bugs that break SwiftUI pages. Both are toolchain issues, not project issues; remove the
 workarounds once a fixed Xcode ships. **Both bugs verified still present in beta 4
-(27A5228h) on 2026-07-20** — by running page 05 with the shims removed (bug 1) and a page
+(27A5228h) on 2026-07-20** — by running page 02 with the shims removed (bug 1) and a page
 with an inline `@State` view (bug 2).
 
 **The bugs appear to be machine-specific.** On 2026-07-20 a fresh clone on an M3 Mac with
 the same Xcode 27 beta 4 and macOS 27 beta 4 ran the SwiftUI pages with no shim at all
-(bug 1 absent; bug 2 untested there — page 07 uses the `Sources/` view, so it does not
+(bug 1 absent; bug 2 untested there — page 04 uses the `Sources/` view, so it does not
 exercise inline `@State`). The affected machine is an A18-based Mac that had earlier
 Xcode 27 betas installed.
 
@@ -192,7 +193,7 @@ is compiled by the regular build system, where the macro expands fine.
 
 **Workaround:** any view using `@State` (or other SwiftUI macros) must live in `Sources/`
 as a `public` type; the page only instantiates it. This is why `BlochExplorerView` is in
-`Sources/` even though only page `07BlochSphere3D` uses it. Also note the SDK 27 `@State`
+`Sources/` even though only page `04Bloch3d` uses it. Also note the SDK 27 `@State`
 init pattern: if a view sets `@State` values in its `init`, drop the initial value at the
 declaration and assign only in the `init`.
 

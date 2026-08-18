@@ -65,7 +65,7 @@ Console-only page in the sectioned style of `09Tensor` (banner comments, printed
 ### 2. Docs
 
 - `CLAUDE.md`: add the `10DeutschExample` bullet to the playground page list.
-- This file (`Docs/DEUTSCHPLAN.md`) records the plan.
+- This file (`Docs/10DEUTSCHPLAN.md`) records the plan.
 
 ## Explicitly not doing
 

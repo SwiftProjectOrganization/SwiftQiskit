@@ -1,6 +1,6 @@
 # 2D Bloch sphere — help & usage guide
 
-User-facing guide to the `05BlochSphere2D` playground page, which visualizes single-qubit
+User-facing guide to the `02Bloch2d` playground page, which visualizes single-qubit
 states on the Bloch sphere with a SwiftUI live view. Unlike the algorithm pages there is no
 separate design/plan document — the shared implementation in
 `Playgrounds.playground/Sources/` (`BlochVector.swift`, `BlochSphereView.swift`) and its
@@ -32,10 +32,9 @@ The geography:
 | \|+i⟩ = (\|0⟩ + i\|1⟩)/√2 | (0, +1, 0) | +y axis |
 | \|−i⟩ = (\|0⟩ − i\|1⟩)/√2 | (0, −1, 0) | −y axis |
 
-The page's gallery shows the first four. The ±y states are absent because reaching them
-from |0⟩ takes a phase gate (S = √Z), which Core does not have yet — see the roadmap in
-`STATUSandTODO.md` (Y/Phase/Rotation gates). They do appear elsewhere: `Ket.plusI` /
-`Ket.minusI` in `Quantum/Dirac.swift` build them directly from amplitudes.
+The page's gallery shows all six. Reaching the ±y states from |0⟩ takes the phase gate
+S = √Z, now in Core: `s(0)` / `sdg(0)` after `h(0)`. (`Ket.plusI` / `Ket.minusI` in
+`Quantum/Dirac.swift` build the same states directly from amplitudes.)
 
 The math lives in `BlochVector` (playground `Sources/`), which reuses the `Complex`
 arithmetic from `SwiftQiskitCore` (`conjugate`, `*`, `magnitudeSquared`) and guards the
@@ -46,17 +45,17 @@ single-qubit requirement with `precondition(state.dimension == 2)`.
 | Section | What it shows |
 |---|---|
 | 1 — Bloch vector math | Commentary only: the α, β → (x, y, z) map above, and where the implementation lives (`BlochVector`, `BlochSphereView` in `Sources/`) |
-| 2 — Demo states | The four gallery states built with real circuits — \|0⟩ from an empty `QuantumCircuit(qubits: 1)`, \|1⟩ via `x(0)`, \|+⟩ via `h(0)`, \|−⟩ via `h(0)` + `z(0)` — each turned into a `BlochVector(circuit.run())` and printed to the console |
-| 3 — Live view | An inline `BlochGalleryView` (a `LazyVGrid`, 2 × 2) of `BlochSphereView`s, handed to `PlaygroundPage.current.setLiveView(_:)` at 560 × 640 points |
+| 2 — Demo states | The six gallery states built with real circuits — \|0⟩ from an empty `QuantumCircuit(qubits: 1)`, \|1⟩ via `x(0)`, \|+⟩ via `h(0)`, \|−⟩ via `h(0)` + `z(0)`, \|+i⟩ via `h(0)` + `s(0)`, \|−i⟩ via `h(0)` + `sdg(0)` — each turned into a `BlochVector(circuit.run())` and printed to the console |
+| 3 — Live view | An inline `BlochGalleryView` (a `LazyVGrid`, 2 × 3) of `BlochSphereView`s, handed to `PlaygroundPage.current.setLiveView(_:)` at 560 × 940 points |
 
 ## Running the page
 
-1. Open `Playgrounds.playground` in Xcode and select the **`05BlochSphere2D`** page
-   (or follow the `[Next]` link from `04Lecture_04` / `[Previous]` from
-   `06BlochSphere2D+Projections`).
+1. Open `Playgrounds.playground` in Xcode and select the **`02Bloch2d`** page
+   (or follow the `[Next]` link from `01Qubits` / `[Previous]` from
+   `03Bloch2dProjection`).
 2. Make sure the **SwiftQiskit** scheme is active and builds — pages set
    `buildActiveScheme` and won't run otherwise.
-3. Run the page. Four lines appear in the console, and the 2 × 2 sphere gallery appears
+3. Run the page. Six lines appear in the console, and the 2 × 3 sphere gallery appears
    in the live-view pane (open the Assistant editor / live view area to see it).
 
 This page **imports SwiftUI and shows a live view**, so the Xcode 27 beta evaluator bugs
@@ -72,6 +71,8 @@ The complete console output:
 |1⟩  x +0.000  y +0.000  z -1.000  (θ 3.142, φ 0.000)
 |+⟩  x +1.000  y +0.000  z +0.000  (θ 1.571, φ 0.000)
 |−⟩  x -1.000  y +0.000  z +0.000  (θ 1.571, φ 3.142)
+|+i⟩  x +0.000  y +1.000  z +0.000  (θ 1.571, φ 1.571)
+|−i⟩  x +0.000  y -1.000  z +0.000  (θ 1.571, φ -1.571)
 ```
 
 Reading notes:
@@ -82,8 +83,9 @@ Reading notes:
   non-polar) states have a meaningful φ, like |−⟩'s φ = π.
 - **The zeros are exact** — H fills both amplitudes with the same double ±1/√2, so
   z = |α|² − |β|² for |±⟩ subtracts two identical doubles, and y = 2·Im(ᾱβ) of real
-  amplitudes is 0. Only x = ±1 carries rounding: 2·(1/√2)² is `±0.9999999999999998`
-  (the same ~1e-16 as H†H in `Docs/DIRACHELP.md`), invisible at three decimals.
+  amplitudes is 0. Only the ±1 entries (x for |±⟩, y for |±i⟩) carry rounding:
+  2·(1/√2)² is `±0.9999999999999998`
+  (the same ~1e-16 as H†H in `Docs/08DIRACHELP.md`), invisible at three decimals.
 - **Every zero prints as `+0.000`** — the `%+.3f` format always emits a sign, and no
   computation here produces a negative zero.
 
@@ -106,11 +108,11 @@ and the poles straight up/down at full length. Other elements:
   repeats the numeric (x, y, z) and (θ, φ).
 
 The projection is fixed. For a rotatable view of the same states, see page
-`07BlochSphere3D` (`Bloch3DView` with drag-to-orbit).
+`04Bloch3d` (`Bloch3DView` with drag-to-orbit).
 
 ## Putting a live view on a playground page
 
-Page 05 is the playground's minimal live-view example; the recipe generalizes to any page.
+Page 02 is the playground's minimal live-view example; the recipe generalizes to any page.
 
 ```swift
 import SwiftUI
@@ -129,14 +131,14 @@ PlaygroundPage.current.setLiveView(
    implementation in `Sources/` (pages reference the shared type by name so readers know
    where to look).
 2. **Give the root view an explicit `.frame(width:height:)`.** The live-view pane does not
-   propose a window-like size, so an unframed view can collapse or clip. Page 05 sizes the
-   root to fit its content: a 2 × 2 grid of 260-point cells plus padding → 560 × 640.
+   propose a window-like size, so an unframed view can collapse or clip. Page 02 sizes the
+   root to fit its content: a 2 × 3 grid of 260-point cells plus padding → 560 × 940.
 3. **Stateless views may be declared inline in the page.** `BlochGalleryView` holds only a
    `let` and can live in page code. Inline page types need no access modifiers.
 4. **Stateful views must live in `Playgrounds.playground/Sources/`.** The Xcode 27 beta
    evaluator cannot expand the SDK 27 `@State` macro in page code; the `Sources/` module
    is compiled by the regular build system, where the macro works. This is why the
-   slider view `BlochExplorerView` (page 07) is in `Sources/`. Details in
+   slider view `BlochExplorerView` (page 04) is in `Sources/`. Details in
    `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds".
 5. **Everything a page touches in `Sources/` must be explicitly `public`** — types,
    initializers, properties. Swift's synthesized memberwise inits are only `internal`,
@@ -166,7 +168,7 @@ print(bloch.x, bloch.y, bloch.z)       // 1.0 0.0 0.0
 print(bloch.theta, bloch.phi)          // π/2, 0
 
 // Render one sphere (size: is the square canvas side, default 220;
-// page 06 passes 300 for its larger single sphere)
+// page 03 passes 300 for its larger single sphere)
 PlaygroundPage.current.setLiveView(
     BlochSphereView(label: "|+⟩", bloch: bloch)
         .frame(width: 300, height: 340)
@@ -175,7 +177,7 @@ PlaygroundPage.current.setLiveView(
 
 States built directly from amplitudes work too — e.g.
 `BlochVector(StateVector([Complex(1 / 2.0.squareRoot()), Complex(0, 1 / 2.0.squareRoot())]))`
-lands on the +y axis (the |+i⟩ the gallery can't reach with H/X/Z alone).
+lands on the +y axis (the same |+i⟩ the gallery reaches with `h(0)` + `s(0)`).
 
 ## Troubleshooting
 

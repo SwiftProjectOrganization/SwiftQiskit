@@ -1,7 +1,7 @@
 # Deutsch's algorithm — help & usage guide
 
 User-facing guide to the `10DeutschExample` playground page. The implementation plan is in
-`DEUTSCHPLAN.md`.
+`10DEUTSCHPLAN.md`.
 
 ## What the algorithm does
 
