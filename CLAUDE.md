@@ -68,8 +68,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   one-line description, plus pointers to the `Docs/` guides. Pages are numbered with an
   ordering prefix (page order is alphabetical); follow this `NNName` naming when adding pages.
 - `01Qubits` — first look at qubit states via the Dirac API, results-sidebar style
-  (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`
-  (content provisional; formerly `02Lecture_01`).
+  (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`; plus a live view
+  showing the `minusCircuit` (|0⟩ → H → Z → H) and `plusCircuit` (|0⟩ → H → P(π/2) → P(π))
+  stages on 2D Bloch spheres (content provisional; formerly `02Lecture_01`).
 - `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.

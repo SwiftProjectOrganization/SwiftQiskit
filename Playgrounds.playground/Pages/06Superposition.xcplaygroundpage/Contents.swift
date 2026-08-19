@@ -3,15 +3,10 @@
 import SwiftQiskitCore
 
 // Build a custom 1-qubit gate (Identity, manually)
-let pauliI = Matrix([
-    [Complex.one, Complex.zero ],
-    [Complex.zero,  Complex.one]
-])
-let xCircuit3 = QuantumCircuit(qubits: 1)
-xCircuit3.apply(pauliI)
-("\npauliI gate applied to |0⟩ → probabilities: \(xCircuit3.run().probabilities)")
-// Expected: [1.0, 0.0]
 
+let xCircuit1 = QuantumCircuit(qubits: 1)
+xCircuit1.x(0)
+xCircuit1.run().probabilities
 
 // Build a custom 1-qubit gate (Pauli-X, manually)
 let customX = Matrix([
@@ -20,9 +15,17 @@ let customX = Matrix([
 ])
 let xCircuit2 = QuantumCircuit(qubits: 1)
 xCircuit2.apply(customX)
-print("\nCustom X gate applied to |0⟩ → probabilities: \(xCircuit2.run().probabilities)")
-// Expected: [0.0, 1.0]
+xCircuit2.run().probabilities
 
 PauliZGate.matrix
+
+let pauliI = Matrix([
+    [Complex.one, Complex.zero ],
+    [Complex.zero,  Complex.one]
+])
+let xCircuit3 = QuantumCircuit(qubits: 1)
+xCircuit3.apply(pauliI)
+print("\npauliI gate applied to |0⟩ → probabilities: \(xCircuit3.run().probabilities)")
+// Expected: [1.0, 0.0]
 
 //: [Next](@next)

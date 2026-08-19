@@ -55,6 +55,7 @@ Multi-qubit basis kets come from the binary-label initializer, e.g. `Ket("01")` 
 
 ##  Quantum Gates
 
+
 **Built-in gates** — each is a `public enum` in `Sources/SwiftQiskitCore/Gates/` exposing
 `static let matrix: Matrix` (parameterized gates expose `static func matrix(theta:)`),
 with a matching convenience method on `QuantumCircuit`:

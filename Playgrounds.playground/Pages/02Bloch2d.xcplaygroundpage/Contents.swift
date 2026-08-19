@@ -30,7 +30,9 @@ let zeroCircuit = QuantumCircuit(qubits: 1)
 
 // |1⟩ — Pauli-X flips |0⟩
 let oneCircuit = QuantumCircuit(qubits: 1)
+oneCircuit.run().probabilities
 oneCircuit.x(0)
+oneCircuit.run().probabilities
 
 // |+⟩ = (|0⟩ + |1⟩)/√2 — Hadamard
 let plusCircuit = QuantumCircuit(qubits: 1)
