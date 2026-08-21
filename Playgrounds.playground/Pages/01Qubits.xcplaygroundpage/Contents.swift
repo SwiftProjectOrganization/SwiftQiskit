@@ -12,7 +12,7 @@ let q1: Ket = .plusI
 // Multi qubit creation examples
 let sv0: StateVector = Ket("000")
 let sv1: StateVector = Ket("010")
-let sv2: [Ket] = Array<StateVector>([.zero, .plusI, .zero, .zero])
+let sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero
 
 // Single qubit circuit examples
 // Quantum circuit are needed to apply quantum gates
