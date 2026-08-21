@@ -106,7 +106,8 @@ Reading notes:
 ## Using it in your own code
 
 Every gate here is a plain `QuantumCircuit` method — no need to touch the underlying
-`Matrix`/`Complex` types unless you're building a custom gate (see `06Superposition`):
+`Matrix`/`Complex` types unless you're building a custom gate, as `07Entanglement`'s
+Section 6 does (a hand-rolled Pauli-X applied via `apply(_:)`):
 
 ```swift
 import SwiftQiskitCore

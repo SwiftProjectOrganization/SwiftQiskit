@@ -84,9 +84,10 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   (no live view): `x/h/z/y/s/sdg/t/tdg/p/rx/ry/rz` each shown individually on a 1-qubit
   `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to
   `07Entanglement` (formerly `03Lecture_02`; user guide in `Docs/05GATESHELP.md`).
-- `06Superposition` — custom 1-qubit gates (Identity, a hand-rolled Pauli-X) from raw
-  `Matrix`/`Complex` values, applied via `apply(_:)`
-  (content provisional; formerly `04Lecture_03`).
+- `06Superposition` — a 4-qubit console walkthrough: every qubit put into superposition
+  via `h`, inspecting the resulting 16-state amplitudes/probabilities and shot counts,
+  plus a partial-superposition (2-qubit) contrast
+  (user guide in `Docs/06SUPERPOSITIONHELP.md`).
 - `07Entanglement` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
   shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits.
 - `08BraKet` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,

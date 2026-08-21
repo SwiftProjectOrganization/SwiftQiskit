@@ -18,8 +18,8 @@
  - [04Bloch3d](04Bloch3d) — rotatable 3D Bloch sphere with live θ/φ sliders.
  - [05Gates](05Gates) — a gentle, gate-by-gate tour of the built-in gates
    (`x/h/z/y/s/t/p/rx/ry/rz`) on a 1-qubit circuit, with a one-line Bell-state teaser.
- - [06Superposition](06Superposition) — custom gates from raw `Matrix`/`Complex`
-   values via `apply(_:)`.
+ - [06Superposition](06Superposition) — a 4-qubit circuit with every qubit put into
+   superposition via `h`, plus a partial-superposition contrast.
  - [07Entanglement](07Entanglement) — annotated Bell-state walkthrough, plus a
    3-qubit GHZ state using `cx` across non-adjacent qubits.
  - [08BraKet](08BraKet) — Dirac notation in depth: projectors, adjoints, and Pauli
@@ -36,8 +36,8 @@
  ## User guides
 
  Several pages have companion documents in `Docs/` at the repo root, prefixed with the
- page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `05GATESHELP.md`, `08DIRACHELP.md`,
- `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`, `11GROVERPLAN/HELP.md`, and
+ page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
+ `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`, `11GROVERPLAN/HELP.md`, and
  `12SHORPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
  expected output and troubleshooting. See also `PLAYGROUNDSUPPORT.md` for how code in
