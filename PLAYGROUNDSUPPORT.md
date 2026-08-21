@@ -120,6 +120,7 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 | Page | Shared code used |
 |---|---|
+| `01Qubits` | `BlochVector`, `BlochSphereView` (stage-by-stage grids for two example circuits) |
 | `02Bloch2d` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
 | `03Bloch2dProjection` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
 | `04Bloch3d` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |

@@ -63,6 +63,9 @@ The project is actively evolving, and major features are planned.
 
 ## Bra/ket & tensor-product additions (this fork)
 
+- [x] First-look Dirac walkthrough — page `01Qubits`: qubit states via the Dirac API in
+      the results sidebar (no prints), plus circuit stage tracking shown live on 2D
+      Bloch spheres, with the user guide `Docs/01QUBITSHELP.md`.
 - [x] Dirac notation in Core (`Quantum/Dirac.swift`): `Ket`/`Bra`, postfix `†`,
       inner/outer products, basis kets — with `DiracNotationTests.swift`,
       playground page `08BraKet` (Pauli expectation values on a `Bloch3DView`),

@@ -70,7 +70,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `01Qubits` — first look at qubit states via the Dirac API, results-sidebar style
   (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`; plus a live view
   showing the `minusCircuit` (|0⟩ → H → Z → H) and `plusCircuit` (|0⟩ → H → P(π/2) → P(π))
-  stages on 2D Bloch spheres (content provisional; formerly `02Lecture_01`).
+  stages on 2D Bloch spheres (content provisional; formerly `02Lecture_01`)
+  (user guide in `Docs/01QUBITSHELP.md`).
 - `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
@@ -79,9 +80,10 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView`.
-- `05Gates` — the Bell circuit built step by step in the results sidebar:
-  `QuantumCircuit(qubits: 2)`, `h(0)`, `cx(0, 1)`, `run()`, `measure(shots:)`
-  (content provisional; formerly `03Lecture_02`).
+- `05Gates` — a gentle, gate-by-gate tour of the built-in gate set in the results sidebar
+  (no live view): `x/h/z/y/s/sdg/t/tdg/p/rx/ry/rz` each shown individually on a 1-qubit
+  `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to
+  `07Entanglement` (formerly `03Lecture_02`; user guide in `Docs/05GATESHELP.md`).
 - `06Superposition` — custom 1-qubit gates (Identity, a hand-rolled Pauli-X) from raw
   `Matrix`/`Complex` values, applied via `apply(_:)`
   (content provisional; formerly `04Lecture_03`).

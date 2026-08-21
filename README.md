@@ -159,7 +159,9 @@ SwiftQiskit/
 │       ├── DiracNotationTests.swift
 │       └── CNOTTests.swift
 ├── Docs/
+│   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
+│   ├── 05GATESHELP.md
 │   ├── 08DIRACHELP.md
 │   ├── 09TENSORPLAN.md
 │   ├── 09TENSORHELP.md
@@ -281,6 +283,8 @@ First look at qubit states through the Dirac API, shown in the results sidebar (
 console output): building `Ket`s from amplitudes, the dagger `†`, inner and outer
 products, probabilities, and tensoring a ket with itself. Content provisional.
 
+User guide in `Docs/01QUBITSHELP.md`.
+
 ### 02Bloch2d
 
 Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` live view.
@@ -330,9 +334,12 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
 
 ### 05Gates
 
-The Bell circuit built step by step in the results sidebar: `QuantumCircuit(qubits: 2)`,
-`h(0)`, `cx(0, 1)`, then the `run()` state's amplitudes and probabilities and a
-2000-shot measurement. Content provisional.
+A gentle, gate-by-gate tour of the built-in gate set in the results sidebar (no live
+view, no prints): `x`, `h`, `z` (with the interference reveal that makes its phase flip
+visible), `y`, `s`/`sdg`, `t`/`tdg`, the general phase gate `p(theta:)`, and the rotations
+`rx`/`ry`/`rz`, each shown individually on a 1-qubit `QuantumCircuit`, plus a one-line
+`h`+`cx` Bell-state teaser pointing to `07Entanglement`. User guide:
+[Docs/05GATESHELP.md](Docs/05GATESHELP.md).
 
 ### 06Superposition
 
