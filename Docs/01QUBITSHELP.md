@@ -19,7 +19,8 @@ the wrong pane.
 The page has four parts:
 
 1. **Single-qubit examples** — two named Dirac states, `q0 = .zero`, `q1 = .plusI`.
-2. **Multi-qubit creation examples** — `sv0`/`sv1` built from binary labels, and `sv2`.
+2. **Multi-qubit creation examples** — `sv0`/`sv1` built from binary labels, and `sv2`
+   built by tensoring four single-qubit kets together with `⊗`.
 3. **Two example circuits** (`circuit1`, `circuit2`) whose intermediate states are turned
    into `BlochVector`s at every stage and shown live at the bottom of the page.
 4. **Bra/Ket operations** — `†`, inner and outer products, `⊗`, and a Bra–Matrix product,
@@ -30,17 +31,19 @@ The page has four parts:
 | Section | What it shows |
 |---|---|
 | 1 — Single-qubit examples | `q0 = Ket.zero` (\|0⟩), `q1 = Ket.plusI` (\|i⟩) — sidebar only, no further use |
-| 2 — Multi-qubit creation | `sv0 = Ket("000")`, `sv1 = Ket("010")` from binary labels; `sv2: [Ket]` — see caveat below |
+| 2 — Multi-qubit creation | `sv0 = Ket("000")`, `sv1 = Ket("010")` from binary labels; `sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` — see below |
 | 3 — `circuit1` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `p(1.571, 0)` → `p(3.142, 0)`, each stage's `BlochVector` appended to `stages1` |
 | 4 — `circuit2` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `z(0)` → `h(0)`, each stage's `BlochVector` appended to `stages2`, with `.probabilities` printed to the sidebar between steps |
 | 5 — Bra/Ket operations | `ket0` (built from unnormalized amplitudes), `ket1` (the same ψ used in `08DIRACHELP.md`), their bras, inner/outer products, `⊗`, double-dagger, and a `Bra * Matrix.identity` check |
 | 6 — Live view | `CircuitStagesView` (an inline, stateless `View`) rendering both stage sequences as two labeled `BlochSphereView` grids |
 
-**`sv2` is not a combined multi-qubit register.** Despite sitting under "Multi qubit
-creation examples", `let sv2: [Ket] = Array<StateVector>([.zero, .plusI, .zero, .zero])`
-is a plain Swift array of four *independent* 1-qubit kets — nothing tensors them
-together. Don't confuse it with `sv0`/`sv1` above it, which really are single multi-qubit
-`StateVector`s built from binary labels.
+**`sv2` combines four single-qubit kets into one multi-qubit register via `⊗`.**
+`let sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` chains three tensor products
+(`⊗` is `MultiplicationPrecedence`, so it's left-associative:
+`((.zero ⊗ .plusI) ⊗ .zero) ⊗ .zero`) into a single 4-qubit, 16-dimensional
+`StateVector` — like `sv0`/`sv1`, a genuine combined register, but built from separate
+kets instead of a binary label. Because one of those kets (`.plusI`) is itself in
+superposition, so is the result: see the amplitudes below.
 
 `circuit1` and `circuit2` are the two circuits CLAUDE.md's page description calls the
 "plusCircuit" and "minusCircuit" (named for the state they pass through mid-circuit); the
@@ -74,7 +77,10 @@ Sidebar values (verified against the library; up to floating-point rounding):
 
 - `sv0 = Ket("000")` → the 8-dim basis state \|000⟩ (amplitude 1 at index 0, 0 elsewhere).
 - `sv1 = Ket("010")` → \|010⟩ (amplitude 1 at index 2 — binary `"010"` = 2).
-- `sv2` → an array of four `Ket`s: \|0⟩, \|i⟩, \|0⟩, \|0⟩ (see the caveat above).
+- `sv2 = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` → a 4-qubit, 16-dimensional `StateVector`:
+  amplitude `0.7071067811865475` at \|0000⟩ (index 0) and `0.7071067811865475i` at
+  \|0100⟩ (index 4), all other amplitudes `0` — probabilities `0.5` at each of those two
+  indices, `0` elsewhere.
 
 **Section 3 — `circuit1` stages (Bloch coordinates x, y, z)**
 
