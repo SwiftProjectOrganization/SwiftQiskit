@@ -49,7 +49,7 @@ they are irrational (±1/√2) — the same distinction the unit tests make.
 ## Running the page
 
 1. Open `Playgrounds.playground` in Xcode and select the **`09Tensor`** page
-   (or follow the `[Next]` link from `08BraKet`).
+   (or follow the `[Next]` link from `08Dirac`).
 2. Make sure the **SwiftQiskit** scheme is active and builds — pages set
    `buildActiveScheme` and won't run otherwise.
 3. Run the page. Output is annotated inline with `// Expected:` comments.

@@ -3,7 +3,7 @@
 User-facing guide to the `01Qubits` playground page — the first page after the table of
 contents, and the playground's introduction to the Dirac-notation API
 (`Sources/SwiftQiskitCore/Quantum/Dirac.swift`, `Quantum/StateVector.swift`). As with
-`02Bloch2d`/`08BraKet` there is no separate design/plan document; the page, its doc
+`02Bloch2d`/`08Dirac` there is no separate design/plan document; the page, its doc
 comments, `Circuit/QuantumCircuit.swift`, `Gates/Phase.swift`, and the shared
 `Playgrounds.playground/Sources/BlochVector.swift` are the reference.
 

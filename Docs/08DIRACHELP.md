@@ -1,6 +1,6 @@
 # Dirac notation — help & usage guide
 
-User-facing guide to the `08BraKet` playground page, which walks through the bra–ket API in
+User-facing guide to the `08Dirac` playground page, which walks through the bra–ket API in
 `Sources/SwiftQiskitCore/Quantum/Dirac.swift`. Unlike the algorithm pages there is no
 separate design/plan document — `Dirac.swift` and its doc comments are the reference.
 
@@ -63,7 +63,7 @@ the X and Y expectation values have no unit-test counterpart.
 
 ## Running the page
 
-1. Open `Playgrounds.playground` in Xcode and select the **`08BraKet`** page
+1. Open `Playgrounds.playground` in Xcode and select the **`08Dirac`** page
    (or follow the `[Next]` link from `07Entanglement` / `[Previous]` from `09Tensor`).
 2. Make sure the **SwiftQiskit** scheme is active and builds — pages set
    `buildActiveScheme` and won't run otherwise.

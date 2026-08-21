@@ -22,7 +22,7 @@
    superposition via `h`, plus a partial-superposition contrast.
  - [07Entanglement](07Entanglement) — annotated Bell-state walkthrough, plus a
    3-qubit GHZ state using `cx` across non-adjacent qubits.
- - [08BraKet](08BraKet) — Dirac notation in depth: projectors, adjoints, and Pauli
+ - [08Dirac](08Dirac) — Dirac notation in depth: projectors, adjoints, and Pauli
    expectation values on a static 3D Bloch sphere.
  - [09Tensor](09Tensor) — tensor products: gate embedding, the mixed-product
    identity, and why the Bell state does not factor.
@@ -37,8 +37,8 @@
 
  Several pages have companion documents in `Docs/` at the repo root, prefixed with the
  page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
- `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`, `11GROVERPLAN/HELP.md`, and
- `12SHORPLAN/HELP.md`. The
+ `07ENTANGLEMENTHELP.md`, `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`,
+ `11GROVERPLAN/HELP.md`, and `12SHORPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
  expected output and troubleshooting. See also `PLAYGROUNDSUPPORT.md` for how code in
  the playground's `Sources/` folder is shared between pages.

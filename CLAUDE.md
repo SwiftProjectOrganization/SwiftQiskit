@@ -89,8 +89,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   plus a partial-superposition (2-qubit) contrast
   (user guide in `Docs/06SUPERPOSITIONHELP.md`).
 - `07Entanglement` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
-  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits.
-- `08BraKet` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
+  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits
+  (user guide in `Docs/07ENTANGLEMENTHELP.md`).
+- `08Dirac` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
   projectors, adjoints, and the page-04 initial qubit's Bloch coordinates as Pauli
   expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`
   (user guide in `Docs/08DIRACHELP.md`).

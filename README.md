@@ -182,7 +182,7 @@ SwiftQiskit/
 │       ├── 05Gates
 │       ├── 06Superposition
 │       ├── 07Entanglement
-│       ├── 08BraKet
+│       ├── 08Dirac
 │       ├── 09Tensor
 │       ├── 10DeutschExample
 │       ├── 11GroverExample
@@ -351,9 +351,12 @@ and applying them via `circuit.apply(_:)`. Content provisional.
 Annotated walkthrough of the Bell state |Φ⁺⟩: builds the circuit (`h` + `cx`), inspects the
 resulting state vector and its amplitudes/probabilities, and runs a 1000-shot measurement.
 A GHZ section extends the recipe to 3 qubits — `cx(0, 2)` spans non-adjacent qubits — and
-the page closes with single-qubit gate demos and a tour of the `Complex`/`Matrix` types.
+the page closes by rebuilding the Bell state via `apply(CNOTGate.matrix)` to show the
+matrix form agrees with the fluent `cx` API.
 
-### 08BraKet
+User guide in `Docs/07ENTANGLEMENTHELP.md`.
+
+### 08Dirac
 
 Dirac-notation walkthrough of `Quantum/Dirac.swift`:
 
