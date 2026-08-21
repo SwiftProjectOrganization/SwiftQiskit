@@ -5,74 +5,48 @@ import SwiftUI
 import PlaygroundSupport
 import SwiftQiskitCore
 
+// Single qubit examples. See 02Bloch2d for more qubit examples.
 let q0: Ket = .zero
 let q1: Ket = .plusI
 
-// The plusCircuit and minusCircuit stages below are shown live on
-// Bloch spheres (see the live view); 02Bloch2d has the full
-// six-state gallery.
+// Multi qubit creation examples
+let sv0: StateVector = Ket("000")
+let sv1: StateVector = Ket("010")
+let sv2: [Ket] = Array<StateVector>([.zero, .plusI, .zero, .zero])
 
-// |0⟩ — empty circuit
-let zeroCircuit = QuantumCircuit(qubits: 1)
+// Single qubit circuit examples
+// Quantum circuit are needed to apply quantum gates
 
-let xCircuit: QuantumCircuit = zeroCircuit
-xCircuit.x(0)
-xCircuit.run().probabilities
+// The circuit1 and circuit2 stages below
+// are shown live on Bloch spheres
 
-// |1⟩ — Pauli-X flips |0⟩
-let oneCircuit = QuantumCircuit(qubits: 1)
-oneCircuit.run().probabilities
-oneCircuit.x(0)
-oneCircuit.run().probabilities
+var stages1: [(name: String, bloch: BlochVector)] = []
+let circuit1 = QuantumCircuit(qubits: 1)
 
-// |1⟩ — Pauli-Y flips |0⟩
-let yCircuit = QuantumCircuit(qubits: 1)
-yCircuit.run().probabilities
-yCircuit.y(0)
-yCircuit.run().probabilities
-yCircuit.z(0)
-yCircuit.run().probabilities
+stages1.append(("|0⟩", BlochVector(circuit1.run())))
+circuit1.h(0)
+stages1.append(("H → |+⟩", BlochVector(circuit1.run())))
+circuit1.p(1.571, 0)
+stages1.append(("P(π/2) → |+i⟩", BlochVector(circuit1.run())))
+circuit1.p(3.142, 0)
+stages1.append(("P(π) → |−i⟩", BlochVector(circuit1.run())))
+circuit1.run().probabilities
 
-// |+⟩ = (|0⟩ + |1⟩)/√2 — Hadamard. P(π/2) and P(π) applied further
-// down (in the |+i⟩ section) then rotate it to |+i⟩ and on to |−i⟩;
-// each stage's Bloch vector is captured for the live view.
-var plusStages: [(name: String, bloch: BlochVector)] = []
-let plusCircuit = QuantumCircuit(qubits: 1)
-plusStages.append(("|0⟩", BlochVector(plusCircuit.run())))
-plusCircuit.h(0)
-plusStages.append(("H → |+⟩", BlochVector(plusCircuit.run())))
+var stages2: [(name: String, bloch: BlochVector)] = []
+let circuit2 = QuantumCircuit(qubits: 1)
+circuit2.run().probabilities
+stages2.append(("|0⟩", BlochVector(circuit2.run())))
+circuit2.h(0)
+circuit2.run().probabilities
+stages2.append(("H → |+⟩", BlochVector(circuit2.run())))
+circuit2.z(0)
+circuit2.run().probabilities
+stages2.append(("Z → |−⟩", BlochVector(circuit2.run())))
+circuit2.h(0)
+circuit2.run().probabilities
+stages2.append(("H → |1⟩", BlochVector(circuit2.run())))
 
-// |−⟩ = (|0⟩ − |1⟩)/√2 — Hadamard then Pauli-Z (the final H shows HZH = X).
-// Each stage's Bloch vector is captured for the live view: probabilities
-// can't tell |+⟩ from |−⟩ (both 50/50), but the Bloch sphere can.
-var minusStages: [(name: String, bloch: BlochVector)] = []
-let minusCircuit = QuantumCircuit(qubits: 1)
-minusCircuit.run().probabilities
-minusStages.append(("|0⟩", BlochVector(minusCircuit.run())))
-minusCircuit.h(0)
-minusCircuit.run().probabilities
-minusStages.append(("H → |+⟩", BlochVector(minusCircuit.run())))
-minusCircuit.z(0)
-minusCircuit.run().probabilities
-minusStages.append(("Z → |−⟩", BlochVector(minusCircuit.run())))
-minusCircuit.h(0)
-minusCircuit.run().probabilities
-minusStages.append(("H → |1⟩", BlochVector(minusCircuit.run())))
-
-// |+i⟩ = (|0⟩ + i|1⟩)/√2 — Hadamard then S (the phase gate √Z)
-let plusICircuit = QuantumCircuit(qubits: 1)
-plusICircuit.h(0)
-plusICircuit.run().probabilities
-plusICircuit.s(0)
-plusICircuit.run().probabilities
-plusCircuit.p(1.571, 0)
-plusStages.append(("P(π/2) → |+i⟩", BlochVector(plusCircuit.run())))
-plusICircuit.run().probabilities
-plusICircuit.p(3.142, 0)
-plusICircuit.run().probabilities
-plusCircuit.p(3.142, 0)
-plusStages.append(("P(π) → |−i⟩", BlochVector(plusCircuit.run())))
-plusICircuit.run().probabilities
+// Operations with Bra and Ket objects
 
 let ket0 = Ket([Complex(1/2), Complex(1/2)])
 let bra0 = ket0†
@@ -102,8 +76,9 @@ ket1 * ket1†
 
 ket1† * Matrix.identity(size: 2)
 
-// Live view: the plusCircuit and minusCircuit stages on Bloch spheres.
+// Live view: the circuit1 and circuit2 stages on Bloch spheres.
 // Stateless view (no @State) — required for page code, see PLAYGROUNDSUPPORT.md.
+
 struct CircuitStagesView: View {
     let sections: [(title: String, stages: [(name: String, bloch: BlochVector)])]
 
@@ -125,8 +100,8 @@ struct CircuitStagesView: View {
 
 PlaygroundPage.current.setLiveView(
     CircuitStagesView(sections: [
-        ("minusCircuit", minusStages),
-        ("plusCircuit", plusStages)
+        ("circuit1", stages1),
+        ("circuit2", stages2)
     ])
     .frame(width: 560, height: 1340)
 )
