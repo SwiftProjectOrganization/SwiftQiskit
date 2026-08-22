@@ -62,14 +62,14 @@ with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 02, 05, 07–12 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`; pages 02, 07–12 |
-| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; page 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`; pages 02, 06–08 |
-| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; page 02 (the \|±i⟩ states) |
-| T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests` |
-| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests` |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests` |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–12 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–12 |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩) |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08 |
+| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05 |
+| T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
+| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05 |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05 |
 | CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11 |
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
@@ -78,7 +78,6 @@ compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 | Gate | Built from | Where |
 |------|------------|-------|
 | Pauli-Y (Y) | raw 2×2 `Matrix` | `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`) |
-| Identity / hand-rolled X | raw `Matrix`/`Complex` values | page 06 |
 | CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator) |
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
@@ -136,32 +135,45 @@ Enjoy exploring the quantum world
 SwiftQiskit/
 ├── Sources/
 │   └── SwiftQiskitCore/
-│       ├── Math/
-│       │   ├── Complex.swift
-│       │   └── Matrix.swift
-│       ├── Quantum/
-│       │   ├── StateVector.swift
-│       │   ├── Dirac.swift
-│       │   └── SimulationResult.swift
-│       ├── Gates/
-│       │   ├── Hadamard.swift
-│       │   ├── PauliX.swift
-│       │   ├── PauliZ.swift
-│       │   └── CNOT.swift
-│       └── Circuit/
-│           └── QuantumCircuit.swift
+│   │   ├── Math/
+│   │   │   ├── Complex.swift
+│   │   │   └── Matrix.swift
+│   │   ├── Quantum/
+│   │   │   ├── StateVector.swift
+│   │   │   ├── Dirac.swift
+│   │   │   └── SimulationResult.swift
+│   │   ├── Gates/
+│   │   │   ├── Hadamard.swift
+│   │   │   ├── PauliX.swift
+│   │   │   ├── PauliY.swift
+│   │   │   ├── PauliZ.swift
+│   │   │   ├── Phase.swift
+│   │   │   ├── Rotation.swift
+│   │   │   └── CNOT.swift
+│   │   ├── Circuit/
+│   │   │   └── QuantumCircuit.swift
+│   │   ├── Utils/
+│   │   │   └── String+Padding.swift
+│   │   └── SwiftQiskitCore.swift
 ├── Examples/
 │   └── main.swift
+├── SwiftQiskitGUI/
+│   └── Sources/
+│       ├── main.swift
+│       └── ContentView.swift
 ├── Tests/
 │   └── SwiftQiskitCoreTests/
 │       ├── BellStateTests.swift
 │       ├── TensorProductTests.swift
 │       ├── DiracNotationTests.swift
-│       └── CNOTTests.swift
+│       ├── CNOTTests.swift
+│       └── AdditionalGatesTests.swift
 ├── Docs/
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
 │   ├── 05GATESHELP.md
+│   ├── 06SUPERPOSITIONHELP.md
+│   ├── 07ENTANGLEMENTHELP.md
 │   ├── 08DIRACHELP.md
 │   ├── 09TENSORPLAN.md
 │   ├── 09TENSORHELP.md
@@ -187,8 +199,8 @@ SwiftQiskit/
 │       ├── 10DeutschExample
 │       ├── 11GroverExample
 │       └── 12ShorExample
+├── Package.swift
 └── References (tbd)
-└── Package.swift
 ```
 
 ---
@@ -197,11 +209,12 @@ SwiftQiskit/
 
 ### Requirements
 
-* Swift **6.3+**
-* macOS **27+**
-- Xcode 27.0  
+The package itself (`Package.swift`) declares `swift-tools-version: 5.9` and targets
+macOS 13+ / iOS 16+.
 
-This forked repository is developed using Swift 6.3+ and MacOS 27.0-beta
+This fork's playground pages, however, are developed and tested against **Xcode 27.0 beta**
+and **macOS 27 beta** — some SwiftUI live-view pages need the beta-specific workarounds in
+[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds) on Xcode 27 betas.
 
 ---
 
@@ -233,27 +246,25 @@ import SwiftQiskitCore
 let circuit = QuantumCircuit(qubits: 2)
 
 circuit.h(0)
-circuit.apply(CNOTGate.matrix)
+circuit.cx(0, 1)
 
 let finalState = circuit.run()
 print(finalState)
 
-for _ in 0..<10 {
-    let result = circuit.runAndMeasure()
-    print(result)
+let result = circuit.measure(shots: 1000)
+for (state, count) in result.sortedCounts {
+    let probability = Double(count) / Double(1000)
+    print("\(state): \(count) (\(String(format: "%.2f", probability)))")
 }
 ```
-> Note: The core module is currently imported as `SwiftQiskitCore`.
+> Note: The core module is currently imported as `SwiftQiskitCore`. This is the same code as
+> `Examples/main.swift`, run via `swift run SwiftQiskitExamples`.
 
 ### Expected Measurement Output
 
 ```text
-00
-11
-00
-11
-11
-00
+00: 498 (0.50)
+11: 502 (0.50)
 ```
 
 >  States **01** and **10** never appear —
@@ -336,15 +347,17 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
 
 A gentle, gate-by-gate tour of the built-in gate set in the results sidebar (no live
 view, no prints): `x`, `h`, `z` (with the interference reveal that makes its phase flip
-visible), `y`, `s`/`sdg`, `t`/`tdg`, the general phase gate `p(theta:)`, and the rotations
-`rx`/`ry`/`rz`, each shown individually on a 1-qubit `QuantumCircuit`, plus a one-line
-`h`+`cx` Bell-state teaser pointing to `07Entanglement`. User guide:
-[Docs/05GATESHELP.md](Docs/05GATESHELP.md).
+visible), `y`, `s`/`sdg`, `t` (applied twice to show `T² == S`), the general phase gate
+`p(theta:)`, and the rotations `rx`/`ry`/`rz`, each shown individually on a 1-qubit
+`QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to `07Entanglement`.
+User guide: [Docs/05GATESHELP.md](Docs/05GATESHELP.md).
 
 ### 06Superposition
 
-Building custom gates from raw `Matrix`/`Complex` values (Identity and a hand-rolled Pauli-X)
-and applying them via `circuit.apply(_:)`. Content provisional.
+A 4-qubit console walkthrough: every qubit put into superposition via `h`, inspecting the
+resulting 16-state amplitudes/probabilities and a 1600-shot measurement, plus a
+partial-superposition (2-qubit) contrast. User guide:
+[Docs/06SUPERPOSITIONHELP.md](Docs/06SUPERPOSITIONHELP.md).
 
 ### 07Entanglement
 

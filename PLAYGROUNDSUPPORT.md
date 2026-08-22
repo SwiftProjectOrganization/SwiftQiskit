@@ -121,9 +121,10 @@ macro works — see "Xcode 27 beta workarounds" below.
 | Page | Shared code used |
 |---|---|
 | `01Qubits` | `BlochVector`, `BlochSphereView` (stage-by-stage grids for two example circuits) |
-| `02Bloch2d` | `BlochVector`, `BlochSphereView` (2×2 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩) |
+| `02Bloch2d` | `BlochVector`, `BlochSphereView` (2×3 gallery of \|0⟩ \|1⟩ \|+⟩ \|−⟩ \|+i⟩ \|−i⟩) |
 | `03Bloch2dProjection` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
 | `04Bloch3d` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
+| `08Dirac` | `BlochVector`, `Bloch3DView` (static, Section 7 — the page-04 initial qubit's Pauli expectation values) |
 
 ## Xcode 27 beta workarounds
 

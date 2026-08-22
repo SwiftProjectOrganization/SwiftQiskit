@@ -10,14 +10,15 @@
  ## Pages
 
  - [01Qubits](01Qubits) — qubit states via the Dirac API: amplitudes, probabilities,
-   the dagger `†`, and inner/outer products.
- - [02Bloch2d](02Bloch2d) — the four canonical states |0⟩ |1⟩ |+⟩ |−⟩ on a 2D Bloch
-   sphere (SwiftUI live view).
+   the dagger `†`, and inner/outer products, plus two example circuits' stages shown
+   live on 2D Bloch spheres.
+ - [02Bloch2d](02Bloch2d) — the six canonical states |0⟩ |1⟩ |+⟩ |−⟩ |+i⟩ |−i⟩ on a 2D
+   Bloch sphere (SwiftUI live view).
  - [03Bloch2dProjection](03Bloch2dProjection) — a general tilted qubit state, with
    x–y and z–y plane projections (live view).
  - [04Bloch3d](04Bloch3d) — rotatable 3D Bloch sphere with live θ/φ sliders.
  - [05Gates](05Gates) — a gentle, gate-by-gate tour of the built-in gates
-   (`x/h/z/y/s/t/p/rx/ry/rz`) on a 1-qubit circuit, with a one-line Bell-state teaser.
+   (`x/h/z/y/s/sdg/t/p/rx/ry/rz`) on a 1-qubit circuit, with a one-line Bell-state teaser.
  - [06Superposition](06Superposition) — a 4-qubit circuit with every qubit put into
    superposition via `h`, plus a partial-superposition contrast.
  - [07Entanglement](07Entanglement) — annotated Bell-state walkthrough, plus a

@@ -45,10 +45,6 @@ The page has four parts:
 kets instead of a binary label. Because one of those kets (`.plusI`) is itself in
 superposition, so is the result: see the amplitudes below.
 
-`circuit1` and `circuit2` are the two circuits CLAUDE.md's page description calls the
-"plusCircuit" and "minusCircuit" (named for the state they pass through mid-circuit); the
-page code itself just calls them `circuit1`/`circuit2`.
-
 ## Running the page
 
 1. Open `Playgrounds.playground` in Xcode and select the **`01Qubits`** page (or follow

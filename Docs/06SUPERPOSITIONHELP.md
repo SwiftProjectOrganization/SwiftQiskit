@@ -4,10 +4,11 @@ User-facing guide to the `06Superposition` playground page — a 4-qubit walkthr
 puts every qubit into superposition at once via `QuantumCircuit.h`, then inspects the
 result through `StateVector.amplitudes`/`.probabilities` and `SimulationResult`. It
 replaces this page's earlier content (hand-built custom gates from raw `Matrix`/`Complex`
-values); that example still lives in `07Entanglement`'s Section 6. As with `01Qubits`/
-`05Gates` there is no separate design/plan document — the page itself and
-`BellStateTests.swift`/`AdditionalGatesTests.swift` (for the underlying `h`/`measure`
-behavior) are the reference.
+values, applied via `apply(_:)`) — that example was dropped when the page was rewritten;
+for hand-built matrices see `09Tensor` (H ⊗ I₂ by hand) or `11GroverExample` § 8 (a
+hand-built CCZ). As with `01Qubits`/`05Gates` there is no separate design/plan document —
+the page itself and `BellStateTests.swift`/`AdditionalGatesTests.swift` (for the underlying
+`h`/`measure` behavior) are the reference.
 
 ## What the page shows
 
@@ -16,7 +17,7 @@ The page runs four short sections, each printing annotated output to the console
 
 | Section | What it does | What it shows |
 |---|---|---|
-| 1 | `QuantumCircuit(qubits: 4)`, then `h(0)`, `h(1)`, `h(2)`, `h(3)` | every qubit Hadamard'd — |0000⟩ → an equal superposition of all 2⁴ = 16 basis states |
+| 1 | `QuantumCircuit(qubits: 4)`, then `h(0)`, `h(1)`, `h(2)`, `h(3)` | every qubit Hadamard'd — \|0000⟩ → an equal superposition of all 2⁴ = 16 basis states |
 | 2 | print `state.amplitudes` (zero-padded binary labels) and `state.probabilities` | all 16 amplitudes ≈ 0.25, all 16 probabilities ≈ 0.0625 |
 | 3 | `qc.measure(shots: 1600)`, print `result.sortedCounts` | 16 states, each landing near 1600/16 = 100 counts (statistical) |
 | 4 | a second circuit with only `h(0)` and `h(2)` (qubits 1, 3 left at \|0⟩) | only 4 of 16 states have nonzero probability — the untouched qubits are 0 in every outcome, contrasting with Section 1 |
@@ -86,5 +87,6 @@ counts.sortedCounts         // [(state: "0000", count: ~100), ...] for all 16 st
   helper zero-pads to 4 digits; if you copy the amplitude-printing loop elsewhere without
   it, `StateVector`'s own `description` does *not* zero-pad and will show ragged widths
   (e.g. `|0⟩` next to `|1111⟩`).
-- **Looking for the custom-gate example that used to be here** — it moved to
-  `07Entanglement`'s Section 6 (a hand-built Pauli-X `Matrix` applied via `apply(_:)`).
+- **Looking for the custom-gate example that used to be here** — it was dropped when the
+  page was rewritten; for hand-built matrices via `apply(_:)` see `09Tensor` or
+  `11GroverExample` § 8.

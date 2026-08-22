@@ -55,7 +55,8 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string.
 - `Quantum/Dirac.swift` — Dirac notation: `Ket` (typealias of `StateVector`), `Bra`
   (conjugated row vector), postfix `†` (dagger; also `Matrix.adjoint`), `*` overloads for
-  inner (`Bra * Ket`) / outer (`Ket * Bra`) products, mixed `⊗` overloads (`Ket ⊗ Bra` /
+  inner (`Bra * Ket`) / outer (`Ket * Bra`) products and `Bra * Matrix -> Bra` (enables
+  expectation values `psi† * U * psi`), mixed `⊗` overloads (`Ket ⊗ Bra` /
   `Bra ⊗ Ket`, both returning the outer-product `Matrix`), basis kets `Ket("01")` /
   `.zero/.one/.plus/.minus/.plusI/.minusI`.
 
@@ -69,7 +70,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   ordering prefix (page order is alphabetical); follow this `NNName` naming when adding pages.
 - `01Qubits` — first look at qubit states via the Dirac API, results-sidebar style
   (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`; plus a live view
-  showing the `minusCircuit` (|0⟩ → H → Z → H) and `plusCircuit` (|0⟩ → H → P(π/2) → P(π))
+  showing `circuit1` (|0⟩ → H → P(π/2) → P(π)) and `circuit2` (|0⟩ → H → Z → H)
   stages on 2D Bloch spheres (content provisional; formerly `02Lecture_01`)
   (user guide in `Docs/01QUBITSHELP.md`).
 - `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
@@ -81,7 +82,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView`.
 - `05Gates` — a gentle, gate-by-gate tour of the built-in gate set in the results sidebar
-  (no live view): `x/h/z/y/s/sdg/t/tdg/p/rx/ry/rz` each shown individually on a 1-qubit
+  (no live view): `x/h/z/y/s/sdg/t/p/rx/ry/rz` each shown individually on a 1-qubit
   `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to
   `07Entanglement` (formerly `03Lecture_02`; user guide in `Docs/05GATESHELP.md`).
 - `06Superposition` — a 4-qubit console walkthrough: every qubit put into superposition

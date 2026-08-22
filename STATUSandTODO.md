@@ -75,6 +75,20 @@ The project is actively evolving, and major features are planned.
       — with `TensorProductTests.swift`, playground page `09Tensor`, the
       design notes in `Docs/09TENSORPLAN.md`, and the user guide `Docs/09TENSORHELP.md`.
 
+## Gate-tour and entanglement playground pages (this fork)
+
+- [x] Gate-by-gate tour — page `05Gates`: every built-in gate
+      (`x/h/z/y/s/sdg/t/p/rx/ry/rz`) shown individually on a 1-qubit `QuantumCircuit`,
+      plus a one-line `h`+`cx` Bell-state teaser, with the user guide
+      `Docs/05GATESHELP.md`.
+- [x] 4-qubit superposition — page `06Superposition`: every qubit put into
+      superposition via `h`, 16-state amplitude/probability/shot inspection, and a
+      partial-superposition contrast, with the user guide `Docs/06SUPERPOSITIONHELP.md`.
+- [x] Entanglement walkthrough — page `07Entanglement`: the Bell state via `h`+`cx`
+      with full amplitude/probability/measurement annotation, plus a 3-qubit GHZ
+      state using `cx` across non-adjacent qubits, with the user guide
+      `Docs/07ENTANGLEMENTHELP.md`.
+
 ## Algorithm playground pages (this fork)
 
 Console-only walkthroughs of the canonical quantum algorithms, each with design
