@@ -33,6 +33,13 @@
    about the mean, and a 3-qubit finale with a hand-built CCZ.
  - [12ShorExample](12ShorExample) — compiled Shor factoring of 15: modular
    multiplication, a hand-built QFT†, and phase estimation.
+ - [13Teleportation](13Teleportation) — teleportation and superdense coding:
+   Bell-basis projectors, deferred measurement, and Bloch spheres of every branch.
+ - [14ErrorCorrection](14ErrorCorrection) — the 3-qubit bit-flip/phase-flip code: a
+   hand-built syndrome correction, continuous errors digitized exactly, and where a
+   distance-3 code breaks.
+ - [15CHSH](15CHSH) — the CHSH inequality: the classical bound enumerated exhaustively,
+   a Bell pair's S = 2√2, and the gap plotted on a live chart.
 
  ## User guides
 
@@ -40,7 +47,8 @@
  page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `03BLOCH2DPROJECTIONHELP.md`,
  `04BLOCH3DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
  `07ENTANGLEMENTHELP.md`, `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`,
- `11GROVERPLAN/HELP.md`, and `12SHORPLAN/HELP.md`. The
+ `11GROVERPLAN/HELP.md`, `12SHORPLAN/HELP.md`, `13TELEPORTATIONPLAN/HELP.md`,
+ `14ERRORCORRECTIONPLAN/HELP.md`, and `15CHSHPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
  expected output and troubleshooting. See also `PLAYGROUNDSUPPORT.md` for how code in
  the playground's `Sources/` folder is shared between pages.

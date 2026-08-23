@@ -62,15 +62,15 @@ with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–12 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–12 |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–15 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14 |
 | Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08 |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14 |
 | S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05 |
 | T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
 | Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05 |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05 |
-| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11 |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis) |
+| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–15 |
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
 compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
@@ -78,7 +78,10 @@ compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 | Gate | Built from | Where |
 |------|------------|-------|
 | Pauli-Y (Y) | raw 2×2 `Matrix` | `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`) |
-| CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator) |
+| CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator); page 13 (`h(2); cx(0,2); h(2)` — the deferred Z^a correction) |
+| Bell-basis projector | `(Ket("ab") * Bra("ab")) ⊗ Matrix.identity(size: 2)` | page 13 (recovering one measurement branch without `measure()`) |
+| 3-qubit code correction | 32×32 permutation decoding two syndrome bits and flipping the accused data qubit | page 14 (syndrome-driven error correction via `apply(_:)`) |
+| Tilted observable A(θ) | `cos θ·Z + sin θ·X`, built entrywise | page 15 (CHSH correlators; measured via `ry(-θ)`) |
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
 | QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
@@ -200,7 +203,10 @@ SwiftQiskit/
 │       ├── 09Tensor
 │       ├── 10DeutschExample
 │       ├── 11GroverExample
-│       └── 12ShorExample
+│       ├── 12ShorExample
+│       ├── 13Teleportation
+│       ├── 14ErrorCorrection
+│       └── 15CHSH
 ├── Package.swift
 └── References (tbd)
 ```
@@ -459,9 +465,69 @@ with a 3-qubit counting register and a 4-qubit work register:
 
 Design notes in `Docs/12SHORPLAN.md`; user guide in `Docs/12SHORHELP.md`.
 
+### 13Teleportation
+
+Quantum teleportation and its dual, superdense coding — entanglement used as a
+*communication resource*, with a Bloch-sphere live view:
+
+- **Teleportation on 3 qubits** — Alice's payload, a shared Bell pair, her Bell-basis
+  rotation (`cx(0,1); h(0)`), and Bob's X^b Z^a correction.
+- **Measurement branches without measuring** — the four outcomes recovered with Dirac
+  projectors (\|ab⟩⟨ab\|) ⊗ I₂, showing P(ab) = ¼ regardless of \|ψ⟩ (no signalling) and
+  fidelity 1 once each branch gets its own correction.
+- **Deferred measurement** — classical feedback replaced by `cx(1,2)` and CZ(0,2), after
+  which the register factors exactly as \|+⟩ ⊗ \|+⟩ ⊗ \|ψ⟩ (~8e-17).
+- **No cloning, concretely** — Bob's marginal reproduces \|ψ\|² while Alice's qubit is left
+  in \|+⟩: the state moved rather than copied.
+- **Superdense coding** — two classical bits carried by one qubit, decoded with certainty,
+  with the Bell basis's Gram matrix printed as the identity to show why.
+
+Design notes in `Docs/13TELEPORTATIONPLAN.md`; user guide in `Docs/13TELEPORTATIONHELP.md`.
+
+### 14ErrorCorrection
+
+The 3-qubit bit-flip/phase-flip repetition code — how a quantum computer protects one
+fragile qubit without ever looking at it directly, with a Bloch-sphere live view:
+
+- **Encode and extract a syndrome** — `cx`-based encoding and two ancilla parities that
+  name the flipped qubit (or "none") without touching α or β.
+- **A hand-built correction** — a 32×32 permutation (Core has no Toffoli) that flips
+  whichever qubit the syndrome accuses, applied via `apply(_:)`.
+- **Continuous errors, digitized exactly** — an `rx(θ)` sweep shows the coherent correction
+  restoring fidelity 1.0000 at *every* θ, while the syndrome ancillas alone carry the
+  cos²(θ/2)/sin²(θ/2) branch weights.
+- **Where distance 3 breaks** — two simultaneous errors alias to the wrong syndrome,
+  producing a silent, fully "corrected" logical X; the exact logical error rate
+  p_L = 3p² − 2p³ is confirmed by enumeration.
+- **Phase flips for free** — Hadamard-conjugating the same code (H Z H = X) turns a Z error
+  into the X error the rest of the page already fixes.
+
+Design notes in `Docs/14ERRORCORRECTIONPLAN.md`; user guide in `Docs/14ERRORCORRECTIONHELP.md`.
+
+### 15CHSH
+
+The CHSH inequality — whether a Bell pair's correlations could ever come from a shared
+classical instruction list — with a live chart of the violation:
+
+- **The classical bound, exhaustively** — all 16 deterministic ±1 strategies checked by
+  brute force (max \|S\| = 2), plus a shared-direction hidden-variable model that saturates
+  the bound and doubles as the chart's classical comparison curve.
+- **A pinned measurement convention** — the tilted observable A(θ) = cos θ·Z + sin θ·X,
+  built entrywise, measured via `ry(-θ)`, with the sign checked against the exact
+  expectation value (and against page 04/08's ⟨Z⟩/⟨X⟩ for the same qubit) before it's trusted.
+- **Correlators two ways** — exact via `psi† * (A(a) ⊗ A(b)) * psi` and sampled via
+  `measure(shots:)`, agreeing with cos(a−b).
+- **The violation and its limits** — a Bell pair's S = 2√2 against a product-state control
+  (S = √2) and a fine angle sweep confirming the Tsirelson ceiling of 2√2, never higher.
+- **A live chart** — `CHSHChartView` (new shared `Sources/` type) plots the exact cos θ
+  curve, sampled points, and the classical line together.
+
+Design notes in `Docs/15CHSHPLAN.md`; user guide in `Docs/15CHSHHELP.md`.
+
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
-`Bloch3DView`, `BlochExplorerView`) are shared between these pages via the playground's
-`Sources/` folder (not part of Core) — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
+`Bloch3DView`, `BlochExplorerView`) and the CHSH chart (`CHSHChartView`) are shared between
+these pages via the playground's `Sources/` folder (not part of Core) — see
+[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
 
 ---
 

@@ -100,8 +100,9 @@ The project is actively evolving, and major features are planned.
 
 ## Algorithm playground pages (this fork)
 
-Console-only walkthroughs of the canonical quantum algorithms, each with design
-notes (`Docs/*PLAN.md`) and a user guide (`Docs/*HELP.md`):
+Walkthroughs of the canonical quantum algorithms and protocols, each with design
+notes (`Docs/*PLAN.md`) and a user guide (`Docs/*HELP.md`). Pages 10–12 are console-only;
+page 13 adds a Bloch-sphere live view:
 
 - [x] Deutsch's algorithm — page `10DeutschExample`: the four 1-bit oracles from
       `x(1)`/`cx(0,1)`, phase kickback stage by stage, and deterministic
@@ -116,3 +117,23 @@ notes (`Docs/*PLAN.md`) and a user guide (`Docs/*HELP.md`):
       an entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the
       order r, classical gcd post-processing, and a base sweep including the
       a = 14 failure case (`Docs/12SHORPLAN.md`, `Docs/12SHORHELP.md`).
+- [x] Teleportation & superdense coding — page `13Teleportation`: entanglement as a
+      communication resource; Bell-basis measurement branches via Dirac projectors
+      `(Ket("ab") * Bra("ab")) ⊗ I₂`, the corrections applied through the
+      deferred-measurement principle (`cx(1,2)` + CZ(0,2)) so the register factors exactly
+      as `|+⟩⊗|+⟩⊗|ψ⟩`, no-cloning read off the marginals, and two classical bits carried
+      by one qubit; Bloch-sphere live view of every branch
+      (`Docs/13TELEPORTATIONPLAN.md`, `Docs/13TELEPORTATIONHELP.md`).
+- [x] 3-qubit error correction — page `14ErrorCorrection`: `cx`-based encode and syndrome
+      extraction onto two ancillas, a hand-built 32×32 permutation correction via
+      `apply(_:)`, an `rx(θ)` sweep showing continuous errors digitized to exact fidelity
+      1.0000 at every θ, the distance-3 failure mode with the enumerated logical error rate
+      p_L = 3p² − 2p³, and phase-flip protection via Hadamard conjugation
+      (`Docs/14ERRORCORRECTIONPLAN.md`, `Docs/14ERRORCORRECTIONHELP.md`).
+- [x] CHSH inequality — page `15CHSH`: all 16 deterministic local-hidden-variable strategies
+      enumerated exhaustively (max \|S\| = 2) plus a shared-direction model that saturates
+      the bound, the tilted observable A(θ) = cos θ·Z + sin θ·X built entrywise and measured
+      via `ry(-θ)` with the sign pinned against the exact expectation value, correlators
+      computed both exactly and via `measure(shots:)`, a Bell pair's S = 2√2 against a
+      product-state control and a Tsirelson-bound sweep, and a `CHSHChartView` live chart
+      (`Docs/15CHSHPLAN.md`, `Docs/15CHSHHELP.md`).

@@ -116,6 +116,31 @@ Xcode 27 beta playground evaluator cannot expand the SDK 27 `@State` macro in pa
 code, while the Sources module is compiled by the regular build system, where the
 macro works — see "Xcode 27 beta workarounds" below.
 
+### `CHSHChartView.swift`
+
+Stateless SwiftUI `Canvas` chart for 2D correlation curves: axes, a dashed zero line,
+`Series` drawn either as a connected polyline (`isLine: true`) or a scatter of dots
+(`isLine: false`), and a small legend row. Used by page 15 to plot a quantum correlator
+against its classical comparison line and a set of shot-sampled points.
+
+```swift
+public struct CHSHChartView: View {
+    public struct Series {
+        public init(label: String, color: Color, points: [CGPoint], isLine: Bool)
+    }
+    public init(
+        title: String,
+        xRange: ClosedRange<Double>, yRange: ClosedRange<Double>,
+        series: [Series],
+        size: CGSize = CGSize(width: 480, height: 300)
+    )
+}
+```
+
+Like the Bloch views (other than `BlochExplorerView`), this one has no `@State` and could in
+principle be declared inline in a page — it lives in `Sources/` for the same reason
+`BlochProjectionView` does: it's general-purpose chart code, not page-specific commentary.
+
 ## Which pages use what
 
 | Page | Shared code used |
@@ -125,6 +150,9 @@ macro works — see "Xcode 27 beta workarounds" below.
 | `03Bloch2dProjection` | `BlochVector`, `BlochSphereView` (size 300), two `BlochProjectionView`s |
 | `04Bloch3d` | `BlochExplorerView` (which uses `BlochVector` + `Bloch3DView`) |
 | `08Dirac` | `BlochVector`, `Bloch3DView` (static, Section 7 — the page-04 initial qubit's Pauli expectation values) |
+| `13Teleportation` | `BlochVector`, `BlochSphereView` (\|ψ⟩, the four uncorrected teleportation branches X^b Z^a\|ψ⟩, and Bob's corrected state) |
+| `14ErrorCorrection` | `BlochVector`, `BlochSphereView` (q0's Bloch point: as prepared, decoded without correction, and corrected) |
+| `15CHSH` | `CHSHChartView` (E(θ): exact cos θ curve, sampled points, classical comparison line) |
 
 ## Xcode 27 beta workarounds
 

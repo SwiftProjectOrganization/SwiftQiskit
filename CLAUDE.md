@@ -117,6 +117,31 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   classical gcd post-processing, shots sampled from one `run()` (per-shot
   `measure(shots:)` replay is too slow at dimension 128), and a base sweep including the
   a = 14 failure case (plan in `Docs/12SHORPLAN.md`, user guide in `Docs/12SHORHELP.md`).
+- `13Teleportation` — quantum teleportation and superdense coding: the payload prepared with
+  `ry`/`rz`, Alice's Bell-basis rotation `cx(0,1); h(0)`, the four measurement branches
+  recovered with Dirac projectors `(Ket("ab") * Bra("ab")) ⊗ I₂` (Core has no mid-circuit or
+  partial measurement), the corrections applied by *deferred measurement* as `cx(1,2)` +
+  CZ(0,2) so the register factors exactly as `|+⟩⊗|+⟩⊗|ψ⟩`, no-cloning read off the
+  marginals, and superdense coding with the Bell basis's Gram matrix; live view of |ψ⟩, the
+  four uncorrected branches and Bob's corrected state on the shared `BlochSphereView`
+  (plan in `Docs/13TELEPORTATIONPLAN.md`, user guide in `Docs/13TELEPORTATIONHELP.md`).
+- `14ErrorCorrection` — the 3-qubit bit-flip/phase-flip repetition code: `cx`-based encode
+  and syndrome extraction onto two ancillas, a hand-built 32×32 permutation correction via
+  `apply(_:)` (Core has no Toffoli), an `rx(θ)` sweep showing a continuous error digitized
+  to exact fidelity 1.0000 at every θ, the distance-3 failure mode (two errors alias to a
+  wrong syndrome, giving a silent logical X) with the enumerated logical error rate
+  p_L = 3p² − 2p³, and phase-flip protection via Hadamard conjugation (H Z H = X); Bloch
+  live view of corrected vs. uncorrected q0
+  (plan in `Docs/14ERRORCORRECTIONPLAN.md`, user guide in `Docs/14ERRORCORRECTIONHELP.md`).
+- `15CHSH` — the CHSH inequality: all 16 deterministic local-hidden-variable strategies
+  enumerated exhaustively (max |S| = 2), plus a shared-direction hidden-variable model that
+  saturates the bound and doubles as the classical comparison curve; the tilted observable
+  A(θ) = cos θ·Z + sin θ·X built entrywise (no `+`/scalar ops on `Matrix`) and measured via
+  `ry(-θ)` with its sign pinned against the exact expectation value; correlators computed
+  both exactly (`psi† * (A(a) ⊗ A(b)) * psi`) and via `measure(shots:)`; a Bell pair's
+  S = 2√2 against a product-state control and a Tsirelson-bound sweep; a `CHSHChartView`
+  live chart of the violation (plan in `Docs/15CHSHPLAN.md`, user guide in
+  `Docs/15CHSHHELP.md`).
 
 Playground notes:
 
