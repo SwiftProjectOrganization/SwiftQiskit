@@ -216,7 +216,8 @@ macOS 13+ / iOS 16+.
 
 This fork's playground pages, however, are developed and tested against **Xcode 27.0 beta**
 and **macOS 27 beta** — some SwiftUI live-view pages need the beta-specific workarounds in
-[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds) on Xcode 27 betas.
+[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds) on Xcode 27 betas
+(confirmed still needed on beta 5, 27A5237l).
 
 ---
 
@@ -345,7 +346,8 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
   currently needs two workarounds, described in
   [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds): a shim
   `libcups.dylib` in DerivedData, and keeping `@State`-based views in the playground's
-  `Sources/` folder (which is why the slider view `BlochExplorerView` lives there).
+  `Sources/` folder (which is why the slider view `BlochExplorerView` lives there). Both
+  are confirmed still present on beta 5 (27A5237l).
 
 User guide: [Docs/04BLOCH3DHELP.md](Docs/04BLOCH3DHELP.md).
 

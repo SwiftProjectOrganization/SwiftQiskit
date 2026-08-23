@@ -127,12 +127,14 @@ Playground notes:
   module auto-imported by every page; declarations there must be `public` (including
   explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current API.
 - Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
-- **Xcode 27 beta (machine-specific; still present on some Macs in beta 4, 27A5228h):**
+- **Xcode 27 beta (confirmed present through beta 5, 27A5237l, 2026-08-23):**
   two evaluator bugs break SwiftUI pages — a missing `libcups.dylib` (needs a shim in
-  DerivedData, wiped by clean builds and playground rebuilds) and `@State` macro expansion
-  failing in page code (stateful views must live in `Sources/`). A fresh clone on another
-  Mac with identical Xcode/macOS betas showed neither bug. Workarounds and the shim recipe
-  are in `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds".
+  DerivedData, wiped by ordinary run/build activity on beta 5, not just Clean Build
+  Folder — re-copy immediately before each run) and `@State` macro expansion failing in
+  page code (stateful views must live in `Sources/`). A page that looks fixed after an
+  untouched rerun may just be reusing a stale build — only a freshly recompiled page run
+  is a valid test. Workarounds and the shim recipe are in `PLAYGROUNDSUPPORT.md`
+  § "Xcode 27 beta workarounds".
 
 ## Conventions & Gotchas
 

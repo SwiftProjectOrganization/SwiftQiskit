@@ -128,11 +128,33 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 ## Xcode 27 beta workarounds
 
-As of Xcode 27.0 beta (27A5209h, July 2026), the playground expression evaluator has two
-bugs that break SwiftUI pages. Both are toolchain issues, not project issues; remove the
-workarounds once a fixed Xcode ships. **Both bugs verified still present in beta 4
+As of Xcode 27.0 beta (27A5209h, July 2026), the playground expression evaluator had two
+bugs that break SwiftUI pages. Both are toolchain issues, not project issues; remove a
+workaround once a fixed Xcode ships. **Both bugs verified still present in beta 4
 (27A5228h) on 2026-07-20** — by running page 02 with the shims removed (bug 1) and a page
 with an inline `@State` view (bug 2).
+
+**Update, beta 5 (27A5237l), 2026-08-23: both bugs verified still present.** A first pass
+that ran `02Bloch2d` unmodified and shim-free looked like bug 1 was fixed — but that page's
+`PageSources` framework hadn't been recompiled since 2026-08-19, so it was reusing an
+already-built, already-loaded module rather than exercising a fresh link. Editing the page
+(adding a harmless `@State` property, see below) forced a recompile, and the cups error came
+right back, shim-free. **Lesson: a passing run only means something if the page was actually
+rebuilt — an untouched page can look "fixed" purely by reusing a stale build.**
+
+The shim itself is also **more fragile on beta 5** than the original recipe assumes: it
+disappeared from all three DerivedData paths within minutes of being placed, before any
+explicit Clean Build Folder — ordinary run/build activity wiped it. Re-copy the shim
+immediately before each run; don't assume it survives between attempts.
+
+With a fresh shim in place immediately before running, bug 2 was also confirmed present:
+adding `@State private var taps = 0` (initial value at the declaration, `private`, per
+Apple's documented pattern — see `Docs/State()`) and mutating it in a Button action
+produced **both** known symptom variants at once — `plugin for module 'SwiftUIMacros' not
+found` *and* `left side of mutating operator isn't mutable: 'self' is immutable` — where
+beta 4 showed them as alternating depending on cache-wipe state. Consistent with: the
+macro fails to expand, so the compiler falls back to treating `taps` as a plain stored
+property, which then can't be mutated from the non-mutating `body` getter.
 
 **The bugs appear to be machine-specific.** On 2026-07-20 a fresh clone on an M3 Mac with
 the same Xcode 27 beta 4 and macOS 27 beta 4 ran the SwiftUI pages with no shim at all
@@ -165,10 +187,12 @@ another Mac; if it fails there too, this belongs in a Feedback to Apple.
 
 The macOS 27 SDK's `CUPS` clang module declares `link "cups"`, and the evaluator tries to
 `dlopen` a literal `libcups.dylib` — which only exists inside the dyld shared cache (as
-`libcups.2.dylib`), not on disk, so every page importing SwiftUI fails to run. Note the bug
-is specific to the evaluator's loading path: a plain-process `dlopen("libcups.dylib")`
-succeeds via the shared cache, so a dlopen test outside the evaluator does not prove the
-bug is fixed — only an actual page run does.
+`libcups.2.dylib`), not on disk, so every page importing SwiftUI fails to run on a fresh
+build. Note the bug is specific to the evaluator's loading path: a plain-process
+`dlopen("libcups.dylib")` succeeds via the shared cache, so a dlopen test outside the
+evaluator does not prove the bug is fixed — only an actual page run, on a page that was
+just rebuilt, does. **Still present in beta 5 (27A5237l), verified 2026-08-23** — see the
+update note above for how an earlier, unrebuilt test run looked like a false fix.
 
 **Workaround:** build a shim dylib that re-exports the real library and drop it into the
 playground product directories in DerivedData (which are on the evaluator's search path):
@@ -183,15 +207,29 @@ cp /tmp/libcups.dylib $DD/Playgrounds/Products/Debug/PackageFrameworks/
 ```
 
 **Clean Build Folder deletes the shim**, and playground rebuilds can regenerate the whole
-products tree (which also removes it) — rerun the copies whenever the error comes back. If the
-same error names a different library (`z` and `resolv` are also cache-only), the identical
+products tree (which also removes it) — rerun the copies whenever the error comes back. On
+beta 5, this happened much faster than "Clean Build Folder" implies: the shim vanished
+within minutes of ordinary run/build activity, with no explicit clean triggered. Treat it
+as needing a fresh copy immediately before every run, not a one-time setup. If the same
+error names a different library (`z` and `resolv` are also cache-only), the identical
 recipe works with `-reexport-l<name>`.
 
-### 2. `plugin for module 'SwiftUIMacros' not found`
+### 2. `plugin for module 'SwiftUIMacros' not found` (and its `@State` sibling)
 
 In SDK 27, SwiftUI's `@State` is a macro implemented in a compiler plugin, and the
 evaluator cannot load that plugin for code typed directly in a *page*. Code in `Sources/`
 is compiled by the regular build system, where the macro expands fine.
+
+**Still present in beta 5 (27A5237l), verified 2026-08-23** by adding `@State private var
+taps = 0` (initial value at the declaration, `private`, per Apple's documented `State()`
+pattern — this rules out the error being a legitimate SDK 27 migration mistake rather than
+the evaluator bug) and `taps += 1` in a Button action to `02Bloch2d`'s inline
+`BlochGalleryView`. Unlike beta 4, where the two symptoms below appeared to alternate
+depending on whether the DerivedData caches had been wiped, beta 5 produced **both at
+once** for the same property: the macro-not-found error at the declaration, and the
+mutating-operator error at the mutation site. Consistent with one root cause — the macro
+fails to expand, so the compiler falls back to a plain stored property, which then can't
+be mutated from `body`'s non-mutating getter.
 
 **Workaround:** any view using `@State` (or other SwiftUI macros) must live in `Sources/`
 as a `public` type; the page only instantiates it. This is why `BlochExplorerView` is in
