@@ -37,7 +37,8 @@
  ## User guides
 
  Several pages have companion documents in `Docs/` at the repo root, prefixed with the
- page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
+ page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `03BLOCH2DPROJECTIONHELP.md`,
+ `04BLOCH3DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
  `07ENTANGLEMENTHELP.md`, `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`,
  `11GROVERPLAN/HELP.md`, and `12SHORPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with

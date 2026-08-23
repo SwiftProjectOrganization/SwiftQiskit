@@ -108,7 +108,7 @@ and the poles straight up/down at full length. Other elements:
   repeats the numeric (x, y, z) and (θ, φ).
 
 The projection is fixed. For a rotatable view of the same states, see page
-`04Bloch3d` (`Bloch3DView` with drag-to-orbit).
+`04Bloch3d` (`Bloch3DView` with drag-to-orbit; user guide `Docs/04BLOCH3DHELP.md`).
 
 ## Putting a live view on a playground page
 

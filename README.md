@@ -171,6 +171,8 @@ SwiftQiskit/
 ├── Docs/
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
+│   ├── 03BLOCH2DPROJECTIONHELP.md
+│   ├── 04BLOCH3DHELP.md
 │   ├── 05GATESHELP.md
 │   ├── 06SUPERPOSITIONHELP.md
 │   ├── 07ENTANGLEMENTHELP.md
@@ -325,6 +327,8 @@ A *general* single-qubit state, tilted off the equator of the Bloch sphere (45°
 - **Live view** — the state on a large Bloch sphere plus two **plane projections**
   (x–y seen from +z, z–y seen from +x) drawn by the shared `BlochProjectionView`.
 
+User guide in `Docs/03BLOCH2DPROJECTIONHELP.md`.
+
 ### 04Bloch3d
 
 An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure SwiftUI
@@ -342,6 +346,8 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
   [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md#xcode-27-beta-workarounds): a shim
   `libcups.dylib` in DerivedData, and keeping `@State`-based views in the playground's
   `Sources/` folder (which is why the slider view `BlochExplorerView` lives there).
+
+User guide: [Docs/04BLOCH3DHELP.md](Docs/04BLOCH3DHELP.md).
 
 ### 05Gates
 

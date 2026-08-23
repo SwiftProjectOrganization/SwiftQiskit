@@ -60,6 +60,15 @@ The project is actively evolving, and major features are planned.
       α, β → (x, y, z), page walkthrough and exact expected output, how the oblique
       projection reads, and the general recipe for putting a SwiftUI live view on a
       playground page (explicit root frame, stateless-inline vs. `@State`-in-`Sources/`).
+- [x] User guide for the tilted-qubit/plane-projection page —
+      `Docs/03BLOCH2DPROJECTIONHELP.md`: the direction-cosine derivation of θ/φ, exact
+      expected console output for the round-trip check, and how to read the two
+      `BlochProjectionView` panels (including why the x–y panel flips its vertical axis).
+- [x] User guide for the 3D Bloch sphere page — `Docs/04BLOCH3DHELP.md`: the θ/φ
+      parametrization and why its two sliders are independent, exact expected console
+      output, the orbit-camera/perspective-projection model behind `Bloch3DView`
+      (near/far wireframe opacity, silhouette scaling, drag-to-orbit), and how the page's
+      starting state matches page `08Dirac`'s initial qubit.
 
 ## Bra/ket & tensor-product additions (this fork)
 

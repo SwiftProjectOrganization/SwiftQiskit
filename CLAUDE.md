@@ -77,10 +77,11 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
   (User guide for page 02 in `Docs/02BLOCH2DHELP.md`, which also documents the general
-  live-view recipe for playground pages.)
+  live-view recipe for playground pages; user guide for page 03 — a general tilted state
+  plus its x–y/z–y plane projections — in `Docs/03BLOCH2DPROJECTIONHELP.md`.)
 - `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
-  `BlochExplorerView`.
+  `BlochExplorerView` (user guide in `Docs/04BLOCH3DHELP.md`).
 - `05Gates` — a gentle, gate-by-gate tour of the built-in gate set in the results sidebar
   (no live view): `x/h/z/y/s/sdg/t/p/rx/ry/rz` each shown individually on a 1-qubit
   `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to

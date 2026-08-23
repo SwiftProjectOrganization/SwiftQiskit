@@ -35,9 +35,10 @@ import SwiftQiskitCore
 // ============================================================
 // Section 2 — Build the state
 // ============================================================
-// SwiftQiskit v0.1 has no rotation or phase gates yet, so the
-// state is constructed directly from its amplitudes.
-// StateVector's initializer normalizes for us.
+// The state is constructed directly from its amplitudes, to show
+// the θ/φ parametrization explicitly; StateVector's initializer
+// normalizes for us. The same state also comes out of gates:
+// qc.ry(theta, 0) followed by qc.p(phi, 0) on a 1-qubit circuit.
 
 let theta = Double.pi / 3                       // 60°
 let phi = atan2(0.5, sqrt(2) / 2)               // ≈ 35.264°

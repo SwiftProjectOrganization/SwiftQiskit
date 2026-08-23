@@ -12,7 +12,7 @@ import SwiftQiskitCore
 /// valid normalized state.
 ///
 /// This view lives in the shared Sources folder (rather than inline in
-/// page 07) because the Xcode 27 beta playground evaluator cannot expand
+/// page 04) because the Xcode 27 beta playground evaluator cannot expand
 /// the SDK 27 `@State` macro in page code; Sources is compiled by the
 /// regular build system, where the macro works.
 public struct BlochExplorerView: View {
