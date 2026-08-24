@@ -62,15 +62,15 @@ with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–15 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14 |
-| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14 |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16 |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18 |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); page 18 (`PauliYGate.matrix` as a raw Hamiltonian term, not via `y(qubit)`) |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; page 18 (`PauliZGate.matrix` as a raw Hamiltonian term) |
 | S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05 |
 | T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
-| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05 |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis) |
-| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–15 |
+| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05; page 16 (the building block of the hand-built controlled-phase CP(θ), five gates deep) |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter) |
+| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18 |
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
 compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
@@ -85,6 +85,8 @@ compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
 | QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
+| Controlled phase CP(θ) | `p(θ/2, c); cx(c,t); p(-θ/2, t); cx(c,t); p(θ/2, t)` | page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π) |
+| H₂ Hamiltonian (Jordan–Wigner, 2 qubits) | six Pauli terms (I⊗I, Z⊗I, I⊗Z, Z⊗Z, Y⊗Y, X⊗X) combined entrywise | page 18 (VQE's energy operator) |
 
 ---
 
@@ -206,7 +208,10 @@ SwiftQiskit/
 │       ├── 12ShorExample
 │       ├── 13Teleportation
 │       ├── 14ErrorCorrection
-│       └── 15CHSH
+│       ├── 15CHSH
+│       ├── 16QFT
+│       ├── 17DeutschJozsa
+│       └── 18VQE
 ├── Package.swift
 └── References (tbd)
 ```
@@ -524,10 +529,62 @@ classical instruction list — with a live chart of the violation:
 
 Design notes in `Docs/15CHSHPLAN.md`; user guide in `Docs/15CHSHHELP.md`.
 
+### 16QFT
+
+The quantum Fourier transform as a gate circuit (console only) — closing the gap page 12 left
+open when it built the QFT as a single entrywise matrix:
+
+- **The missing gate** — controlled phase CP(θ) derived from `p` + `cx` alone
+  (`p(θ/2,c); cx(c,t); p(-θ/2,t); cx(c,t); p(θ/2,t)`), checked against CZ at θ = π.
+- **The QFT ladder** — Hadamards and CP's per qubit, plus a swap network, checked against
+  page 12's entrywise DFT to ~1e-15 on every basis state.
+- **Why the swaps** — dropping them reproduces the exact bit-reversal of the correct output.
+- **The inverse QFT and unitarity** — QFT then QFT† returns every basis state to itself.
+- **Standalone phase estimation** — exact recovery of dyadic phases, a spread for phases that
+  aren't, and a precision comparison at 3 vs. 6 counting qubits.
+
+Design notes in `Docs/16QFTPLAN.md`; user guide in `Docs/16QFTHELP.md`.
+
+### 17DeutschJozsa
+
+Deutsch–Jozsa and Bernstein–Vazirani (console only) — page 10's algorithm generalized from 1
+bit to n:
+
+- **The n-qubit circuit** — page 10's shape widened to n input qubits + 1 ancilla.
+- **Oracles from `cx`** — constant and balanced functions built the same way page 10 did.
+- **The verdict** — P(all-zero input) is exactly 1 or 0, from a single query, for any n.
+- **A shot-sampling gotcha** — the ancilla's bit is a free coin flip; only the input bits are
+  deterministic in `measure(shots:)` output.
+- **Bernstein–Vazirani** — the identical circuit recovers an entire hidden n-bit string in
+  one query.
+- **The query-count gap** — quantum stays at 1 while classical Deutsch–Jozsa's worst case
+  grows exponentially and classical Bernstein–Vazirani grows linearly.
+
+Design notes in `Docs/17DEUTSCHJOZSAPLAN.md`; user guide in `Docs/17DEUTSCHJOZSAHELP.md`.
+
+### 18VQE
+
+The variational quantum eigensolver — the one page where the circuit isn't fixed in advance,
+with a live chart of the optimization:
+
+- **The Hamiltonian** — the qubit Hamiltonian for H₂ (Jordan–Wigner, minimal basis), assembled
+  entrywise from six Pauli terms.
+- **A one-parameter ansatz** — `x(0); ry(θ,1); cx(1,0)`, provably confined to the
+  {\|01⟩,\|10⟩} subspace.
+- **The energy** — `psi† * H * psi`, page 08's Dirac expectation-value idiom.
+- **The exact answer** — a closed-form 2×2 eigenvalue, used only to grade the optimizer.
+- **Parameter-shift gradients** — exact, not approximate, for a single-rotation ansatz;
+  pinned against a finite difference.
+- **Gradient descent** — converges to the exact ground energy (error 0.00e+00) in ~10 steps.
+- **A live chart** — the E(θ) landscape and the optimizer's own visited points, on the shared
+  `CHSHChartView`.
+
+Design notes in `Docs/18VQEPLAN.md`; user guide in `Docs/18VQEHELP.md`.
+
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
-`Bloch3DView`, `BlochExplorerView`) and the CHSH chart (`CHSHChartView`) are shared between
-these pages via the playground's `Sources/` folder (not part of Core) — see
-[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
+`Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15
+and 18) are shared between these pages via the playground's `Sources/` folder (not part of
+Core) — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
 
 ---
 

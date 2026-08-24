@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// A minimal 2D line/scatter chart for plotting correlation curves —
-/// e.g. the quantum E(θ) = cos θ against a classical comparison line.
-/// Stateless (no `@State`), so it can be declared and instantiated
-/// directly in page code — see PLAYGROUNDSUPPORT.md.
+/// A minimal, general-purpose 2D line/scatter chart — used for the CHSH
+/// correlation curves (page 15) and the VQE energy landscape and
+/// optimizer trajectory (page 18). Stateless (no `@State`), so it can
+/// be declared and instantiated directly in page code — see
+/// PLAYGROUNDSUPPORT.md.
 public struct CHSHChartView: View {
 
     /// One plotted series: either a connected curve (`isLine: true`,

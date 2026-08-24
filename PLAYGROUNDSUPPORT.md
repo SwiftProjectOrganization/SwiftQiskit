@@ -118,10 +118,11 @@ macro works — see "Xcode 27 beta workarounds" below.
 
 ### `CHSHChartView.swift`
 
-Stateless SwiftUI `Canvas` chart for 2D correlation curves: axes, a dashed zero line,
-`Series` drawn either as a connected polyline (`isLine: true`) or a scatter of dots
+Stateless SwiftUI `Canvas` chart for generic 2D line/scatter data: axes, a dashed zero
+line, `Series` drawn either as a connected polyline (`isLine: true`) or a scatter of dots
 (`isLine: false`), and a small legend row. Used by page 15 to plot a quantum correlator
-against its classical comparison line and a set of shot-sampled points.
+against its classical comparison line and a set of shot-sampled points, and by page 18 to
+plot a VQE energy landscape against the optimizer's own visited points.
 
 ```swift
 public struct CHSHChartView: View {
@@ -153,6 +154,7 @@ principle be declared inline in a page — it lives in `Sources/` for the same r
 | `13Teleportation` | `BlochVector`, `BlochSphereView` (\|ψ⟩, the four uncorrected teleportation branches X^b Z^a\|ψ⟩, and Bob's corrected state) |
 | `14ErrorCorrection` | `BlochVector`, `BlochSphereView` (q0's Bloch point: as prepared, decoded without correction, and corrected) |
 | `15CHSH` | `CHSHChartView` (E(θ): exact cos θ curve, sampled points, classical comparison line) |
+| `18VQE` | `CHSHChartView` (VQE energy landscape E(θ) as a line, gradient-descent trajectory as scatter points) |
 
 ## Xcode 27 beta workarounds
 

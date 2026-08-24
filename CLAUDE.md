@@ -142,6 +142,26 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   S = 2√2 against a product-state control and a Tsirelson-bound sweep; a `CHSHChartView`
   live chart of the violation (plan in `Docs/15CHSHPLAN.md`, user guide in
   `Docs/15CHSHHELP.md`).
+- `16QFT` — the quantum Fourier transform as a gate circuit (console only): a controlled
+  phase CP(θ) derived from `p`+`cx` (`p(θ/2,c); cx(c,t); p(-θ/2,t); cx(c,t); p(θ/2,t)`), the
+  QFT ladder checked against page 12's entrywise DFT to ~1e-15, a no-swap bit-reversal
+  demonstration, the inverse QFT with a unitarity check, and standalone phase estimation —
+  exact for dyadic phases, spread otherwise, with a precision comparison at 3 vs. 6 counting
+  qubits (plan in `Docs/16QFTPLAN.md`, user guide in `Docs/16QFTHELP.md`).
+- `17DeutschJozsa` — Deutsch–Jozsa and Bernstein–Vazirani (console only): page 10's circuit
+  generalized to n input qubits, `cx`-built constant/balanced oracles, a deterministic
+  all-zero-vs-not verdict from one query, a `measure(shots:)` gotcha (the ancilla's bit is
+  random; only the input bits are deterministic), Bernstein–Vazirani recovering a hidden
+  n-bit string from the identical circuit, and a query-count table showing the classical
+  cost growing exponentially (DJ) or linearly (BV) while the quantum cost stays at 1 (plan in
+  `Docs/17DEUTSCHJOZSAPLAN.md`, user guide in `Docs/17DEUTSCHJOZSAHELP.md`).
+- `18VQE` — the variational quantum eigensolver: an H₂ qubit Hamiltonian (Jordan–Wigner,
+  minimal basis) built entrywise from six Pauli terms, a one-parameter ansatz
+  `x(0); ry(θ,1); cx(1,0)` provably confined to the `{|01⟩,|10⟩}` subspace, the energy via
+  `psi† * H * psi`, a closed-form 2×2 eigenvalue for grading, *exact* parameter-shift
+  gradients pinned against a finite difference, gradient descent converging to error
+  0.00e+00, and a live chart of the E(θ) landscape with the optimizer's own path, on the
+  shared `CHSHChartView` (plan in `Docs/18VQEPLAN.md`, user guide in `Docs/18VQEHELP.md`).
 
 Playground notes:
 

@@ -137,3 +137,25 @@ page 13 adds a Bloch-sphere live view:
       computed both exactly and via `measure(shots:)`, a Bell pair's S = 2√2 against a
       product-state control and a Tsirelson-bound sweep, and a `CHSHChartView` live chart
       (`Docs/15CHSHPLAN.md`, `Docs/15CHSHHELP.md`).
+- [x] The QFT gate decomposition — page `16QFT`: a controlled phase CP(θ) derived from
+      `p`+`cx`, the QFT ladder (Hadamards, CP cascade, swap network) checked against page
+      12's entrywise matrix to ~1e-15, a no-swap bit-reversal demonstration, the inverse QFT
+      with a unitarity check, and standalone phase estimation — exact for dyadic phases,
+      spread otherwise, with precision improving at more counting qubits
+      (`Docs/16QFTPLAN.md`, `Docs/16QFTHELP.md`).
+- [x] Deutsch–Jozsa and Bernstein–Vazirani — page `17DeutschJozsa`: page 10's one-query
+      circuit generalized to n input qubits, `cx`-built constant/balanced oracles, a
+      deterministic verdict, a `measure(shots:)` gotcha about the ancilla's free bit,
+      Bernstein–Vazirani recovering a hidden n-bit string from the identical circuit, and a
+      query-count table contrasting the classical exponential/linear costs against the
+      quantum constant of 1 (`Docs/17DEUTSCHJOZSAPLAN.md`, `Docs/17DEUTSCHJOZSAHELP.md`).
+
+## Variational (NISQ-era) playground page (this fork)
+
+- [x] VQE — page `18VQE`: the first page where the circuit isn't fixed in advance. An H₂
+      qubit Hamiltonian (Jordan–Wigner, minimal basis) built entrywise from six Pauli terms,
+      a one-parameter ansatz confined to the `{|01⟩,|10⟩}` subspace, the energy via page 08's
+      `psi† * H * psi`, a closed-form 2×2 eigenvalue for grading, exact parameter-shift
+      gradients pinned against a finite difference, gradient descent converging to error
+      0.00e+00, and a live chart (the shared `CHSHChartView`) of the energy landscape with
+      the optimizer's own path (`Docs/18VQEPLAN.md`, `Docs/18VQEHELP.md`).

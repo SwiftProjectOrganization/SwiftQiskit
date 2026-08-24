@@ -40,6 +40,13 @@
    distance-3 code breaks.
  - [15CHSH](15CHSH) — the CHSH inequality: the classical bound enumerated exhaustively,
    a Bell pair's S = 2√2, and the gap plotted on a live chart.
+ - [16QFT](16QFT) — the quantum Fourier transform as a gate circuit: a hand-derived
+   controlled-phase gate, the QFT ladder checked against page 12's matrix, and standalone
+   phase estimation.
+ - [17DeutschJozsa](17DeutschJozsa) — Deutsch–Jozsa and Bernstein–Vazirani: page 10's
+   one-query trick generalized to n bits, plus recovering a hidden string in one query.
+ - [18VQE](18VQE) — the variational quantum eigensolver: an H₂ Hamiltonian, a one-parameter
+   ansatz, exact parameter-shift gradients, and gradient descent plotted live.
 
  ## User guides
 
@@ -48,7 +55,8 @@
  `04BLOCH3DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
  `07ENTANGLEMENTHELP.md`, `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`,
  `11GROVERPLAN/HELP.md`, `12SHORPLAN/HELP.md`, `13TELEPORTATIONPLAN/HELP.md`,
- `14ERRORCORRECTIONPLAN/HELP.md`, and `15CHSHPLAN/HELP.md`. The
+ `14ERRORCORRECTIONPLAN/HELP.md`, `15CHSHPLAN/HELP.md`, `16QFTPLAN/HELP.md`,
+ `17DEUTSCHJOZSAPLAN/HELP.md`, and `18VQEPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
  expected output and troubleshooting. See also `PLAYGROUNDSUPPORT.md` for how code in
  the playground's `Sources/` folder is shared between pages.
