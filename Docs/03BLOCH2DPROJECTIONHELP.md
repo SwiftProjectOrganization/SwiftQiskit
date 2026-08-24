@@ -5,8 +5,8 @@ with a single *general* single-qubit state and its plane projections. As with `0
 there is no separate design/plan document — the page, its comments, and the shared
 implementation in `Playgrounds.playground/Sources/` (`BlochVector.swift`,
 `BlochSphereView.swift`, `BlochProjectionView.swift`) are the reference; see
-`02BLOCH2DHELP.md` for the Bloch map itself and the general live-view recipe (both apply
-unchanged here) and `PLAYGROUNDSUPPORT.md` for how `Sources/` sharing works.
+`02BLOCH2DHELP.md` for the Bloch map itself (applies unchanged here) and
+`Docs/LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
 
 ## What the page shows
 
@@ -153,10 +153,9 @@ state in the x–y panel) reaches the circle's edge.
 
 ## Using it in your own code
 
-`BlochProjectionView` lives in the playground's `Sources/` folder, **not** in
-`SwiftQiskitCore` (Bloch math stays out of Core) — it's available on every playground page,
-not in library targets. It takes any two labeled numbers, so it isn't limited to Bloch
-components:
+`BlochProjectionView` lives in the playground's `Sources/` folder, not in
+`SwiftQiskitCore` (see `Docs/LIVEVIEWHELP.md` for how that sharing works, and for why the
+view takes any two labelled numbers rather than being limited to Bloch components):
 
 ```swift
 import SwiftUI
@@ -191,19 +190,11 @@ parametrization explicit for the reader.
 
 ## Troubleshooting
 
-- **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`.
-- **`Failed to load linked library cups of module SwiftUI`** — the Xcode 27 beta libcups
-  bug; install the shim per `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (a clean
-  build deletes it — rerun the copies).
 - **A projected arrow doesn't reach the panel's circle** — expected whenever the state
   points out of that plane; only a state lying exactly in the drawn plane reaches the edge.
   See "Reading the drawing" above for which component each panel drops.
-- **`Bloch sphere is defined for single-qubit states` precondition** — `BlochVector` was
-  handed a multi-qubit state; it only accepts `dimension == 2`.
-- **Live view blank, collapsed, or clipped** — the root view passed to `setLiveView` is
-  missing an explicit `.frame(width:height:)`; this page's `BlochDetailView` is already
-  framed 460 × 720.
-- **`Cannot find 'BlochProjectionView'/'BlochSphereView'/'BlochVector' in scope`** — the
-  `Sources/` declaration (or its `init`) isn't `public`, or the file isn't in the
-  playground's top-level `Sources/` folder.
+- **Live view blank, collapsed, or clipped** — this page's `BlochDetailView` is already
+  framed 460 × 720; if it still looks wrong, see the general causes in
+  `Docs/LIVEVIEWHELP.md` § "Troubleshooting" (which also covers the scheme-build
+  requirement, the libcups shim, `Cannot find 'X' in scope`, and the `BlochVector`
+  single-qubit precondition).

@@ -179,18 +179,11 @@ let doubled = psi ⊗ psi                     // |ψ⟩ ⊗ |ψ⟩ — a 4-dim S
 
 - **Nothing prints when the page runs** — expected; this page has no `print` calls.
   Check the results sidebar (or Quick Look on individual lines), not the console.
-- **Page won't run / no results at all** — the SwiftQiskit scheme must build first;
-  check for compile errors in `Sources/SwiftQiskitCore/`.
-- **`Failed to load linked library cups of module SwiftUI`** — the Xcode 27 beta libcups
-  bug; install the shim per `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (a clean
-  build deletes it — rerun the copies).
-- **Live view blank, collapsed, or clipped** — the root view passed to `setLiveView`
-  needs an explicit `.frame(width:height:)`; this page's `CircuitStagesView` already has
-  one (`560 × 1340`) — if it looks wrong, check for edits to that frame or to `stages1`/
-  `stages2`.
 - **A Bloch coordinate is slightly off from the "textbook" value** — check whether the
   triggering gate used a decimal literal like `1.571` instead of `.pi / 2`; see the
   reading note above.
-- **`Cannot find 'BlochVector'/'BlochSphereView' in scope`** — the `Sources/` declaration
-  (or its `init`) isn't `public`, or the file isn't in the playground's top-level
-  `Sources/` folder.
+- **Live view blank, collapsed, or clipped** — this page's `CircuitStagesView` already
+  has an explicit frame (`560 × 1340`) — if it looks wrong, check for edits to that frame
+  or to `stages1`/`stages2`; for the general causes see `Docs/LIVEVIEWHELP.md`
+  § "Troubleshooting" (which also covers the scheme-build requirement, the libcups shim,
+  `Cannot find 'X' in scope`, and the `BlochVector` single-qubit precondition).

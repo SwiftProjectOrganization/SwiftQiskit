@@ -1,6 +1,8 @@
 # Playground Support Code
 
-How code is shared between the pages of `Playgrounds.playground`.
+How code is shared between the pages of `Playgrounds.playground`. This is the terse
+implementation reference; the user-facing guide (usage snippets, the live-view recipe,
+and troubleshooting) is `Docs/LIVEVIEWHELP.md`.
 
 ## How sharing works
 
@@ -111,10 +113,12 @@ normalized, which is why the two sliders are independent).
 public init()   // starts at θ = 60°, φ = 45°
 ```
 
-Unlike the other views, this one is in Sources out of necessity, not reuse: the
+Like `Bloch3DView` above, this one is in `Sources/` out of necessity, not just reuse: the
 Xcode 27 beta playground evaluator cannot expand the SDK 27 `@State` macro in page
 code, while the Sources module is compiled by the regular build system, where the
-macro works — see "Xcode 27 beta workarounds" below.
+macro works — see "Xcode 27 beta workarounds" below. `BlochExplorerView` and
+`Bloch3DView` are the two stateful views in this file (`@State theta/phi` and
+`@State azimuth/elevation/lastDrag` respectively); every other view here is stateless.
 
 ### `CHSHChartView.swift`
 
@@ -138,9 +142,10 @@ public struct CHSHChartView: View {
 }
 ```
 
-Like the Bloch views (other than `BlochExplorerView`), this one has no `@State` and could in
-principle be declared inline in a page — it lives in `Sources/` for the same reason
-`BlochProjectionView` does: it's general-purpose chart code, not page-specific commentary.
+Like the Bloch views other than `BlochExplorerView`/`Bloch3DView`, this one has no
+`@State` and could in principle be declared inline in a page — it lives in `Sources/` for
+the same reason `BlochProjectionView` does: it's general-purpose chart code, not
+page-specific commentary.
 
 ## Which pages use what
 

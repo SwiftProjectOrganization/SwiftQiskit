@@ -76,9 +76,10 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
   via SwiftUI Canvas live views, built on the shared types in
   `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
-  (User guide for page 02 in `Docs/02BLOCH2DHELP.md`, which also documents the general
-  live-view recipe for playground pages; user guide for page 03 — a general tilted state
-  plus its x–y/z–y plane projections — in `Docs/03BLOCH2DPROJECTIONHELP.md`.)
+  (User guide for page 02 in `Docs/02BLOCH2DHELP.md`; user guide for page 03 — a general
+  tilted state plus its x–y/z–y plane projections — in `Docs/03BLOCH2DPROJECTIONHELP.md`.
+  The general live-view recipe and the shared `Sources/` module are documented in
+  `Docs/LIVEVIEWHELP.md`, not page-numbered since it isn't tied to one page.)
 - `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView` (user guide in `Docs/04BLOCH3DHELP.md`).
@@ -170,7 +171,9 @@ Playground notes:
 - Pages are linked sequentially with `//: [Previous](@previous)` / `//: [Next](@next)` markers.
 - Code shared by multiple pages lives in `Playgrounds.playground/Sources/` — an auxiliary
   module auto-imported by every page; declarations there must be `public` (including
-  explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current API.
+  explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current
+  API, and `Docs/LIVEVIEWHELP.md` for the user-facing guide (usage snippets, the
+  live-view recipe, troubleshooting).
 - Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
 - **Xcode 27 beta (confirmed present through beta 5, 27A5237l, 2026-08-23):**
   two evaluator bugs break SwiftUI pages — a missing `libcups.dylib` (needs a shim in

@@ -5,8 +5,8 @@ state on a rotatable 3D Bloch sphere with a SwiftUI live view and live θ/φ sli
 with `02Bloch2d`/`03Bloch2dProjection` there is no separate design/plan document — the
 shared implementation in `Playgrounds.playground/Sources/` (`BlochVector.swift`,
 `Bloch3DView.swift`, `BlochExplorerView.swift`) and its doc comments are the reference;
-see `02BLOCH2DHELP.md` for the Bloch map itself and the general live-view recipe (both
-apply unchanged here) and `PLAYGROUNDSUPPORT.md` for how `Sources/` sharing works.
+see `02BLOCH2DHELP.md` for the Bloch map itself (applies unchanged here) and
+`Docs/LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
 
 ## What the page shows
 
@@ -135,10 +135,9 @@ For the fixed 2D oblique projection this page's camera model replaces, see
 
 ## Using it in your own code
 
-`Bloch3DView` and `BlochExplorerView` live in the playground's `Sources/` folder, **not**
-in `SwiftQiskitCore` — available on every playground page (auto-imported), but not in
-library targets ("Bloch math stays out of Core"). `Bloch3DView` takes the same
-`BlochVector` as `BlochSphereView`, so any single-qubit circuit works:
+`Bloch3DView` and `BlochExplorerView` live in the playground's `Sources/` folder, not in
+`SwiftQiskitCore` (see `Docs/LIVEVIEWHELP.md` for how that sharing works). `Bloch3DView`
+takes the same `BlochVector` as `BlochSphereView`, so any single-qubit circuit works:
 
 ```swift
 import SwiftUI
@@ -155,32 +154,19 @@ PlaygroundPage.current.setLiveView(
 )
 ```
 
-`BlochExplorerView()` takes no parameters — its starting θ = π/3, φ = π/4 are hardcoded
-in `Playgrounds.playground/Sources/BlochExplorerView.swift`; edit that initializer if you
-want the live view to start somewhere else. For a **static** `Bloch3DView` frozen at one
-state rather than a slider-driven one, see page `08Dirac`, which reuses the same view to
-show its initial qubit's Pauli expectation values.
+For `BlochExplorerView`'s parameterless `init` and where its starting angles are
+hardcoded, see `Docs/LIVEVIEWHELP.md` § "Using each type" (`BlochExplorerView`). For a
+**static** `Bloch3DView` frozen at one state rather than a slider-driven one, see page
+`08Dirac`, which reuses the same view to show its initial qubit's Pauli expectation
+values.
 
 ## Troubleshooting
 
-- **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`.
-- **`Failed to load linked library cups of module SwiftUI`** — the Xcode 27 beta libcups
-  bug; install the shim per `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (a clean
-  build deletes it — rerun the copies).
-- **An inline copy of `BlochExplorerView` fails** (`plugin for module 'SwiftUIMacros' not
-  found`, or `'self' is immutable` at the mutation site) — its `@State` sliders only
-  compile in `Playgrounds.playground/Sources/`, where the regular build system expands
-  the macro; keep it there and only instantiate it from the page.
 - **Dragging does nothing / sliders don't move the arrow** — make sure you're dragging
   inside the `Canvas` (not the sliders or readout text below it); the gesture is attached
   to the canvas only.
-- **`Bloch sphere is defined for single-qubit states` precondition** — `BlochVector` was
-  handed a multi-qubit state; it only accepts `dimension == 2` (e.g.
-  `QuantumCircuit(qubits: 1).run()`).
-- **Live view blank, collapsed, or clipped** — the root view passed to `setLiveView` is
-  missing an explicit `.frame(width:height:)`; this page's live view is already framed
-  460 × 640.
-- **`Cannot find 'Bloch3DView'/'BlochExplorerView'/'BlochVector' in scope`** — the
-  `Sources/` declaration (or its `init`) isn't `public`, or the file isn't in the
-  playground's top-level `Sources/` folder.
+- **Live view blank, collapsed, or clipped** — this page's live view is already framed
+  460 × 640; if it still looks wrong, see the general causes in `Docs/LIVEVIEWHELP.md`
+  § "Troubleshooting" (which also covers the scheme-build requirement, the libcups shim,
+  an inline `@State` view, `Cannot find 'X' in scope`, and the `BlochVector`
+  single-qubit precondition).

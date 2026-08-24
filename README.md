@@ -174,6 +174,7 @@ SwiftQiskit/
 │       ├── CNOTTests.swift
 │       └── AdditionalGatesTests.swift
 ├── Docs/
+│   ├── LIVEVIEWHELP.md   (not page-numbered — the shared-code/live-view guide)
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
 │   ├── 03BLOCH2DPROJECTIONHELP.md
@@ -294,8 +295,9 @@ explorations of the library. Open it in Xcode — pages build against the `Swift
 and are linked sequentially with Previous/Next markers.
 
 Code shared by multiple pages (the Bloch-sphere types and views) lives in the playground's
-`Sources/` folder — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for how that works and
-what is available.
+`Sources/` folder — see [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md) for a user-facing
+guide to that shared code and to putting a live view on a page, and
+[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the terse implementation reference.
 
 ### 00TOC
 
@@ -324,8 +326,8 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
   |−⟩ via Hadamard + Pauli-Z (−x axis), |+i⟩ via Hadamard + S (+y axis), and
   |−i⟩ via Hadamard + S† (−y axis). The same vectors are also printed to the console.
 
-User guide in `Docs/02BLOCH2DHELP.md`, including the general recipe for putting a SwiftUI
-live view on a playground page.
+User guide in `Docs/02BLOCH2DHELP.md`; the general recipe for putting a SwiftUI live
+view on a playground page is in [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md).
 
 ### 03Bloch2dProjection
 
@@ -584,7 +586,8 @@ Design notes in `Docs/18VQEPLAN.md`; user guide in `Docs/18VQEHELP.md`.
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15
 and 18) are shared between these pages via the playground's `Sources/` folder (not part of
-Core) — see [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md).
+Core) — see [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md) for a user guide to each type and
+[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference.
 
 ---
 

@@ -58,7 +58,10 @@
  `14ERRORCORRECTIONPLAN/HELP.md`, `15CHSHPLAN/HELP.md`, `16QFTPLAN/HELP.md`,
  `17DEUTSCHJOZSAPLAN/HELP.md`, and `18VQEPLAN/HELP.md`. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
- expected output and troubleshooting. See also `PLAYGROUNDSUPPORT.md` for how code in
- the playground's `Sources/` folder is shared between pages.
+ expected output and troubleshooting. One guide isn't page-numbered:
+ `Docs/LIVEVIEWHELP.md` covers the playground's shared `Sources/` code and the general
+ live-view recipe used by several pages. See also `PLAYGROUNDSUPPORT.md` for the terse
+ implementation reference on how code in the playground's `Sources/` folder is shared
+ between pages.
  */
 //: [Next](@next)

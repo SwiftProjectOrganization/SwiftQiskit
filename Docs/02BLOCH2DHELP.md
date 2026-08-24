@@ -4,7 +4,9 @@ User-facing guide to the `02Bloch2d` playground page, which visualizes single-qu
 states on the Bloch sphere with a SwiftUI live view. Unlike the algorithm pages there is no
 separate design/plan document — the shared implementation in
 `Playgrounds.playground/Sources/` (`BlochVector.swift`, `BlochSphereView.swift`) and its
-doc comments are the reference, and `PLAYGROUNDSUPPORT.md` documents the sharing mechanism.
+doc comments are the reference; `Docs/LIVEVIEWHELP.md` documents the shared module and
+the general live-view recipe, and `PLAYGROUNDSUPPORT.md` is the terse implementation
+reference.
 
 ## What the Bloch sphere shows
 
@@ -110,50 +112,29 @@ and the poles straight up/down at full length. Other elements:
 The projection is fixed. For a rotatable view of the same states, see page
 `04Bloch3d` (`Bloch3DView` with drag-to-orbit; user guide `Docs/04BLOCH3DHELP.md`).
 
-## Putting a live view on a playground page
+## Putting a live view on this page
 
-Page 02 is the playground's minimal live-view example; the recipe generalizes to any page.
+Page 02 is the playground's minimal live-view example. Its live view is a single call:
 
 ```swift
-import SwiftUI
-import PlaygroundSupport
-
-// ... console/lecture code ...
-
 PlaygroundPage.current.setLiveView(
-    MyRootView()
-        .frame(width: 560, height: 640)   // explicit size — see note 2
+    BlochGalleryView()
+        .frame(width: 560, height: 940)
 )
 ```
 
-1. **`setLiveView` takes any SwiftUI `View`.** Console `print`s and the live view coexist:
-   keep the lecture commentary and printed checks in the page, and the rendering
-   implementation in `Sources/` (pages reference the shared type by name so readers know
-   where to look).
-2. **Give the root view an explicit `.frame(width:height:)`.** The live-view pane does not
-   propose a window-like size, so an unframed view can collapse or clip. Page 02 sizes the
-   root to fit its content: a 2 × 3 grid of 260-point cells plus padding → 560 × 940.
-3. **Stateless views may be declared inline in the page.** `BlochGalleryView` holds only a
-   `let` and can live in page code. Inline page types need no access modifiers.
-4. **Stateful views must live in `Playgrounds.playground/Sources/`.** The Xcode 27 beta
-   evaluator cannot expand the SDK 27 `@State` macro in page code; the `Sources/` module
-   is compiled by the regular build system, where the macro works. This is why the
-   slider view `BlochExplorerView` (page 04) is in `Sources/`. Details in
-   `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds".
-5. **Everything a page touches in `Sources/` must be explicitly `public`** — types,
-   initializers, properties. Swift's synthesized memberwise inits are only `internal`,
-   so shared views need a written-out `public init` (see `BlochSphereView.init`).
-6. **The scheme must build.** Pages set `buildActiveScheme='true'`; `Sources/` may
-   `import SwiftQiskitCore` (and `SwiftUI`) because the SwiftQiskit scheme builds first.
-7. **Xcode 27 beta only (machine-specific):** any page importing SwiftUI may hit the
-   missing-`libcups.dylib` evaluator bug; the shim recipe is in `PLAYGROUNDSUPPORT.md`
-   § "Xcode 27 beta workarounds". Rerun it after Clean Build Folder.
+`BlochGalleryView` is an inline, stateless `LazyVGrid` (2 × 3) of `BlochSphereView`s —
+holding only a `let`, so it needs no access modifiers to live in page code. The root
+frame, 560 × 940, fits its content: a 2 × 3 grid of 260-point cells plus padding.
+
+For the general recipe (why the frame is required, when a view must move to `Sources/`,
+and the beta workarounds), see `Docs/LIVEVIEWHELP.md` § "Putting a live view on a
+playground page".
 
 ## Using it in your own code
 
-`BlochVector` and `BlochSphereView` live in the playground's `Sources/` folder, **not** in
-`SwiftQiskitCore` — they are available on every playground page (auto-imported), but not
-in library targets ("Bloch math stays out of Core"). On any page:
+`BlochVector` and `BlochSphereView` live in the playground's `Sources/` folder, not in
+`SwiftQiskitCore` (see `Docs/LIVEVIEWHELP.md` for how that sharing works). On any page:
 
 ```swift
 import SwiftUI
@@ -181,19 +162,7 @@ lands on the +y axis (the same |+i⟩ the gallery reaches with `h(0)` + `s(0)`).
 
 ## Troubleshooting
 
-- **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`.
-- **`Failed to load linked library cups of module SwiftUI`** — the Xcode 27 beta libcups
-  bug; install the shim per `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (a clean
-  build deletes it — rerun the copies).
-- **An inline view with `@State` fails** (`plugin for module 'SwiftUIMacros' not found`,
-  or `'self' is immutable` at the mutation site) — move the view to
-  `Playgrounds.playground/Sources/` as a `public` type; the page only instantiates it.
-- **`Bloch sphere is defined for single-qubit states` precondition** — `BlochVector` was
-  handed a multi-qubit state; it only accepts `dimension == 2` (e.g.
-  `QuantumCircuit(qubits: 1).run()`).
-- **Live view blank, collapsed, or clipped** — the root view passed to `setLiveView`
-  is missing an explicit `.frame(width:height:)`.
-- **`Cannot find 'BlochSphereView' in scope` from a page** — the `Sources/` declaration
-  (or its `init`) isn't `public`, or the file isn't in the playground's top-level
-  `Sources/` folder.
+This page has no troubleshooting notes of its own beyond the shared-code failures — see
+`Docs/LIVEVIEWHELP.md` § "Troubleshooting" for the scheme-build requirement, the libcups
+shim, an unframed live view, `Cannot find 'X' in scope`, and the `BlochVector`
+single-qubit precondition.

@@ -57,9 +57,15 @@ The project is actively evolving, and major features are planned.
       → page `04Bloch3d`; the θ/φ parametrization keeps |α|² + |β|² = 1
       for every slider position, so the two sliders are independent.
 - [x] User guide for the 2D Bloch sphere page — `Docs/02BLOCH2DHELP.md`: the Bloch map
-      α, β → (x, y, z), page walkthrough and exact expected output, how the oblique
-      projection reads, and the general recipe for putting a SwiftUI live view on a
-      playground page (explicit root frame, stateless-inline vs. `@State`-in-`Sources/`).
+      α, β → (x, y, z), page walkthrough, exact expected output, and how the oblique
+      projection reads.
+- [x] User guide for the playground's shared code and live views —
+      `Docs/LIVEVIEWHELP.md` (not page-numbered): the `Sources/` module mechanics, an
+      at-a-glance table of all six shared types (including the non-view `BlochVector`),
+      the general live-view recipe (explicit root frame, stateless-inline vs.
+      `@State`-in-`Sources/`), and consolidated troubleshooting — deduplicating what was
+      previously repeated across `01QUBITSHELP.md`/`02BLOCH2DHELP.md`/
+      `03BLOCH2DPROJECTIONHELP.md`/`04BLOCH3DHELP.md`.
 - [x] User guide for the tilted-qubit/plane-projection page —
       `Docs/03BLOCH2DPROJECTIONHELP.md`: the direction-cosine derivation of θ/φ, exact
       expected console output for the round-trip check, and how to read the two
