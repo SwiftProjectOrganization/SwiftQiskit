@@ -29,6 +29,15 @@ public struct BlochVector {
         z = alpha.magnitudeSquared - beta.magnitudeSquared
     }
 
+    /// Raw coordinates, for mixed-state Bloch vectors — page 19's
+    /// r = (Tr(ρX), Tr(ρY), Tr(ρZ)) has |r| ≤ 1, not identically 1 like a
+    /// pure state's, so it cannot be built from a normalized `StateVector`.
+    public init(x: Double, y: Double, z: Double) {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
+
     /// Polar angle from +Z (|0⟩ pole), in radians
     public var theta: Double { acos(max(-1.0, min(1.0, z))) }
 

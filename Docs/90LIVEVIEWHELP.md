@@ -35,12 +35,12 @@ playground root compiles into an auxiliary module that every page imports
 
 | Type | File | Kind | Stateful? | `init` | Used by |
 |---|---|---|---|---|---|
-| `BlochVector` | `BlochVector.swift` | plain type | no | `init(_ state: StateVector)` | 01, 02, 03, 04 (via `BlochExplorerView`), 08, 13, 14 |
-| `BlochSphereView` | `BlochSphereView.swift` | view | no | `init(label:bloch:size:)` — `size` defaults to 220 | 01, 02, 03, 13, 14 |
+| `BlochVector` | `BlochVector.swift` | plain type | no | `init(_ state: StateVector)`, and `init(x:y:z:)` for mixed-state (sub-unit-length) vectors | 01, 02, 03, 04 (via `BlochExplorerView`), 08, 13, 14, 19, 20 |
+| `BlochSphereView` | `BlochSphereView.swift` | view | no | `init(label:bloch:size:)` — `size` defaults to 220 | 01, 02, 03, 13, 14, 19, 20 |
 | `BlochProjectionView` | `BlochProjectionView.swift` | view | no | `init(label:horizontal:vertical:verticalPointsDown:)` | 03 |
 | `Bloch3DView` | `Bloch3DView.swift` | view | **yes** — `@State azimuth/elevation/lastDrag` | `init(label:bloch:size:)` — `size` defaults to 300 | 04 (via `BlochExplorerView`), 08 (static) |
 | `BlochExplorerView` | `BlochExplorerView.swift` | view | **yes** — `@State theta/phi` | `init()` — no arguments | 04 |
-| `CHSHChartView` | `CHSHChartView.swift` | view | no | `init(title:xRange:yRange:series:size:)` — `size` defaults to 480 × 300 | 15, 18 |
+| `CHSHChartView` | `CHSHChartView.swift` | view | no | `init(title:xRange:yRange:series:size:)` — `size` defaults to 480 × 300 | 15, 18, 21, 22 |
 
 The *Kind* column is what makes `BlochVector`'s non-view status visible at a glance — it's
 the only row usable with no `import SwiftUI` at all. *Stateful?* is what decides where a
@@ -66,6 +66,22 @@ No `import SwiftUI` or live view needed — this compiles and runs on a console-
 `theta`/`phi` clamp/`atan2` their inputs, so a pole (x = y = 0) reports `φ = 0` by
 convention, not because the azimuth is meaningful there (see
 `Docs/02BLOCH2DHELP.md`'s reading notes for the worked example).
+
+**`init(x:y:z:)`** — a second, additive initializer for vectors that don't come from a
+normalized `StateVector` at all: a *mixed*-state Bloch vector r = (Tr(ρX), Tr(ρY), Tr(ρZ)),
+which has |r| ≤ 1 rather than identically 1. Pages 19 and 20 build one of these whenever the
+point they want to plot is the result of a density-matrix calculation or a shot-based
+reconstruction, not a pure `StateVector`:
+
+```swift
+// page 19: a partially-dephased state, computed as a density matrix — no
+// StateVector to hand at all, only its Pauli expectation values.
+let mixed = BlochVector(x: 0.1074, y: 0.0, z: 0.9885)
+```
+
+`BlochSphereView` needed no change to support this — it already draws the arrow at the
+vector's true length, so a sub-unit vector renders strictly inside the sphere, which is
+exactly the point of pages 19/20's live views.
 
 ### `BlochSphereView`
 

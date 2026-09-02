@@ -2,7 +2,7 @@
 
 How code is shared between the pages of `Playgrounds.playground`. This is the terse
 implementation reference; the user-facing guide (usage snippets, the live-view recipe,
-and troubleshooting) is `Docs/LIVEVIEWHELP.md`.
+and troubleshooting) is `Docs/90LIVEVIEWHELP.md`.
 
 ## How sharing works
 
@@ -16,7 +16,8 @@ Playgrounds.playground/
 │   ├── BlochSphereView.swift
 │   ├── BlochProjectionView.swift
 │   ├── Bloch3DView.swift
-│   └── BlochExplorerView.swift
+│   ├── BlochExplorerView.swift
+│   └── CHSHChartView.swift
 └── Pages/
     ├── 00TOC.xcplaygroundpage
     ├── 01Qubits.xcplaygroundpage
@@ -58,7 +59,13 @@ Maps a single-qubit `StateVector` |ψ⟩ = α|0⟩ + β|1⟩ to Bloch-sphere coo
 
 ```swift
 public init(_ state: StateVector)   // preconditions dimension == 2
+public init(x: Double, y: Double, z: Double)   // raw coordinates, |r| may be < 1
 ```
+
+The second initializer is additive (page 19) — for Bloch vectors computed from a density
+matrix as r = (Tr(ρX), Tr(ρY), Tr(ρZ)), which has |r| ≤ 1 rather than identically 1, so it
+can't be built from a normalized `StateVector`. Used by pages 19 and 20; every existing call
+site is unaffected.
 
 ### `BlochSphereView.swift`
 
@@ -125,8 +132,10 @@ macro works — see "Xcode 27 beta workarounds" below. `BlochExplorerView` and
 Stateless SwiftUI `Canvas` chart for generic 2D line/scatter data: axes, a dashed zero
 line, `Series` drawn either as a connected polyline (`isLine: true`) or a scatter of dots
 (`isLine: false`), and a small legend row. Used by page 15 to plot a quantum correlator
-against its classical comparison line and a set of shot-sampled points, and by page 18 to
-plot a VQE energy landscape against the optimizer's own visited points.
+against its classical comparison line and a set of shot-sampled points, by page 18 to
+plot a VQE energy landscape against the optimizer's own visited points, by page 21 to plot
+an exact ⟨Z₀⟩(t) curve against Trotterized samples at two step counts, and by page 22 to plot
+a quantum walk's position distribution against a classical random walk's.
 
 ```swift
 public struct CHSHChartView: View {
@@ -160,6 +169,10 @@ page-specific commentary.
 | `14ErrorCorrection` | `BlochVector`, `BlochSphereView` (q0's Bloch point: as prepared, decoded without correction, and corrected) |
 | `15CHSH` | `CHSHChartView` (E(θ): exact cos θ curve, sampled points, classical comparison line) |
 | `18VQE` | `CHSHChartView` (VQE energy landscape E(θ) as a line, gradient-descent trajectory as scatter points) |
+| `19Noise` | `BlochVector` (via the additive `init(x:y:z:)`), `BlochSphereView` (pure |+⟩, its dephased image, and the fully depolarized point — three vectors shrinking toward the sphere's center) |
+| `20Tomography` | `BlochVector` (`init(x:y:z:)`), `BlochSphereView` (a Bell pair's true qubit-0 marginal against its shot-reconstructed estimate) |
+| `21Trotter` | `CHSHChartView` (exact ⟨Z₀⟩(t) as a line, Trotterized samples at n=2 and n=8 as two scatter series) |
+| `22Walk` | `CHSHChartView` (the quantum and classical position distributions at t=7, both as scatter series) |
 
 ## Xcode 27 beta workarounds
 

@@ -47,21 +47,31 @@
    one-query trick generalized to n bits, plus recovering a hidden string in one query.
  - [18VQE](18VQE) — the variational quantum eigensolver: an H₂ Hamiltonian, a one-parameter
    ansatz, exact parameter-shift gradients, and gradient descent plotted live.
+ - [19Noise](19Noise) — open systems: the density matrix, Kraus channels (bit-flip,
+   phase-flip, depolarizing, amplitude damping), coherence decay, a Monte-Carlo unraveling,
+   and entanglement entropy from a Bell pair's reduced state, with a live Bloch gallery.
+ - [20Tomography](20Tomography) — reconstructing a state from `measure(shots:)` alone: basis
+   rotations pinned by hand, 1/√N error scaling, and why a *pure* state's reconstruction stays
+   "unphysical" about half the time no matter how many shots you take.
+ - [21Trotter](21Trotter) — Hamiltonian simulation of a spin chain: an `expm` ground truth, the
+   exact ZZ-rotation gate identity, Trotter error shrinking as 1/n (and 1/n² for Suzuki), and
+   the non-commuting terms that cause it.
+ - [22Walk](22Walk) — the discrete-time quantum walk: a hand-built shift permutation, ballistic
+   (∝t) spreading against a classical diffusive (∝√t) comparison, and why the |0⟩-coin
+   distribution is lopsided while |+i⟩'s is symmetric.
 
  ## User guides
 
- Several pages have companion documents in `Docs/` at the repo root, prefixed with the
- page number: `01QUBITSHELP.md`, `02BLOCH2DHELP.md`, `03BLOCH2DPROJECTIONHELP.md`,
- `04BLOCH3DHELP.md`, `05GATESHELP.md`, `06SUPERPOSITIONHELP.md`,
- `07ENTANGLEMENTHELP.md`, `08DIRACHELP.md`, `09TENSORPLAN/HELP.md`, `10DEUTSCHPLAN/HELP.md`,
- `11GROVERPLAN/HELP.md`, `12SHORPLAN/HELP.md`, `13TELEPORTATIONPLAN/HELP.md`,
- `14ERRORCORRECTIONPLAN/HELP.md`, `15CHSHPLAN/HELP.md`, `16QFTPLAN/HELP.md`,
- `17DEUTSCHJOZSAPLAN/HELP.md`, and `18VQEPLAN/HELP.md`. The
+ Several pages have companion documents in `Docs/` at the repo root. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
- expected output and troubleshooting. One guide isn't page-numbered:
- `Docs/LIVEVIEWHELP.md` covers the playground's shared `Sources/` code and the general
- live-view recipe used by several pages. See also `PLAYGROUNDSUPPORT.md` for the terse
- implementation reference on how code in the playground's `Sources/` folder is shared
- between pages.
+ expected output and troubleshooting.
+
+ One guide isn't tied to a single page: `Docs/90LIVEVIEWHELP.md` documents the shared
+ `Sources/` module and the general recipe for putting a SwiftUI live view on any page —
+ read it alongside whichever page guide sent you here. (Numbered `90` rather than a page
+ number, so it always sorts after every page guide above.)
+
+ See also `PLAYGROUNDSUPPORT.md` for the terse implementation reference on how code in the playground's `Sources/` folder is shared between pages.
  */
+
 //: [Next](@next)

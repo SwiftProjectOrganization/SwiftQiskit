@@ -79,7 +79,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   (User guide for page 02 in `Docs/02BLOCH2DHELP.md`; user guide for page 03 — a general
   tilted state plus its x–y/z–y plane projections — in `Docs/03BLOCH2DPROJECTIONHELP.md`.
   The general live-view recipe and the shared `Sources/` module are documented in
-  `Docs/LIVEVIEWHELP.md`, not page-numbered since it isn't tied to one page.)
+  `Docs/90LIVEVIEWHELP.md`, not page-numbered since it isn't tied to one page.)
 - `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
   no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
   `BlochExplorerView` (user guide in `Docs/04BLOCH3DHELP.md`).
@@ -163,6 +163,40 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   gradients pinned against a finite difference, gradient descent converging to error
   0.00e+00, and a live chart of the E(θ) landscape with the optimizer's own path, on the
   shared `CHSHChartView` (plan in `Docs/18VQEPLAN.md`, user guide in `Docs/18VQEHELP.md`).
+- `19Noise` — open systems (no Core changes): the density matrix ρ = |ψ⟩⟨ψ| via the existing
+  `Ket * Bra` outer product; a classical mixture vs. a superposition at identical
+  Z-statistics; four Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping)
+  checked for trace preservation; coherence decaying exactly as `(1-2p)ⁿ`; amplitude damping
+  pulling the Bloch vector *inside* the sphere; a Monte-Carlo unraveling reproducing the exact
+  channel from pure-state code alone; and a Bell pair's reduced state giving entropy exactly 1
+  bit against a product state's 0; live Bloch gallery shrinking from pure to fully
+  depolarized, via the additive `BlochVector.init(x:y:z:)`
+  (plan in `Docs/19NOISEPLAN.md`, user guide in `Docs/19NOISEHELP.md`).
+- `20Tomography` — reconstructing a state from `measure(shots:)` alone: basis rotations
+  (`h` for X, `sdg;h` for Y) pinned against a known Y-eigenstate rather than assumed; the
+  estimator's 1/√N error scaling; the sharper-than-expected result that a *pure* state's
+  per-axis reconstruction lands outside the Bloch ball about half the time at *any* N (only a
+  genuinely mixed state's frequency, page 19's territory, shrinks toward zero); a Bell pair's
+  marginal reconstructed from shots alone; and the 3ⁿ-settings cost table motivating page 18's
+  per-term Pauli measurements; live view of the true vs. reconstructed Bloch point
+  (plan in `Docs/20TOMOGRAPHYPLAN.md`, user guide in `Docs/20TOMOGRAPHYHELP.md`).
+- `21Trotter` — Hamiltonian simulation of a transverse-field Ising chain (no Core changes): a
+  page-level `expm` (scaling-and-squaring Taylor series) self-checked against `RXGate`; the
+  exact gate identity `exp(-iθ·Z⊗Z/2) = cx(0,1); rz(θ,1); cx(0,1)` derived from `RZGate` and
+  checked against `expm`; first- and second-order Trotter error shrinking at the textbook
+  O(1/n)/O(1/n²) rates, both at the operator level and the observable level (⟨Z₀⟩(t)); and the
+  non-zero commutator `[Z⊗Z, X⊗I]` identified as the error's source (a commuting-only
+  Hamiltonian is exact at n=1); live chart of the exact curve against Trotterized samples on
+  the shared `CHSHChartView` (plan in `Docs/21TROTTERPLAN.md`, user guide in
+  `Docs/21TROTTERHELP.md`).
+- `22Walk` — the discrete-time coined quantum walk on a 16-site cycle (no Core changes): a
+  hand-built conditional-shift permutation checked as unitary; ballistic (∝t) spreading
+  against an exactly diffusive (∝√t) classical random walk; a caught-and-documented
+  cyclic-coordinate variance bug (raw site indices vs. signed offsets from the start); and the
+  `|0⟩`-vs-`|+i⟩` coin contrast showing the walk's asymmetry is interference, not a flaw; live
+  chart of both final distributions on the shared `CHSHChartView`, with cross-references to
+  Grover (page 11) and Hamiltonian simulation (page 21)
+  (plan in `Docs/22WALKPLAN.md`, user guide in `Docs/22WALKHELP.md`).
 
 Playground notes:
 
@@ -172,7 +206,7 @@ Playground notes:
 - Code shared by multiple pages lives in `Playgrounds.playground/Sources/` — an auxiliary
   module auto-imported by every page; declarations there must be `public` (including
   explicit `public init`s). See `PLAYGROUNDSUPPORT.md` for the conventions and current
-  API, and `Docs/LIVEVIEWHELP.md` for the user-facing guide (usage snippets, the
+  API, and `Docs/90LIVEVIEWHELP.md` for the user-facing guide (usage snippets, the
   live-view recipe, troubleshooting).
 - Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
 - **Xcode 27 beta (confirmed present through beta 5, 27A5237l, 2026-08-23):**

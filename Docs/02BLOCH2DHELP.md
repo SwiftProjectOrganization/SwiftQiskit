@@ -4,7 +4,7 @@ User-facing guide to the `02Bloch2d` playground page, which visualizes single-qu
 states on the Bloch sphere with a SwiftUI live view. Unlike the algorithm pages there is no
 separate design/plan document — the shared implementation in
 `Playgrounds.playground/Sources/` (`BlochVector.swift`, `BlochSphereView.swift`) and its
-doc comments are the reference; `Docs/LIVEVIEWHELP.md` documents the shared module and
+doc comments are the reference; `Docs/90LIVEVIEWHELP.md` documents the shared module and
 the general live-view recipe, and `PLAYGROUNDSUPPORT.md` is the terse implementation
 reference.
 
@@ -128,13 +128,13 @@ holding only a `let`, so it needs no access modifiers to live in page code. The 
 frame, 560 × 940, fits its content: a 2 × 3 grid of 260-point cells plus padding.
 
 For the general recipe (why the frame is required, when a view must move to `Sources/`,
-and the beta workarounds), see `Docs/LIVEVIEWHELP.md` § "Putting a live view on a
+and the beta workarounds), see `Docs/90LIVEVIEWHELP.md` § "Putting a live view on a
 playground page".
 
 ## Using it in your own code
 
 `BlochVector` and `BlochSphereView` live in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `Docs/LIVEVIEWHELP.md` for how that sharing works). On any page:
+`SwiftQiskitCore` (see `Docs/90LIVEVIEWHELP.md` for how that sharing works). On any page:
 
 ```swift
 import SwiftUI
@@ -163,6 +163,6 @@ lands on the +y axis (the same |+i⟩ the gallery reaches with `h(0)` + `s(0)`).
 ## Troubleshooting
 
 This page has no troubleshooting notes of its own beyond the shared-code failures — see
-`Docs/LIVEVIEWHELP.md` § "Troubleshooting" for the scheme-build requirement, the libcups
+`Docs/90LIVEVIEWHELP.md` § "Troubleshooting" for the scheme-build requirement, the libcups
 shim, an unframed live view, `Cannot find 'X' in scope`, and the `BlochVector`
 single-qubit precondition.

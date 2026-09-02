@@ -40,7 +40,10 @@ The project is actively evolving, and major features are planned.
       `Gates/Rotation.swift` (RX/RY/RZ); circuit API `y/s/sdg/t/tdg/p/rx/ry/rz`,
       tested in `AdditionalGatesTests.swift`
 - [ ] Circuit visualization (ASCII / SwiftUI)
-- [ ] Noise models
+- [x] Noise models — addressed at the playground-example level: page `19Noise` builds Kraus
+      channels (bit-flip, phase-flip, depolarizing, amplitude damping) as page-level `Matrix`
+      operations. Core itself still has no `DensityMatrix` type or built-in noise simulation —
+      that remains open if a first-class Core feature is wanted.
 - [ ] Performance optimizations
 - [ ] Stable public API (v1.0)
 
@@ -60,7 +63,7 @@ The project is actively evolving, and major features are planned.
       α, β → (x, y, z), page walkthrough, exact expected output, and how the oblique
       projection reads.
 - [x] User guide for the playground's shared code and live views —
-      `Docs/LIVEVIEWHELP.md` (not page-numbered): the `Sources/` module mechanics, an
+      `Docs/90LIVEVIEWHELP.md` (not page-numbered): the `Sources/` module mechanics, an
       at-a-glance table of all six shared types (including the non-view `BlochVector`),
       the general live-view recipe (explicit root frame, stateless-inline vs.
       `@State`-in-`Sources/`), and consolidated troubleshooting — deduplicating what was
@@ -165,3 +168,42 @@ page 13 adds a Bloch-sphere live view:
       gradients pinned against a finite difference, gradient descent converging to error
       0.00e+00, and a live chart (the shared `CHSHChartView`) of the energy landscape with
       the optimizer's own path (`Docs/18VQEPLAN.md`, `Docs/18VQEHELP.md`).
+
+## Open systems, measurement, and dynamics playground pages (this fork)
+
+Four more pages, closing gaps pages 01–18 left open: every earlier page assumed a perfect,
+pure, noiseless state read out by direct amplitude access, and none of them simulated physics
+or interference-driven distributions. All four ship with **no `SwiftQiskitCore` changes**;
+page 19 adds one small additive initializer to the playground's shared `BlochVector`.
+
+- [x] Noise — page `19Noise`: the density matrix ρ = |ψ⟩⟨ψ| via the existing `Ket * Bra`
+      outer product, a mixture vs. a superposition contrasted at identical Z-statistics,
+      four Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping) checked for
+      trace preservation, coherence decaying exactly as (1−2p)ⁿ, amplitude damping pulling the
+      Bloch vector *inside* the sphere, a Monte-Carlo unraveling reproducing the exact channel
+      from pure-state code alone, and a Bell pair's reduced state giving entropy exactly 1 bit
+      against a product state's 0 — with a live Bloch gallery shrinking from pure to fully
+      depolarized (`Docs/19NOISEPLAN.md`, `Docs/19NOISEHELP.md`).
+- [x] Tomography — page `20Tomography`: reconstructing a state from `measure(shots:)` alone.
+      Basis rotations pinned against a known Y-eigenstate, the estimator checked against exact
+      expectation values, RMS error falling at the 1/√N rate, and the sharper-than-expected
+      result that a *pure* state's per-axis reconstruction lands outside the Bloch ball about
+      half the time at *any* N (only a genuinely mixed state's frequency shrinks toward zero) —
+      plus a Bell pair's marginal reconstructed from shots and the 3ⁿ cost table explaining why
+      page 18's VQE measures Pauli terms instead of the full state
+      (`Docs/20TOMOGRAPHYPLAN.md`, `Docs/20TOMOGRAPHYHELP.md`).
+- [x] Trotterization — page `21Trotter`: Hamiltonian simulation of a transverse-field Ising
+      chain. A page-level `expm` (scaling-and-squaring Taylor series) self-checked against
+      `RXGate`, the exact gate identity exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, first-
+      and second-order Trotter error shrinking at the textbook O(1/n)/O(1/n²) rates, the
+      observable-level ⟨Z₀⟩(t) tracking the exact curve more closely at higher step counts, and
+      the non-zero commutator [Z⊗Z, X⊗I] identified as the error's source (a commuting-only
+      Hamiltonian is exact at n=1) — with a live chart of the exact curve against Trotterized
+      samples (`Docs/21TROTTERPLAN.md`, `Docs/21TROTTERHELP.md`).
+- [x] Quantum walk — page `22Walk`: the discrete-time coined walk on a 16-site cycle. A
+      hand-built conditional-shift permutation checked as unitary, ballistic (∝t) spreading
+      against an exactly diffusive (∝√t) classical random walk, a caught-and-documented
+      cyclic-coordinate variance bug (raw site indices vs. signed offsets), and the |0⟩-vs-|+i⟩
+      coin contrast showing the walk's asymmetry is interference, not a flaw — with a live
+      chart of both final distributions and cross-references to Grover (page 11) and
+      Hamiltonian simulation (page 21) (`Docs/22WALKPLAN.md`, `Docs/22WALKHELP.md`).

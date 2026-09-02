@@ -62,18 +62,19 @@ with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16 |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18 |
-| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); page 18 (`PauliYGate.matrix` as a raw Hamiltonian term, not via `y(qubit)`) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; page 18 (`PauliZGate.matrix` as a raw Hamiltonian term) |
-| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05 |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16; pages 19–22 (`HadamardGate.matrix` applied directly via `StateVector.apply(_:)` — Bell-pair prep, basis rotations, the walk's coin flip — rather than the circuit method, since 19–22 don't use `QuantumCircuit` at all) |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18; page 19 (`PauliXGate.matrix` as a Kraus operator) |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); page 18 (`PauliYGate.matrix` as a raw Hamiltonian term, not via `y(qubit)`); pages 19–20 (`PauliYGate.matrix` as a Kraus operator / an exact-expectation check) |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; page 18 (`PauliZGate.matrix` as a raw Hamiltonian term); pages 19–21 (`PauliZGate.matrix` as a Kraus operator, an Ising-chain term, and the ZZ-rotation identity's core piece) |
+| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05; page 20 (`SDaggerGate.matrix` applied raw for the Y-basis measurement rotation, sign-checked against a known Y-eigenstate) |
 | T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
 | Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05; page 16 (the building block of the hand-built controlled-phase CP(θ), five gates deep) |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter) |
-| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18 |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter); page 20 (`RYGate`/`RZGate.matrix(θ)` build a generic tilted state, raw); page 21 (`RXGate.matrix(θ)` self-checks `expm` and drives the Ising field term; `RZGate.matrix(θ)` is the core of the exact ZZ-rotation identity) |
+| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18; pages 19–21 (`CNOTGate.matrix(qubits:control:target:)` applied directly via `StateVector.apply(_:)` for Bell-pair prep and the ZZ-rotation identity) |
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
-compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
+compositions and applied with `circuit.apply(_:)` (or, on pages 19–22, which don't build a
+`QuantumCircuit` at all, directly via `StateVector.apply(_:)`); not (yet) part of Core:
 
 | Gate | Built from | Where |
 |------|------------|-------|
@@ -87,6 +88,11 @@ compositions and applied with `circuit.apply(_:)`; not (yet) part of Core:
 | QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
 | Controlled phase CP(θ) | `p(θ/2, c); cx(c,t); p(-θ/2, t); cx(c,t); p(θ/2, t)` | page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π) |
 | H₂ Hamiltonian (Jordan–Wigner, 2 qubits) | six Pauli terms (I⊗I, Z⊗I, I⊗Z, Z⊗Z, Y⊗Y, X⊗X) combined entrywise | page 18 (VQE's energy operator) |
+| Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping) | pairs/quadruples of scaled `Matrix` values satisfying ΣKᵢ†Kᵢ = I | page 19 (noise channels, applied as ρ' = ΣKᵢρKᵢ†) |
+| `expm` (matrix exponential) | scaling-and-squaring Taylor series on `Matrix *` | page 21 (ground truth for Trotterized Hamiltonian simulation, self-checked against `RXGate`) |
+| ZZ-rotation exp(−iθ·Z⊗Z/2) | `cx(0,1); rz(θ,1); cx(0,1)` | page 21 (the exact building block of every Trotter step) |
+| Ising chain H = −J·Z⊗Z − h·(X⊗I + I⊗X) | two Pauli terms combined entrywise | page 21 (Hamiltonian simulation target) |
+| Coined-walk shift S | 32×32 permutation on (coin ⊗ 16-site position) — one `.one` per column | page 22 (the conditional shift \|0,x⟩→\|0,x+1⟩, \|1,x⟩→\|1,x−1⟩) |
 
 ---
 
@@ -174,7 +180,6 @@ SwiftQiskit/
 │       ├── CNOTTests.swift
 │       └── AdditionalGatesTests.swift
 ├── Docs/
-│   ├── LIVEVIEWHELP.md   (not page-numbered — the shared-code/live-view guide)
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
 │   ├── 03BLOCH2DPROJECTIONHELP.md
@@ -190,7 +195,28 @@ SwiftQiskit/
 │   ├── 11GROVERPLAN.md
 │   ├── 11GROVERHELP.md
 │   ├── 12SHORPLAN.md
-│   └── 12SHORHELP.md
+│   ├── 12SHORHELP.md
+│   ├── 13TELEPORTATIONPLAN.md
+│   ├── 13TELEPORTATIONHELP.md
+│   ├── 14ERRORCORRECTIONPLAN.md
+│   ├── 14ERRORCORRECTIONHELP.md
+│   ├── 15CHSHPLAN.md
+│   ├── 15CHSHHELP.md
+│   ├── 16QFTPLAN.md
+│   ├── 16QFTHELP.md
+│   ├── 17DEUTSCHJOZSAPLAN.md
+│   ├── 17DEUTSCHJOZSAHELP.md
+│   ├── 18VQEPLAN.md
+│   ├── 18VQEHELP.md
+│   ├── 19NOISEPLAN.md
+│   ├── 19NOISEHELP.md
+│   ├── 20TOMOGRAPHYPLAN.md
+│   ├── 20TOMOGRAPHYHELP.md
+│   ├── 21TROTTERPLAN.md
+│   ├── 21TROTTERHELP.md
+│   ├── 22WALKPLAN.md
+│   ├── 22WALKHELP.md
+│   └── 90LIVEVIEWHELP.md   (not page-numbered — sorts last on purpose; the shared-code/live-view guide)
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
 │   └── Pages/
@@ -212,7 +238,11 @@ SwiftQiskit/
 │       ├── 15CHSH
 │       ├── 16QFT
 │       ├── 17DeutschJozsa
-│       └── 18VQE
+│       ├── 18VQE
+│       ├── 19Noise
+│       ├── 20Tomography
+│       ├── 21Trotter
+│       └── 22Walk
 ├── Package.swift
 └── References (tbd)
 ```
@@ -295,7 +325,7 @@ explorations of the library. Open it in Xcode — pages build against the `Swift
 and are linked sequentially with Previous/Next markers.
 
 Code shared by multiple pages (the Bloch-sphere types and views) lives in the playground's
-`Sources/` folder — see [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md) for a user-facing
+`Sources/` folder — see [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md) for a user-facing
 guide to that shared code and to putting a live view on a page, and
 [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the terse implementation reference.
 
@@ -327,7 +357,7 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
   |−i⟩ via Hadamard + S† (−y axis). The same vectors are also printed to the console.
 
 User guide in `Docs/02BLOCH2DHELP.md`; the general recipe for putting a SwiftUI live
-view on a playground page is in [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md).
+view on a playground page is in [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md).
 
 ### 03Bloch2dProjection
 
@@ -583,11 +613,85 @@ with a live chart of the optimization:
 
 Design notes in `Docs/18VQEPLAN.md`; user guide in `Docs/18VQEHELP.md`.
 
+### 19Noise
+
+Open systems: the density matrix, and how noise enters a state-vector simulator with **no
+`SwiftQiskitCore` changes**, plus a live Bloch gallery:
+
+- **ρ and coherence** — the density matrix ρ = |ψ⟩⟨ψ| from the existing `Ket * Bra` outer
+  product; a classical mixture ½|0⟩⟨0| + ½|1⟩⟨1| contrasted against the superposition |+⟩⟨+| —
+  identical Z-statistics, different off-diagonals.
+- **Kraus channels** — bit-flip, phase-flip, depolarizing, and amplitude damping, each checked
+  for trace preservation (ΣKᵢ†Kᵢ = I) before being trusted.
+- **Decoherence, exactly** — coherence decaying as (1−2p)ⁿ under repeated dephasing, and
+  amplitude damping pulling the Bloch vector *inside* the sphere — the picture no pure state
+  can draw.
+- **A Monte-Carlo unraveling** — the exact channel reproduced from ordinary pure-state code:
+  flip a coin per shot, apply the error gate or not, then measure.
+- **Entanglement via a reduced state** — tracing out one qubit of a Bell pair gives entropy
+  exactly 1 bit, against 0 for a product state — the explanation page 13's marginals were owed.
+
+Design notes in `Docs/19NOISEPLAN.md`; user guide in `Docs/19NOISEHELP.md`.
+
+### 20Tomography
+
+Reconstructing a state from `measure(shots:)` statistics alone — the honest version of "what a
+real device gives you," depending on page 19's mixed states for its sharpest result:
+
+- **Basis rotations, pinned by hand** — `h` for X, `sdg`+`h` for Y, checked against a known
+  Y-eigenstate rather than assumed.
+- **The estimator and its 1/√N error** — RMS error against the exact expectation value falls
+  by roughly √10 each time the shot count grows tenfold.
+- **Pure vs. mixed unphysical estimates** — a *pure* state's per-axis reconstruction lands
+  outside the Bloch ball about half the time at *any* N (it sits exactly on the boundary);
+  only a genuinely mixed state's frequency shrinks toward zero.
+- **An entangled qubit's marginal, from shots** — a Bell pair's qubit-0 Bloch vector
+  reconstructs to the origin, restating page 13's no-cloning result statistically.
+- **Why full tomography doesn't scale** — a 3ⁿ-settings cost table, motivating page 18's
+  per-term Pauli measurements.
+
+Design notes in `Docs/20TOMOGRAPHYPLAN.md`; user guide in `Docs/20TOMOGRAPHYHELP.md`.
+
+### 21Trotter
+
+Hamiltonian simulation — evolving a state in time under a Hamiltonian too large for a single
+gate, the original motivation for quantum computers, with a live chart:
+
+- **`expm`, self-checked** — a page-level matrix exponential (scaling-and-squaring Taylor
+  series) validated against Core's exact `RXGate` before being trusted as ground truth.
+- **An exact gate identity** — exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, derived from
+  Core's `RZGate` and checked against `expm`, not assumed.
+- **Trotter error scaling** — first-order error shrinking as O(1/n), second-order (Suzuki) as
+  O(1/n²), at the observable level (⟨Z₀⟩(t)) as well as the operator level.
+- **Why the error exists** — the non-zero commutator [Z⊗Z, X⊗I] identified as the cause; a
+  commuting-only Hamiltonian is exact at n=1.
+
+Design notes in `Docs/21TROTTERPLAN.md`; user guide in `Docs/21TROTTERHELP.md`.
+
+### 22Walk
+
+The discrete-time quantum walk — interference producing a *distribution*, rather than
+answering an oracle question or amplifying a marked item, with a live chart:
+
+- **The shift, as a permutation** — a hand-built conditional shift on a 16-site cycle, checked
+  as unitary (S†S = I).
+- **Ballistic vs. diffusive spreading** — the quantum walk's spread grows roughly linearly in
+  t; a classical random walk's grows as exactly √t, at every step.
+- **A cyclic-coordinate gotcha, caught and documented** — computing spread from raw site
+  indices breaks near the cycle's wraparound boundary; the fix is a signed offset from the
+  start.
+- **Interference, not asymmetry** — an |0⟩ coin gives a lopsided distribution; Core's existing
+  `|+i⟩` basis ket restores left-right symmetry exactly.
+
+Design notes in `Docs/22WALKPLAN.md`; user guide in `Docs/22WALKHELP.md`.
+
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
-`Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15
-and 18) are shared between these pages via the playground's `Sources/` folder (not part of
-Core) — see [Docs/LIVEVIEWHELP.md](Docs/LIVEVIEWHELP.md) for a user guide to each type and
-[PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference.
+`Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15,
+18, 21, and 22) are shared between these pages via the playground's `Sources/` folder (not
+part of Core) — see [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md) for a user guide to each type
+and [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference. `BlochVector`
+gained an additive `init(x:y:z:)` for page 19's mixed-state (sub-unit-length) vectors, used by
+pages 19 and 20; every earlier call site is unaffected.
 
 ---
 
