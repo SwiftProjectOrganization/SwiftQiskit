@@ -4,8 +4,8 @@ import PackageDescription
 let package = Package(
     name: "SwiftQiskit",
     platforms: [
-        .macOS(.v13),
-        .iOS(.v16)
+        .macOS(.v14),
+        .iOS(.v17)
     ],
     products: [
         // Core library
@@ -63,6 +63,15 @@ let package = Package(
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ]
+        ),
+
+        // =========================
+        // GUI model tests
+        // =========================
+        .testTarget(
+            name: "SwiftQiskitGUITests",
+            dependencies: ["SwiftQiskitGUI", "SwiftQiskitCore"],
+            path: "Tests/SwiftQiskitGUITests"
         )
     ]
 )
