@@ -55,7 +55,7 @@ line/scatter chart used by pages 15 and 18.
 ### Docs
 
 - `CLAUDE.md`: add the `18VQE` bullet.
-- `Docs/18VQEHELP.md`: user-facing guide.
+- `PlaygroundDocs/18VQEHELP.md`: user-facing guide.
 - This file records the plan.
 - `README.md`: a `### 18VQE` section, project tree update, and gate tables' "Used in" column
   (`ry` gains a variational use alongside its page 15 measurement-rotation use).

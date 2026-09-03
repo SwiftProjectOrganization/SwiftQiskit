@@ -76,7 +76,7 @@ change**.
 ### Docs
 
 - `CLAUDE.md`: add the `19Noise` bullet.
-- `Docs/19NOISEHELP.md`: user-facing guide (deferred with the page).
+- `PlaygroundDocs/19NOISEHELP.md`: user-facing guide (deferred with the page).
 - This file records the plan.
 - `README.md`: a `### 19Noise` section and project-tree update.
 - `STATUSandTODO.md`: an entry — this is also the "Noise models" roadmap item, so mark that

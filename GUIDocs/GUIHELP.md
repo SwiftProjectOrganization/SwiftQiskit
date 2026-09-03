@@ -139,11 +139,11 @@ test targets in it (a pre-existing gotcha, also noted for `SwiftQiskitCoreTests`
   a control is pending before the second tap.
 - **State Vector panel looks stale.** It shouldn't — `ResultsView.body` calls
   `builder.buildCircuit().run()` fresh on every render. If it really doesn't update, that's
-  a bug, not expected behavior (unlike `Docs/05GATESHELP.md`'s "nothing prints" case, which
+  a bug, not expected behavior (unlike `PlaygroundDocs/05GATESHELP.md`'s "nothing prints" case, which
   *is* expected there).
 - **App won't build on macOS 13.** Expected — the minimum deployment target is now
   `.macOS(.v14)` (see "The model" above). Either update the deployment target further only
   forward, or don't build this target on macOS 13.
 - **Measure gives a different split every time.** Expected; `measure(shots:)` is
-  probabilistic, same as everywhere else in this project (`Docs/07ENTANGLEMENTHELP.md`
+  probabilistic, same as everywhere else in this project (`PlaygroundDocs/07ENTANGLEMENTHELP.md`
   etc.) — re-run or raise the shot count for a tighter distribution.

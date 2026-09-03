@@ -80,7 +80,7 @@ the product-state and Tsirelson-sweep controls; and the angle sweep rendered on
 ### 3. Docs
 
 - `CLAUDE.md`: add the `15CHSH` bullet.
-- `Docs/15CHSHHELP.md`: user-facing guide.
+- `PlaygroundDocs/15CHSHHELP.md`: user-facing guide.
 - This file records the plan.
 - `README.md`: a `### 15CHSH` section, the project tree, the gate tables' "Used in" column
   (`ry` gains its first use as a *measurement* rotation rather than state prep), and a

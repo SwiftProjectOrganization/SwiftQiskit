@@ -64,7 +64,7 @@ Trotterized points as two scatter series) — no new shared view, no new exposur
 ### Docs
 
 - `CLAUDE.md`: add the `21Trotter` bullet.
-- `Docs/21TROTTERHELP.md`: user-facing guide (deferred with the page).
+- `PlaygroundDocs/21TROTTERHELP.md`: user-facing guide (deferred with the page).
 - This file records the plan.
 - `README.md`: a `### 21Trotter` section; the gate tables' "Used in" column (`rz`/`cx` gain a
   Hamiltonian-simulation use alongside page 16's QFT use).

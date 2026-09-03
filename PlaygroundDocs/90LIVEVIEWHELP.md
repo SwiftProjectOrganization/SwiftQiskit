@@ -1,7 +1,7 @@
 # Playground live views & shared code — help & usage guide
 
 User-facing guide to the playground's shared `Sources/` module and to putting a SwiftUI
-live view on any page. Unlike the other `Docs/*HELP.md` files this one isn't numbered —
+live view on any page. Unlike the other `PlaygroundDocs/*HELP.md` files this one isn't numbered —
 it documents a mechanism used by several pages, not one page — so read it alongside
 whichever page guide sent you here.
 
@@ -14,7 +14,7 @@ independently of anything they render. Everything else in
 
 `PLAYGROUNDSUPPORT.md` at the repo root stays the terse reference — the "Current shared
 code" / "Which pages use what" tables and the Xcode 27 beta bug log live there; this guide
-links to it rather than restating it. Per-page walkthroughs are `Docs/NNxxxHELP.md`.
+links to it rather than restating it. Per-page walkthroughs are `PlaygroundDocs/NNxxxHELP.md`.
 
 ## What the `Sources/` module is
 
@@ -65,7 +65,7 @@ print(bloch.theta, bloch.phi)       // acos(z), atan2(y, x) — π/2, 0
 No `import SwiftUI` or live view needed — this compiles and runs on a console-only page.
 `theta`/`phi` clamp/`atan2` their inputs, so a pole (x = y = 0) reports `φ = 0` by
 convention, not because the azimuth is meaningful there (see
-`Docs/02BLOCH2DHELP.md`'s reading notes for the worked example).
+`PlaygroundDocs/02BLOCH2DHELP.md`'s reading notes for the worked example).
 
 **`init(x:y:z:)`** — a second, additive initializer for vectors that don't come from a
 normalized `StateVector` at all: a *mixed*-state Bloch vector r = (Tr(ρX), Tr(ρY), Tr(ρZ)),
@@ -100,7 +100,7 @@ PlaygroundPage.current.setLiveView(
 ```
 
 Page 03 passes `size: 300` for its single larger sphere. For how to read the drawing
-(axes, foreshortening, the dashed equator), see `Docs/02BLOCH2DHELP.md`
+(axes, foreshortening, the dashed equator), see `PlaygroundDocs/02BLOCH2DHELP.md`
 § "Reading the drawing".
 
 ### `BlochProjectionView`
@@ -120,7 +120,7 @@ BlochProjectionView(
 ```
 
 For the panel semantics and why one of page 03's two panels sets
-`verticalPointsDown: true`, see `Docs/03BLOCH2DPROJECTIONHELP.md`
+`verticalPointsDown: true`, see `PlaygroundDocs/03BLOCH2DPROJECTIONHELP.md`
 § "Reading the drawing".
 
 ### `Bloch3DView`
@@ -139,7 +139,7 @@ PlaygroundPage.current.setLiveView(
 It can be used **static**, with no sliders — page 08 does exactly this, showing a fixed
 qubit's Pauli expectation values on the same view page 04 drives interactively. For the
 camera model (perspective divide, near/far wireframe opacity, the silhouette scale
-factor, drag rates), see `Docs/04BLOCH3DHELP.md` § "Reading the drawing".
+factor, drag rates), see `PlaygroundDocs/04BLOCH3DHELP.md` § "Reading the drawing".
 
 ### `BlochExplorerView`
 

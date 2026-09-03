@@ -75,7 +75,7 @@ annotations), plus a SwiftUI live view. Structure:
 ### 2. Docs
 
 - `CLAUDE.md`: add the `13Teleportation` bullet to the playground page list.
-- `Docs/13TELEPORTATIONHELP.md`: user-facing guide (companion to `12SHORHELP.md`).
+- `PlaygroundDocs/13TELEPORTATIONHELP.md`: user-facing guide (companion to `12SHORHELP.md`).
 - This file records the plan.
 - `README.md`: a `### 13Teleportation` section, the project tree, and the gate tables'
   "Used in" column (`ry`/`rz` gain their first non-page-05 user; `cx` extends to 13).

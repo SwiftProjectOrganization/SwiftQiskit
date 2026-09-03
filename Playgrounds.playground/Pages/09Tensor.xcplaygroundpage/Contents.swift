@@ -10,7 +10,7 @@ import SwiftQiskitCore
 // composite systems: matrices combine into multi-qubit gates, and
 // state vectors combine into multi-qubit registers. Core exposes it
 // as `tensor(_:)` / `⊗` on both Matrix and StateVector (design notes
-// in Docs/09TENSORPLAN.md).
+// in PlaygroundDocs/09TENSORPLAN.md).
 //
 // Each section below mirrors one test in
 // Tests/SwiftQiskitCoreTests/TensorProductTests.swift, turning its

@@ -54,7 +54,7 @@ a precision comparison at 3 vs. 6 counting qubits.
 ### Docs
 
 - `CLAUDE.md`: add the `16QFT` bullet.
-- `Docs/16QFTHELP.md`: user-facing guide.
+- `PlaygroundDocs/16QFTHELP.md`: user-facing guide.
 - This file records the plan.
 - `README.md`: a `### 16QFT` section, the project tree, and the gate tables' "Used in" column
   (`p` gains its first use as a *controlled* rotation building block).

@@ -40,7 +40,7 @@ aren't); Bernstein–Vazirani reusing the identical circuit; a query-count compa
 ### Docs
 
 - `CLAUDE.md`: add the `17DeutschJozsa` bullet (naming both algorithms).
-- `Docs/17DEUTSCHJOZSAHELP.md`: user-facing guide.
+- `PlaygroundDocs/17DEUTSCHJOZSAHELP.md`: user-facing guide.
 - This file records the plan.
 - `README.md`: a `### 17DeutschJozsa` section and project tree update.
 - `STATUSandTODO.md`: an entry alongside pages 10–16.

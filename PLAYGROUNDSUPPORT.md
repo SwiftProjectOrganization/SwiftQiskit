@@ -2,7 +2,7 @@
 
 How code is shared between the pages of `Playgrounds.playground`. This is the terse
 implementation reference; the user-facing guide (usage snippets, the live-view recipe,
-and troubleshooting) is `Docs/90LIVEVIEWHELP.md`.
+and troubleshooting) is `PlaygroundDocs/90LIVEVIEWHELP.md`.
 
 ## How sharing works
 

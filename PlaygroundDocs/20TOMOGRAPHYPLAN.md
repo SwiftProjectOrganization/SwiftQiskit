@@ -71,7 +71,7 @@ additive initializer; no further shared-code change.
 ### Docs
 
 - `CLAUDE.md`: add the `20Tomography` bullet, after `19Noise`.
-- `Docs/20TOMOGRAPHYHELP.md`: user-facing guide (deferred with the page).
+- `PlaygroundDocs/20TOMOGRAPHYHELP.md`: user-facing guide (deferred with the page).
 - This file records the plan.
 - `README.md`: a `### 20Tomography` section.
 - `STATUSandTODO.md`: an entry alongside page 19.

@@ -28,7 +28,7 @@ Full control-by-control reference is in `GUIDocs/GUIHELP.md`.
 ## Walkthrough: build and measure a Bell state
 
 This reproduces the classic `h(0); cx(0, 1)` circuit from
-`Docs/07ENTANGLEMENTHELP.md`, but by tapping instead of writing code.
+`PlaygroundDocs/07ENTANGLEMENTHELP.md`, but by tapping instead of writing code.
 
 1. **Launch the app.** It opens with the default 2-qubit circuit (rows `q0`, `q1`), empty.
 
@@ -71,4 +71,4 @@ it exactly, same as `measure(shots:)` anywhere else in this project.
   count.
 - **A 3-qubit GHZ state.** Bump **Qubits** to 3, place `H` on `q0`, then `CX(q0, q1)` and
   `CX(q0, q2)` in the next two columns — the State Vector panel should settle on `|000⟩` and
-  `|111⟩` only, each ≈ 0.500, mirroring the GHZ section of `Docs/07ENTANGLEMENTHELP.md`.
+  `|111⟩` only, each ≈ 0.500, mirroring the GHZ section of `PlaygroundDocs/07ENTANGLEMENTHELP.md`.

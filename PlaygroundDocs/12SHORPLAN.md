@@ -86,8 +86,8 @@ with `// Expected:` annotations; no SwiftUI live view). Structure:
 ### 2. Docs
 
 - `CLAUDE.md`: add the `12ShorExample` bullet to the playground page list.
-- `Docs/12SHORHELP.md`: user-facing guide (companion to `11GROVERHELP.md`).
-- This file (`Docs/12SHORPLAN.md`) records the plan.
+- `PlaygroundDocs/12SHORHELP.md`: user-facing guide (companion to `11GROVERHELP.md`).
+- This file (`PlaygroundDocs/12SHORPLAN.md`) records the plan.
 - `README.md`: extend the gate tables (Hadamard/Pauli-X "Used in" now 08–12; new
   hand-built rows for U_a and QFT†), the project tree, and a `### 12ShorExample` section.
 

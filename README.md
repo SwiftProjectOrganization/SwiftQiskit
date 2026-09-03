@@ -179,7 +179,7 @@ SwiftQiskit/
 │       ├── DiracNotationTests.swift
 │       ├── CNOTTests.swift
 │       └── AdditionalGatesTests.swift
-├── Docs/
+├── PlaygroundDocs/
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
 │   ├── 03BLOCH2DPROJECTIONHELP.md
@@ -325,14 +325,14 @@ explorations of the library. Open it in Xcode — pages build against the `Swift
 and are linked sequentially with Previous/Next markers.
 
 Code shared by multiple pages (the Bloch-sphere types and views) lives in the playground's
-`Sources/` folder — see [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md) for a user-facing
+`Sources/` folder — see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user-facing
 guide to that shared code and to putting a live view on a page, and
 [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the terse implementation reference.
 
 ### 00TOC
 
 Clickable table of contents (markdown only): links to every page with a one-line
-description, plus pointers to the guides in `Docs/`.
+description, plus pointers to the guides in `PlaygroundDocs/`.
 
 ### 01Qubits
 
@@ -340,7 +340,7 @@ First look at qubit states through the Dirac API, shown in the results sidebar (
 console output): building `Ket`s from amplitudes, the dagger `†`, inner and outer
 products, probabilities, and tensoring a ket with itself. Content provisional.
 
-User guide in `Docs/01QUBITSHELP.md`.
+User guide in `PlaygroundDocs/01QUBITSHELP.md`.
 
 ### 02Bloch2d
 
@@ -356,8 +356,8 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
   |−⟩ via Hadamard + Pauli-Z (−x axis), |+i⟩ via Hadamard + S (+y axis), and
   |−i⟩ via Hadamard + S† (−y axis). The same vectors are also printed to the console.
 
-User guide in `Docs/02BLOCH2DHELP.md`; the general recipe for putting a SwiftUI live
-view on a playground page is in [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md).
+User guide in `PlaygroundDocs/02BLOCH2DHELP.md`; the general recipe for putting a SwiftUI live
+view on a playground page is in [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md).
 
 ### 03Bloch2dProjection
 
@@ -371,7 +371,7 @@ A *general* single-qubit state, tilted off the equator of the Bloch sphere (45°
 - **Live view** — the state on a large Bloch sphere plus two **plane projections**
   (x–y seen from +z, z–y seen from +x) drawn by the shared `BlochProjectionView`.
 
-User guide in `Docs/03BLOCH2DPROJECTIONHELP.md`.
+User guide in `PlaygroundDocs/03BLOCH2DPROJECTIONHELP.md`.
 
 ### 04Bloch3d
 
@@ -392,7 +392,7 @@ An **interactive 3D Bloch sphere**: a rotatable wireframe rendered with a pure S
   `Sources/` folder (which is why the slider view `BlochExplorerView` lives there). Both
   are confirmed still present on beta 5 (27A5237l).
 
-User guide: [Docs/04BLOCH3DHELP.md](Docs/04BLOCH3DHELP.md).
+User guide: [PlaygroundDocs/04BLOCH3DHELP.md](PlaygroundDocs/04BLOCH3DHELP.md).
 
 ### 05Gates
 
@@ -401,14 +401,14 @@ view, no prints): `x`, `h`, `z` (with the interference reveal that makes its pha
 visible), `y`, `s`/`sdg`, `t` (applied twice to show `T² == S`), the general phase gate
 `p(theta:)`, and the rotations `rx`/`ry`/`rz`, each shown individually on a 1-qubit
 `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to `07Entanglement`.
-User guide: [Docs/05GATESHELP.md](Docs/05GATESHELP.md).
+User guide: [PlaygroundDocs/05GATESHELP.md](PlaygroundDocs/05GATESHELP.md).
 
 ### 06Superposition
 
 A 4-qubit console walkthrough: every qubit put into superposition via `h`, inspecting the
 resulting 16-state amplitudes/probabilities and a 1600-shot measurement, plus a
 partial-superposition (2-qubit) contrast. User guide:
-[Docs/06SUPERPOSITIONHELP.md](Docs/06SUPERPOSITIONHELP.md).
+[PlaygroundDocs/06SUPERPOSITIONHELP.md](PlaygroundDocs/06SUPERPOSITIONHELP.md).
 
 ### 07Entanglement
 
@@ -418,7 +418,7 @@ A GHZ section extends the recipe to 3 qubits — `cx(0, 2)` spans non-adjacent q
 the page closes by rebuilding the Bell state via `apply(CNOTGate.matrix)` to show the
 matrix form agrees with the fluent `cx` API.
 
-User guide in `Docs/07ENTANGLEMENTHELP.md`.
+User guide in `PlaygroundDocs/07ENTANGLEMENTHELP.md`.
 
 ### 08Dirac
 
@@ -433,7 +433,7 @@ Dirac-notation walkthrough of `Quantum/Dirac.swift`:
   as the Pauli expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static
   `Bloch3DView`.
 
-User guide in `Docs/08DIRACHELP.md`.
+User guide in `PlaygroundDocs/08DIRACHELP.md`.
 
 ### 09Tensor
 
@@ -447,7 +447,7 @@ Tensor-product walkthrough (console only), mirroring
 - **Entanglement** — why the Bell state cannot be factored as a tensor product
   of single-qubit states.
 
-Design notes in `Docs/09TENSORPLAN.md`; user guide in `Docs/09TENSORHELP.md`.
+Design notes in `PlaygroundDocs/09TENSORPLAN.md`; user guide in `PlaygroundDocs/09TENSORHELP.md`.
 
 ### 10DeutschExample
 
@@ -462,7 +462,7 @@ f: {0,1} → {0,1} is constant or balanced with a *single* oracle query:
   measurement reads off constant (0) vs balanced (1) with certainty, confirmed for
   all four oracles and backed by shot statistics.
 
-Design notes in `Docs/10DEUTSCHPLAN.md`; user guide in `Docs/10DEUTSCHHELP.md`.
+Design notes in `PlaygroundDocs/10DEUTSCHPLAN.md`; user guide in `PlaygroundDocs/10DEUTSCHHELP.md`.
 
 ### 11GroverExample
 
@@ -479,7 +479,7 @@ fewer oracle queries:
 - **3-qubit finale** — Grover on 8 states using a hand-built CCZ matrix applied via
   `apply(_:)`, with the theoretical success probability after each iteration.
 
-Design notes in `Docs/11GROVERPLAN.md`; user guide in `Docs/11GROVERHELP.md`.
+Design notes in `PlaygroundDocs/11GROVERPLAN.md`; user guide in `PlaygroundDocs/11GROVERHELP.md`.
 
 ### 12ShorExample
 
@@ -500,7 +500,7 @@ with a 3-qubit counting register and a 4-qubit work register:
   gcd factors, then a sweep of every coprime base including the instructive a = 14
   failure (a^(r/2) ≡ −1).
 
-Design notes in `Docs/12SHORPLAN.md`; user guide in `Docs/12SHORHELP.md`.
+Design notes in `PlaygroundDocs/12SHORPLAN.md`; user guide in `PlaygroundDocs/12SHORHELP.md`.
 
 ### 13Teleportation
 
@@ -519,7 +519,7 @@ Quantum teleportation and its dual, superdense coding — entanglement used as a
 - **Superdense coding** — two classical bits carried by one qubit, decoded with certainty,
   with the Bell basis's Gram matrix printed as the identity to show why.
 
-Design notes in `Docs/13TELEPORTATIONPLAN.md`; user guide in `Docs/13TELEPORTATIONHELP.md`.
+Design notes in `PlaygroundDocs/13TELEPORTATIONPLAN.md`; user guide in `PlaygroundDocs/13TELEPORTATIONHELP.md`.
 
 ### 14ErrorCorrection
 
@@ -539,7 +539,7 @@ fragile qubit without ever looking at it directly, with a Bloch-sphere live view
 - **Phase flips for free** — Hadamard-conjugating the same code (H Z H = X) turns a Z error
   into the X error the rest of the page already fixes.
 
-Design notes in `Docs/14ERRORCORRECTIONPLAN.md`; user guide in `Docs/14ERRORCORRECTIONHELP.md`.
+Design notes in `PlaygroundDocs/14ERRORCORRECTIONPLAN.md`; user guide in `PlaygroundDocs/14ERRORCORRECTIONHELP.md`.
 
 ### 15CHSH
 
@@ -559,7 +559,7 @@ classical instruction list — with a live chart of the violation:
 - **A live chart** — `CHSHChartView` (new shared `Sources/` type) plots the exact cos θ
   curve, sampled points, and the classical line together.
 
-Design notes in `Docs/15CHSHPLAN.md`; user guide in `Docs/15CHSHHELP.md`.
+Design notes in `PlaygroundDocs/15CHSHPLAN.md`; user guide in `PlaygroundDocs/15CHSHHELP.md`.
 
 ### 16QFT
 
@@ -575,7 +575,7 @@ open when it built the QFT as a single entrywise matrix:
 - **Standalone phase estimation** — exact recovery of dyadic phases, a spread for phases that
   aren't, and a precision comparison at 3 vs. 6 counting qubits.
 
-Design notes in `Docs/16QFTPLAN.md`; user guide in `Docs/16QFTHELP.md`.
+Design notes in `PlaygroundDocs/16QFTPLAN.md`; user guide in `PlaygroundDocs/16QFTHELP.md`.
 
 ### 17DeutschJozsa
 
@@ -592,7 +592,7 @@ bit to n:
 - **The query-count gap** — quantum stays at 1 while classical Deutsch–Jozsa's worst case
   grows exponentially and classical Bernstein–Vazirani grows linearly.
 
-Design notes in `Docs/17DEUTSCHJOZSAPLAN.md`; user guide in `Docs/17DEUTSCHJOZSAHELP.md`.
+Design notes in `PlaygroundDocs/17DEUTSCHJOZSAPLAN.md`; user guide in `PlaygroundDocs/17DEUTSCHJOZSAHELP.md`.
 
 ### 18VQE
 
@@ -611,7 +611,7 @@ with a live chart of the optimization:
 - **A live chart** — the E(θ) landscape and the optimizer's own visited points, on the shared
   `CHSHChartView`.
 
-Design notes in `Docs/18VQEPLAN.md`; user guide in `Docs/18VQEHELP.md`.
+Design notes in `PlaygroundDocs/18VQEPLAN.md`; user guide in `PlaygroundDocs/18VQEHELP.md`.
 
 ### 19Noise
 
@@ -631,7 +631,7 @@ Open systems: the density matrix, and how noise enters a state-vector simulator 
 - **Entanglement via a reduced state** — tracing out one qubit of a Bell pair gives entropy
   exactly 1 bit, against 0 for a product state — the explanation page 13's marginals were owed.
 
-Design notes in `Docs/19NOISEPLAN.md`; user guide in `Docs/19NOISEHELP.md`.
+Design notes in `PlaygroundDocs/19NOISEPLAN.md`; user guide in `PlaygroundDocs/19NOISEHELP.md`.
 
 ### 20Tomography
 
@@ -650,7 +650,7 @@ real device gives you," depending on page 19's mixed states for its sharpest res
 - **Why full tomography doesn't scale** — a 3ⁿ-settings cost table, motivating page 18's
   per-term Pauli measurements.
 
-Design notes in `Docs/20TOMOGRAPHYPLAN.md`; user guide in `Docs/20TOMOGRAPHYHELP.md`.
+Design notes in `PlaygroundDocs/20TOMOGRAPHYPLAN.md`; user guide in `PlaygroundDocs/20TOMOGRAPHYHELP.md`.
 
 ### 21Trotter
 
@@ -666,7 +666,7 @@ gate, the original motivation for quantum computers, with a live chart:
 - **Why the error exists** — the non-zero commutator [Z⊗Z, X⊗I] identified as the cause; a
   commuting-only Hamiltonian is exact at n=1.
 
-Design notes in `Docs/21TROTTERPLAN.md`; user guide in `Docs/21TROTTERHELP.md`.
+Design notes in `PlaygroundDocs/21TROTTERPLAN.md`; user guide in `PlaygroundDocs/21TROTTERHELP.md`.
 
 ### 22Walk
 
@@ -683,12 +683,12 @@ answering an oracle question or amplifying a marked item, with a live chart:
 - **Interference, not asymmetry** — an |0⟩ coin gives a lopsided distribution; Core's existing
   `|+i⟩` basis ket restores left-right symmetry exactly.
 
-Design notes in `Docs/22WALKPLAN.md`; user guide in `Docs/22WALKHELP.md`.
+Design notes in `PlaygroundDocs/22WALKPLAN.md`; user guide in `PlaygroundDocs/22WALKHELP.md`.
 
 The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
 `Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15,
 18, 21, and 22) are shared between these pages via the playground's `Sources/` folder (not
-part of Core) — see [Docs/90LIVEVIEWHELP.md](Docs/90LIVEVIEWHELP.md) for a user guide to each type
+part of Core) — see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user guide to each type
 and [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference. `BlochVector`
 gained an additive `init(x:y:z:)` for page 19's mixed-state (sub-unit-length) vectors, used by
 pages 19 and 20; every earlier call site is unaffected.

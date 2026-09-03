@@ -4,7 +4,7 @@ User-facing guide to the `02Bloch2d` playground page, which visualizes single-qu
 states on the Bloch sphere with a SwiftUI live view. Unlike the algorithm pages there is no
 separate design/plan document — the shared implementation in
 `Playgrounds.playground/Sources/` (`BlochVector.swift`, `BlochSphereView.swift`) and its
-doc comments are the reference; `Docs/90LIVEVIEWHELP.md` documents the shared module and
+doc comments are the reference; `PlaygroundDocs/90LIVEVIEWHELP.md` documents the shared module and
 the general live-view recipe, and `PLAYGROUNDSUPPORT.md` is the terse implementation
 reference.
 
@@ -87,7 +87,7 @@ Reading notes:
   z = |α|² − |β|² for |±⟩ subtracts two identical doubles, and y = 2·Im(ᾱβ) of real
   amplitudes is 0. Only the ±1 entries (x for |±⟩, y for |±i⟩) carry rounding:
   2·(1/√2)² is `±0.9999999999999998`
-  (the same ~1e-16 as H†H in `Docs/08DIRACHELP.md`), invisible at three decimals.
+  (the same ~1e-16 as H†H in `PlaygroundDocs/08DIRACHELP.md`), invisible at three decimals.
 - **Every zero prints as `+0.000`** — the `%+.3f` format always emits a sign, and no
   computation here produces a negative zero.
 
@@ -110,7 +110,7 @@ and the poles straight up/down at full length. Other elements:
   repeats the numeric (x, y, z) and (θ, φ).
 
 The projection is fixed. For a rotatable view of the same states, see page
-`04Bloch3d` (`Bloch3DView` with drag-to-orbit; user guide `Docs/04BLOCH3DHELP.md`).
+`04Bloch3d` (`Bloch3DView` with drag-to-orbit; user guide `PlaygroundDocs/04BLOCH3DHELP.md`).
 
 ## Putting a live view on this page
 
@@ -128,13 +128,13 @@ holding only a `let`, so it needs no access modifiers to live in page code. The 
 frame, 560 × 940, fits its content: a 2 × 3 grid of 260-point cells plus padding.
 
 For the general recipe (why the frame is required, when a view must move to `Sources/`,
-and the beta workarounds), see `Docs/90LIVEVIEWHELP.md` § "Putting a live view on a
+and the beta workarounds), see `PlaygroundDocs/90LIVEVIEWHELP.md` § "Putting a live view on a
 playground page".
 
 ## Using it in your own code
 
 `BlochVector` and `BlochSphereView` live in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `Docs/90LIVEVIEWHELP.md` for how that sharing works). On any page:
+`SwiftQiskitCore` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works). On any page:
 
 ```swift
 import SwiftUI
@@ -163,6 +163,6 @@ lands on the +y axis (the same |+i⟩ the gallery reaches with `h(0)` + `s(0)`).
 ## Troubleshooting
 
 This page has no troubleshooting notes of its own beyond the shared-code failures — see
-`Docs/90LIVEVIEWHELP.md` § "Troubleshooting" for the scheme-build requirement, the libcups
+`PlaygroundDocs/90LIVEVIEWHELP.md` § "Troubleshooting" for the scheme-build requirement, the libcups
 shim, an unframed live view, `Cannot find 'X' in scope`, and the `BlochVector`
 single-qubit precondition.

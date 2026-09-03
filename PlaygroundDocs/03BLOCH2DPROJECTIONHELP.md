@@ -6,7 +6,7 @@ there is no separate design/plan document — the page, its comments, and the sh
 implementation in `Playgrounds.playground/Sources/` (`BlochVector.swift`,
 `BlochSphereView.swift`, `BlochProjectionView.swift`) are the reference; see
 `02BLOCH2DHELP.md` for the Bloch map itself (applies unchanged here) and
-`Docs/90LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
+`PlaygroundDocs/90LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
 
 ## What the page shows
 
@@ -154,7 +154,7 @@ state in the x–y panel) reaches the circle's edge.
 ## Using it in your own code
 
 `BlochProjectionView` lives in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `Docs/90LIVEVIEWHELP.md` for how that sharing works, and for why the
+`SwiftQiskitCore` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works, and for why the
 view takes any two labelled numbers rather than being limited to Bloch components):
 
 ```swift
@@ -195,6 +195,6 @@ parametrization explicit for the reader.
   See "Reading the drawing" above for which component each panel drops.
 - **Live view blank, collapsed, or clipped** — this page's `BlochDetailView` is already
   framed 460 × 720; if it still looks wrong, see the general causes in
-  `Docs/90LIVEVIEWHELP.md` § "Troubleshooting" (which also covers the scheme-build
+  `PlaygroundDocs/90LIVEVIEWHELP.md` § "Troubleshooting" (which also covers the scheme-build
   requirement, the libcups shim, `Cannot find 'X' in scope`, and the `BlochVector`
   single-qubit precondition).

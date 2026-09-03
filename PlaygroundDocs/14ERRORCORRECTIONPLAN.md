@@ -65,7 +65,7 @@ state.
 ### 2. Docs
 
 - `CLAUDE.md`: add the `14ErrorCorrection` bullet.
-- `Docs/14ERRORCORRECTIONHELP.md`: user-facing guide.
+- `PlaygroundDocs/14ERRORCORRECTIONHELP.md`: user-facing guide.
 - This file records the plan.
 - `README.md`: a `### 14ErrorCorrection` section, the project tree, and the gate tables'
   "Used in" column.

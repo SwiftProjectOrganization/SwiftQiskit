@@ -67,7 +67,7 @@ distributions at t=7 as two series — no new shared view.
 ### Docs
 
 - `CLAUDE.md`: add the `22Walk` bullet.
-- `Docs/22WALKHELP.md`: user-facing guide (deferred with the page).
+- `PlaygroundDocs/22WALKHELP.md`: user-facing guide (deferred with the page).
 - This file records the plan.
 - `README.md`: a `### 22Walk` section.
 - `STATUSandTODO.md`: an entry alongside pages 19–21, closing out this batch of four.

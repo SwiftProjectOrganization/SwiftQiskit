@@ -62,11 +62,11 @@
 
  ## User guides
 
- Several pages have companion documents in `Docs/` at the repo root. The
+ Several pages have companion documents in `PlaygroundDocs/` at the repo root. The
  `…PLAN.md` files record design notes; the `…HELP.md` files are user guides with
  expected output and troubleshooting.
 
- One guide isn't tied to a single page: `Docs/90LIVEVIEWHELP.md` documents the shared
+ One guide isn't tied to a single page: `PlaygroundDocs/90LIVEVIEWHELP.md` documents the shared
  `Sources/` module and the general recipe for putting a SwiftUI live view on any page —
  read it alongside whichever page guide sent you here. (Numbered `90` rather than a page
  number, so it always sorts after every page guide above.)

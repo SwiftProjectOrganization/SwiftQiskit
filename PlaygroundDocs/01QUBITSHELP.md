@@ -184,6 +184,6 @@ let doubled = psi ⊗ psi                     // |ψ⟩ ⊗ |ψ⟩ — a 4-dim S
   reading note above.
 - **Live view blank, collapsed, or clipped** — this page's `CircuitStagesView` already
   has an explicit frame (`560 × 1340`) — if it looks wrong, check for edits to that frame
-  or to `stages1`/`stages2`; for the general causes see `Docs/90LIVEVIEWHELP.md`
+  or to `stages1`/`stages2`; for the general causes see `PlaygroundDocs/90LIVEVIEWHELP.md`
   § "Troubleshooting" (which also covers the scheme-build requirement, the libcups shim,
   `Cannot find 'X' in scope`, and the `BlochVector` single-qubit precondition).
