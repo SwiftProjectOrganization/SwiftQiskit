@@ -3,7 +3,7 @@
 A hands-on walkthrough of `SwiftQiskitGUI`, the interactive macOS app for building
 `QuantumCircuit`s by tapping gates onto a grid instead of writing Swift. This document is
 the *how to use it* guide; for the app's architecture, extension points, and
-troubleshooting, see the companion `GUIDocs/GUIHELP.md`.
+troubleshooting, see the companion `SwiftQiskitDocs/GUIHELP.md`.
 
 The app lives at `SwiftQiskitGUI/Sources/` and is a normal SwiftPM executable target — no
 playground involved. It's mac-only (`.macOS(.v14)` minimum, per `Package.swift`) and uses
@@ -23,7 +23,7 @@ nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx`
 | **Circuit** (center) | A grid, one row per qubit. Tap an empty cell to place the armed gate there. Has the qubit-count stepper and a **Clear** button. |
 | **State Vector** (right) | Live amplitudes/probabilities for the circuit as currently built, plus a **Measure** button and shot-count histogram. |
 
-Full control-by-control reference is in `GUIDocs/GUIHELP.md`.
+Full control-by-control reference is in `SwiftQiskitDocs/GUIHELP.md`.
 
 ## Walkthrough: build and measure a Bell state
 

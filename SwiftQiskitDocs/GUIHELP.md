@@ -1,7 +1,7 @@
 # SwiftQiskitGUI — help & reference
 
 Implementation reference, extension guide, and troubleshooting for `SwiftQiskitGUI`. The
-user-facing walkthrough (how to actually use the app) is `GUIDocs/GUITUTORIAL.md`; this
+user-facing walkthrough (how to actually use the app) is `SwiftQiskitDocs/GUITUTORIAL.md`; this
 document is its `PLAYGROUNDSUPPORT.md`-style companion — how it's built, not how to drive
 it.
 
