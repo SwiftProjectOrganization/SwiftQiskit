@@ -5,7 +5,7 @@ A hands-on walkthrough of `SwiftQiskitGUI`, the interactive macOS app for buildi
 the *how to use it* guide; for the app's architecture, extension points, and
 troubleshooting, see the companion `SwiftQiskitDocs/GUIHELP.md`.
 
-The app lives at `SwiftQiskitGUI/Sources/` and is a normal SwiftPM executable target — no
+The app lives at `Sources/SwiftQiskitGUI/` and is a normal SwiftPM executable target — no
 playground involved. It's mac-only (`.macOS(.v14)` minimum, per `Package.swift`) and uses
 nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx` circuit API.
 
@@ -20,7 +20,7 @@ nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx`
 | Panel | What it's for |
 |---|---|
 | **Gates** (left) | Tap a gate button to *arm* it (it highlights). |
-| **Circuit** (center) | A grid, one row per qubit. Tap an empty cell to place the armed gate there. Has the qubit-count stepper and a **Clear** button. |
+| **Circuit** (center) | A grid, one wire per qubit, drawn as a real horizontal line. Tap an empty cell to place the armed gate there. Has the qubit-count stepper and a **Clear** button. |
 | **State Vector** (right) | Live amplitudes/probabilities for the circuit as currently built, plus a **Measure** button and shot-count histogram. |
 
 Full control-by-control reference is in `SwiftQiskitDocs/GUIHELP.md`.
@@ -42,9 +42,10 @@ This reproduces the classic `h(0); cx(0, 1)` circuit from
    label that's split, not the second.
 
 3. **Place the CX.** Click **CX** in the "Multi-qubit" section to arm it. Click the `q0`
-   cell in the *next* empty column — its border turns orange, marking it as the pending
-   control. Click the `q1` cell in that *same* column. The `q0` cell now shows a filled
-   dot (control) and the `q1` cell shows a circle-plus (⊕, target).
+   cell in the *next* empty column — an orange ring appears there, marking it as the
+   pending control. Click the `q1` cell in that *same* column. The `q0` cell now shows a
+   filled dot (control) and the `q1` cell shows a circle-plus (⊕, target), joined by a
+   vertical line connecting the two.
 
    The State Vector panel now shows only two states: `|00⟩` and `|11⟩`, each with
    probability ≈ 0.500 — the Bell state.

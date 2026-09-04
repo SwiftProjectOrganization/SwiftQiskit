@@ -2,6 +2,7 @@ import Testing
 @testable import SwiftQiskitGUI
 import SwiftQiskitCore
 
+@MainActor
 @Suite("CircuitBuilder")
 struct CircuitBuilderTests {
 

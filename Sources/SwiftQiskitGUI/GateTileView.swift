@@ -17,15 +17,21 @@ struct GateTileView: View {
 
     @State private var showingParameters = false
 
+    private var thetaBinding: Binding<Double> {
+        Binding(
+            get: { gate.kind.theta ?? 0 },
+            set: { onThetaChange($0) }
+        )
+    }
+
+    private var isBoxed: Bool { gate.kind.qubitSpan == 1 }
+
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(isSelected ? Color.accentColor.opacity(0.25) : Color.accentColor.opacity(0.12))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
-            )
+            .background(boxedBackground)
+            .clipShape(isBoxed ? RoundedRectangle(cornerRadius: 6) : RoundedRectangle(cornerRadius: 0))
+            .overlay(isBoxed ? boxedSelectionOverlay : nil)
             .contentShape(Rectangle())
             .onTapGesture {
                 onSelect()
@@ -34,11 +40,27 @@ struct GateTileView: View {
                 }
             }
             .popover(isPresented: $showingParameters) {
-                ParameterPopover(theta: gate.kind.theta ?? 0, onChange: onThetaChange)
+                ParameterPopover(theta: thetaBinding)
             }
             .contextMenu {
                 Button("Delete", role: .destructive, action: onDelete)
             }
+    }
+
+    @ViewBuilder
+    private var boxedBackground: some View {
+        if isBoxed {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6).fill(.background)
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.accentColor.opacity(0.25) : Color.accentColor.opacity(0.12))
+            }
+        }
+    }
+
+    private var boxedSelectionOverlay: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
     }
 
     @ViewBuilder
@@ -47,6 +69,11 @@ struct GateTileView: View {
             Circle()
                 .fill(Color.accentColor)
                 .frame(width: 14, height: 14)
+                .overlay(
+                    Circle()
+                        .stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                )
         } else {
             Text(gate.kind.symbol)
                 .font(.system(.body, design: .monospaced, weight: .semibold))
@@ -74,12 +101,11 @@ struct EmptyCellView: View {
     let isPendingControl: Bool
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .strokeBorder(
-                isPendingControl ? Color.orange : Color.secondary.opacity(0.25),
-                lineWidth: isPendingControl ? 2 : 1
-            )
-            .background(Color.secondary.opacity(0.03))
+        Circle()
+            .stroke(Color.orange, lineWidth: 2)
+            .opacity(isPendingControl ? 1 : 0)
+            .frame(width: 20, height: 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
     }
 }

@@ -27,7 +27,7 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 |---|---|---|
 | `SwiftQiskitCore` | `Sources/SwiftQiskitCore/` | Core simulation library |
 | `SwiftQiskitExamples` | `Examples/` | CLI Bell-state demo |
-| `SwiftQiskitGUI` | `SwiftQiskitGUI/Sources/` | SwiftUI macOS app (built with `-parse-as-library`) |
+| `SwiftQiskitGUI` | `Sources/SwiftQiskitGUI/` | SwiftUI macOS app (built with `-parse-as-library`) |
 
 **Import gotcha:** the library *product* is named `SwiftQiskit` but the *module* is
 `SwiftQiskitCore` — always `import SwiftQiskitCore`.

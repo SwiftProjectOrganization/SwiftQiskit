@@ -2,15 +2,18 @@
 //  CircuitBuilderView.swift
 //  SwiftQiskitGUI
 //
-//  Top-level layout: gate palette, circuit grid, and live results.
+//  Regular-width layout: gate palette, circuit grid, and live results side by
+//  side. Used on macOS and iPad (any horizontalSizeClass other than .compact).
+//  State is owned by ContentView so CompactBuilderView can share the same
+//  builder and armed gate.
 //
 
 import SwiftUI
 import SwiftQiskitCore
 
 struct CircuitBuilderView: View {
-    @State private var builder = CircuitBuilder(qubitCount: 2)
-    @State private var armedGate: GateKind?
+    var builder: CircuitBuilder
+    @Binding var armedGate: GateKind?
 
     var body: some View {
         HStack(spacing: 16) {
@@ -52,6 +55,6 @@ struct CircuitBuilderView: View {
 }
 
 #Preview {
-    CircuitBuilderView()
+    CircuitBuilderView(builder: CircuitBuilder(qubitCount: 2), armedGate: .constant(nil))
         .frame(width: 900, height: 600)
 }

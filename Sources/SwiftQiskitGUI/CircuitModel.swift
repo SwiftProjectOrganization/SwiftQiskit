@@ -86,6 +86,7 @@ public struct PlacedGate: Identifiable, Equatable {
 
 // MARK: - CircuitBuilder
 
+@MainActor
 @Observable
 public final class CircuitBuilder {
 

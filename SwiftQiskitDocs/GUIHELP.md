@@ -15,19 +15,22 @@ record of *placed* gates and replays them onto a fresh `QuantumCircuit` whenever
 to run — the same "keep UI-only concerns out of Core" split the playground uses for Bloch
 math and charts. No `SwiftQiskitCore` changes were needed or made for this feature.
 
-## File map (`SwiftQiskitGUI/Sources/`)
+## File map (`Sources/SwiftQiskitGUI/`)
 
 | File | Contents |
 |---|---|
 | `CircuitModel.swift` | `GateKind`, `PlacedGate`, `CircuitBuilder` — the model, no SwiftUI import |
-| `CircuitBuilderView.swift` | Top-level 3-pane layout; owns the `CircuitBuilder` and `armedGate` state |
-| `GatePaletteView.swift` | Gate buttons, grouped by category; arms a `GateKind` |
+| `CircuitLayout.swift` | Pure geometry — turns `(column, qubit)` into points shared by the wire layer and the interactive gate layer so they can't drift apart |
+| `CircuitWiresView.swift` | Background `Canvas` layer: one horizontal wire per qubit, plus a vertical connector between a CX gate's control and target |
+| `CircuitBuilderView.swift` | Regular-width (macOS/iPad) 3-pane layout; takes `builder`/`armedGate` from `ContentView` |
+| `CompactBuilderView.swift` | iPhone-compact layout (`#if os(iOS)`): full-bleed grid + horizontal gate strip, results in a sheet |
+| `GatePaletteView.swift` | Gate buttons, grouped by category; arms a `GateKind`; `.sidebar` (macOS/iPad) or `.strip` (iPhone) layout |
 | `CircuitGridView.swift` | The qubit-wire grid; tap-to-place and the CX two-tap state machine |
 | `GateTileView.swift` | `GateTileView` (a placed single-qubit or CX-control tile), `CXTargetView` (the ⊕ half of a CX), `EmptyCellView` |
 | `ParameterPopover.swift` | θ slider for `.p/.rx/.ry/.rz` tiles |
 | `ResultsView.swift` | Live state vector + shots/Measure/histogram |
 | `HistogramView.swift` | Bar chart of `SimulationResult` counts |
-| `ContentView.swift` | Thin wrapper — just returns `CircuitBuilderView()` |
+| `ContentView.swift` | Owns the `CircuitBuilder` and `armedGate` state; picks `CircuitBuilderView` vs. `CompactBuilderView` by size class on iOS |
 | `main.swift` | `@main App`, unchanged by this feature |
 
 ## The model (`CircuitModel.swift`)
@@ -63,10 +66,11 @@ public struct PlacedGate: Identifiable, Equatable {
 CLAUDE.md asks to avoid the Combine framework, and `@Observable` is the modern
 replacement. That's *why* the package's minimum deployment target is `.macOS(.v14)`
 (bumped from `.v13` when this feature was added): `@Observable` and the two-parameter
-`onChange(of:initial:_:)` used in `ParameterPopover.swift` both need macOS 14. If you ever
-need to drop back below macOS 14, you'd have to fall back to `ObservableObject`/`@Published`
-and the older single-parameter `onChange(of:)` instead — a real trade-off, not a style
-choice.
+`onChange(of:initial:_:)` used in `CircuitGridView.swift` (to clear a pending CX control
+when the armed gate changes) both need macOS 14. If you ever need to drop back below
+macOS 14, you'd have to fall back to `ObservableObject`/`@Published` and the older
+single-parameter `onChange(of:)` instead — a real trade-off, not a style choice.
+`CircuitBuilder` is also `@MainActor`-isolated, since it's only ever touched from view code.
 
 `qubitCount`'s clamp-and-filter lives in its own `didSet`, written carefully to avoid
 infinite recursion: it only re-assigns `qubitCount` (which would re-trigger `didSet`) when
@@ -89,6 +93,13 @@ below):
   `GateTileView` renders (the symbol, or a filled dot for CX's control). The other qubit(s)
   of a multi-qubit gate render `CXTargetView` (the ⊕ glyph) instead. Deleting works from
   either half.
+- The grid sits on two layers sharing one `CircuitLayout`: `CircuitWiresView` (a `Canvas`)
+  draws the horizontal qubit wires and the vertical CX control→target connector *behind*
+  everything, and `CircuitGridView` `.position()`s labels/cells on top from the same
+  `center(column:qubit:)` geometry, so the two layers can't drift apart. Single-qubit tiles
+  paint an opaque backing (`GateTileView.boxedBackground`) so they read clearly over the
+  wire; CX dots and `EmptyCellView`'s pending-control marker are transparent rings instead,
+  so the wire shows through.
 
 ## Extending
 
@@ -97,7 +108,7 @@ below):
    `theta`/`withTheta` if parameterized).
 2. Add the matching case in `CircuitBuilder.apply(_:to:)`, calling the corresponding
    `QuantumCircuit` method.
-3. Add a button for it in `GatePaletteView`'s `section(_:gates:)` calls.
+3. Add it to the appropriate group in `GatePaletteView`'s `sections` array.
 
 No changes needed anywhere else — `CircuitGridView`/`GateTileView` render any `GateKind`
 generically via `.symbol`/`.qubitSpan`.
@@ -110,10 +121,6 @@ stateless `View` taking a value type, not the whole `CircuitBuilder`) and wire i
 
 - **No drag-and-drop.** Tap-to-arm-then-tap-cell was chosen over `onDrag`/`dropDestination`
   for simplicity; revisit if it feels clunky in practice.
-- **No wire connecting a CX's control and target visually** — they're drawn as a dot and a
-  ⊕ in the same column with nothing joining them, unlike a textbook circuit diagram. Only a
-  glyph convention, not a real limitation of the model (`PlacedGate.qubits` already has
-  both endpoints) — a future pass could draw the connecting line with an overlay `Canvas`.
 - **No persistence.** Closing the app discards the circuit; there's no save/load/export.
 - **No undo.** `Clear` and qubit-count shrinking are immediate and irreversible within a
   session.
@@ -123,7 +130,9 @@ stateless `View` taking a value type, not the whole `CircuitBuilder`) and wire i
 `Tests/SwiftQiskitGUITests/CircuitBuilderTests.swift` covers `CircuitBuilder`'s logic only
 (no view tests — SwiftUI views aren't unit-testable here): Bell-state replay via
 `buildCircuit()`, occupied/out-of-range placement rejection, qubit-count clamping and
-gate-dropping on shrink, `updateTheta`, and `clear`. Run via `swift test` or the
+gate-dropping on shrink, `updateTheta`, and `clear`. `CircuitLayoutTests.swift` covers the
+pure `CircuitLayout` geometry: center spacing, `wireY` agreement with `center`, and
+`canvasSize` growth in each dimension independently. Run via `swift test` or the
 **`SwiftQiskit-Package`** Xcode scheme — the plain `SwiftQiskit` scheme's test plan has no
 test targets in it (a pre-existing gotcha, also noted for `SwiftQiskitCoreTests`).
 
@@ -132,7 +141,7 @@ test targets in it (a pre-existing gotcha, also noted for `SwiftQiskitCoreTests`
 - **Clicking a gate button does nothing.** Check whether it's already armed (tinted with
   the accent color) — clicking an armed gate again disarms it instead of re-arming it.
 - **Tapping a grid cell does nothing.** Nothing is armed, or that qubit is already occupied
-  at that column — occupied cells render a tile, not the dashed `EmptyCellView`, so if you
+  at that column — occupied cells render a tile, not the empty-cell hit target, so if you
   see a tile there, that's why.
 - **CX won't place.** Both taps must land in the *same column*; a stray tap elsewhere resets
   the pending control rather than placing the gate. Check for the orange border to confirm

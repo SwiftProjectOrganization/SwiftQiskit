@@ -16,37 +16,50 @@ struct CircuitGridView: View {
     @State private var pendingControl: (column: Int, qubit: Int)?
     @State private var selectedGateID: UUID?
 
-    private let cellSize: CGFloat = 44
+    private let layout = CircuitLayout()
 
     var body: some View {
         let columns = max(builder.columnCount() + 1, 4)
+        let size = layout.canvasSize(columns: columns, qubits: builder.qubitCount)
 
         ScrollView([.horizontal, .vertical]) {
-            Grid(horizontalSpacing: 4, verticalSpacing: 4) {
-                ForEach(0..<builder.qubitCount, id: \.self) { qubit in
-                    GridRow {
-                        Text("q\(qubit)")
-                            .font(.caption.monospaced())
-                            .frame(width: 28, alignment: .trailing)
+            ZStack(alignment: .topLeading) {
+                CircuitWiresView(
+                    gates: builder.gates,
+                    qubitCount: builder.qubitCount,
+                    columns: columns,
+                    layout: layout
+                )
 
-                        ForEach(0..<columns, id: \.self) { column in
-                            cell(column: column, qubit: qubit)
-                        }
+                ForEach(0..<builder.qubitCount, id: \.self) { qubit in
+                    Text("q\(qubit)")
+                        .font(.caption.monospaced())
+                        .position(x: layout.padding + layout.labelWidth / 2, y: layout.wireY(qubit))
+                }
+
+                ForEach(0..<columns, id: \.self) { column in
+                    ForEach(0..<builder.qubitCount, id: \.self) { qubit in
+                        cell(column: column, qubit: qubit)
                     }
                 }
             }
-            .padding()
+            .frame(width: size.width, height: size.height)
         }
+        .onChange(of: armedGate) { pendingControl = nil }
     }
 
     @ViewBuilder
     private func cell(column: Int, qubit: Int) -> some View {
+        let point = layout.center(column: column, qubit: qubit)
+
         if let gate = builder.gate(atColumn: column, qubit: qubit) {
             occupiedCell(gate: gate, qubit: qubit)
-                .frame(width: cellSize, height: cellSize)
+                .frame(width: layout.cellSize, height: layout.cellSize)
+                .position(point)
         } else {
             EmptyCellView(isPendingControl: pendingControl?.column == column && pendingControl?.qubit == qubit)
-                .frame(width: cellSize, height: cellSize)
+                .frame(width: layout.cellSize, height: layout.cellSize)
+                .position(point)
                 .onTapGesture { handleTap(column: column, qubit: qubit) }
         }
     }
@@ -97,4 +110,14 @@ struct CircuitGridView: View {
             pendingControl = nil
         }
     }
+}
+
+#Preview {
+    let builder = CircuitBuilder(qubitCount: 3)
+    builder.place(.h, qubits: [0], column: 0)
+    builder.place(.rx(.pi / 2), qubits: [1], column: 0)
+    builder.place(.cx, qubits: [0, 2], column: 1)
+
+    return CircuitGridView(builder: builder, armedGate: .constant(nil))
+        .frame(width: 500, height: 300)
 }

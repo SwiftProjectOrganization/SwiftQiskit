@@ -166,12 +166,22 @@ SwiftQiskit/
 │   │   ├── Utils/
 │   │   │   └── String+Padding.swift
 │   │   └── SwiftQiskitCore.swift
+│   └── SwiftQiskitGUI/
+│       ├── main.swift
+│       ├── ContentView.swift
+│       ├── CircuitModel.swift
+│       ├── CircuitLayout.swift
+│       ├── CircuitWiresView.swift
+│       ├── CircuitBuilderView.swift
+│       ├── CompactBuilderView.swift
+│       ├── CircuitGridView.swift
+│       ├── GatePaletteView.swift
+│       ├── GateTileView.swift
+│       ├── ParameterPopover.swift
+│       ├── ResultsView.swift
+│       └── HistogramView.swift
 ├── Examples/
 │   └── main.swift
-├── SwiftQiskitGUI/
-│   └── Sources/
-│       ├── main.swift
-│       └── ContentView.swift
 ├── Tests/
 │   └── SwiftQiskitCoreTests/
 │       ├── BellStateTests.swift

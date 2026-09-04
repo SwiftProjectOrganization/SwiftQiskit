@@ -59,7 +59,6 @@ let package = Package(
         .executableTarget(
             name: "SwiftQiskitGUI",
             dependencies: ["SwiftQiskitCore"],
-            path: "SwiftQiskitGUI/Sources",
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ]
