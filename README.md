@@ -7,8 +7,10 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
 1. The usage of Xcode playgrounds.
-2. Showing of Bloch spheres (in live playgrounds).
-3. Using Swift Testing.
+2. Playgrounds 10 to 22 contain many different quantum computing examples.
+3. Showing of Bloch spheres (in live playgrounds).
+4. Using Swift Testing.
+5. In addition to the included expanded version of SwiftQiskitGUI, a separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting MacOS, IOS and iPadOS is available..
 
 ---
 
@@ -264,7 +266,8 @@ SwiftQiskit/
 ### Requirements
 
 The package itself (`Package.swift`) declares `swift-tools-version: 5.9` and targets
-macOS 13+ / iOS 16+.
+macOS 14+ / iOS 17+ (bumped from macOS 13+/iOS 16+ for `SwiftQiskitGUI`'s use of
+`@Observable` and two-parameter `onChange(of:initial:_:)`).
 
 This fork's playground pages, however, are developed and tested against **Xcode 27.0 beta**
 and **macOS 27 beta** — some SwiftUI live-view pages need the beta-specific workarounds in

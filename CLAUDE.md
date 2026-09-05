@@ -18,7 +18,7 @@ CLI equivalents:
 swift build                        # build everything
 swift test                        # run unit tests
 swift run SwiftQiskitExamples     # Bell-state CLI demo
-swift run SwiftQiskitGUI          # SwiftUI macOS app
+swift run SwiftQiskitGUI          # SwiftUI macOS/iOS app
 ```
 
 ## Targets
@@ -27,7 +27,7 @@ swift run SwiftQiskitGUI          # SwiftUI macOS app
 |---|---|---|
 | `SwiftQiskitCore` | `Sources/SwiftQiskitCore/` | Core simulation library |
 | `SwiftQiskitExamples` | `Examples/` | CLI Bell-state demo |
-| `SwiftQiskitGUI` | `Sources/SwiftQiskitGUI/` | SwiftUI macOS app (built with `-parse-as-library`) |
+| `SwiftQiskitGUI` | `Sources/SwiftQiskitGUI/` | SwiftUI macOS/iOS app (built with `-parse-as-library`); `ContentView` picks a regular (macOS/iPad) or compact (iPhone) layout by size class |
 
 **Import gotcha:** the library *product* is named `SwiftQiskit` but the *module* is
 `SwiftQiskitCore` — always `import SwiftQiskitCore`.

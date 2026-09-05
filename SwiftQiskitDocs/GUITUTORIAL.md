@@ -1,21 +1,28 @@
 # SwiftQiskitGUI — tutorial & usage guide
 
-A hands-on walkthrough of `SwiftQiskitGUI`, the interactive macOS app for building
+A hands-on walkthrough of `SwiftQiskitGUI`, the interactive macOS/iOS app for building
 `QuantumCircuit`s by tapping gates onto a grid instead of writing Swift. This document is
 the *how to use it* guide; for the app's architecture, extension points, and
 troubleshooting, see the companion `SwiftQiskitDocs/GUIHELP.md`.
 
 The app lives at `Sources/SwiftQiskitGUI/` and is a normal SwiftPM executable target — no
-playground involved. It's mac-only (`.macOS(.v14)` minimum, per `Package.swift`) and uses
-nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx` circuit API.
+playground involved. It targets `.macOS(.v14)` / `.iOS(.v17)` minimum (per `Package.swift`)
+and uses nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx`
+circuit API.
+
+On macOS and iPad it shows the three-panel regular layout described below
+(`CircuitBuilderView`); on iPhone (horizontally-compact size class) it switches
+automatically to a single-screen layout (`CompactBuilderView`) with the gate palette as a
+horizontal strip below the grid and results in a sheet — see "The compact (iPhone) layout"
+further down.
 
 ## Launching the app
 
-- **Command line:** `swift run SwiftQiskitGUI` from the repo root.
-- **Xcode:** select the **`SwiftQiskitGUI`** scheme with run destination **My Mac**, then
-  Run (⌘R).
+- **Command line:** `swift run SwiftQiskitGUI` from the repo root (runs the macOS build).
+- **Xcode:** select the **`SwiftQiskitGUI`** scheme with run destination **My Mac**, an
+  iPhone simulator, or an iPad simulator, then Run (⌘R).
 
-## The three panels
+## The three panels (macOS / iPad)
 
 | Panel | What it's for |
 |---|---|
@@ -24,6 +31,16 @@ nothing outside `SwiftQiskitCore`'s existing `h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx`
 | **State Vector** (right) | Live amplitudes/probabilities for the circuit as currently built, plus a **Measure** button and shot-count histogram. |
 
 Full control-by-control reference is in `SwiftQiskitDocs/GUIHELP.md`.
+
+## The compact (iPhone) layout
+
+On an iPhone-width window, `ContentView` swaps in `CompactBuilderView` instead: the circuit
+grid fills the screen with the gate palette as a horizontal scrolling strip pinned below
+it. The qubit-count stepper becomes a **Qubits: N** menu in the toolbar (a `Stepper` doesn't
+fit), and there's a **Results** button in the bottom bar that opens the State Vector panel
+(amplitudes/probabilities, **Measure**, and the histogram) in a sheet instead of a side
+panel. Placing gates, the CX two-tap flow, and deleting gates all work identically to the
+regular layout — only where the palette and results live is different.
 
 ## Walkthrough: build and measure a Bell state
 
