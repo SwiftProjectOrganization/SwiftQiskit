@@ -58,8 +58,9 @@ checks with `// Expected:` annotations; no SwiftUI live view). Structure:
   with Deutsch's 50/50 ancilla bit).
 - **Section 6** — over-rotation: P(marked) for k = 0…4 is 0.25, 1, 0.25, 0.25, 1.
 - **Section 7** — the Dirac view (ties to page 08): D = 2|s⟩⟨s| − I built from the outer
-  product `s * s†`, filled entrywise (Matrix has no `+`/scalar ops), applied via
-  `apply(_:)`; matches the gate diffusion up to the global −1.
+  product `s * s†`, filled entrywise (`Matrix` had no `+`/scalar ops at the time; both exist
+  now, but this page is unchanged), applied via `apply(_:)`; matches the gate diffusion up to
+  the global −1.
 - **Section 8** — real Grover on 3 qubits: hand-built CCZ via `apply(_:)`, marked |101⟩,
   P(marked) for k = 1…4 peaking at 0.9453, then 1000 shots at k = 2 (~945 hits).
 - Linked with `//: [Previous](@previous)` / `//: [Next](@next)`; `10DeutschExample`

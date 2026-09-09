@@ -35,8 +35,9 @@ swift run SwiftQiskitGUI          # SwiftUI macOS/iOS app
 ## Architecture (bottom-up)
 
 - `Math/Complex.swift` — value-type complex numbers (`+ - * /`, scalar mul, `.zero/.one/.i`).
-- `Math/Matrix.swift` — row-major complex matrix; `*`, `multiply(by:)` (matrix × vector),
-  `identity(size:)`, Kronecker product `tensor(_:)` / `⊗` (the `⊗` operator is declared here).
+- `Math/Matrix.swift` — row-major complex matrix; `* + -`, scalar mul (`Double`/`Complex`,
+  either operand order), `multiply(by:)` (matrix × vector), `identity(size:)`, Kronecker
+  product `tensor(_:)` / `⊗` (the `⊗` operator is declared here).
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
   `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
   combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention).
@@ -137,7 +138,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `15CHSH` — the CHSH inequality: all 16 deterministic local-hidden-variable strategies
   enumerated exhaustively (max |S| = 2), plus a shared-direction hidden-variable model that
   saturates the bound and doubles as the classical comparison curve; the tilted observable
-  A(θ) = cos θ·Z + sin θ·X built entrywise (no `+`/scalar ops on `Matrix`) and measured via
+  A(θ) = cos θ·Z + sin θ·X built as a hand-written 2×2 literal (predates `Matrix`'s `+`/scalar
+  operators) and measured via
   `ry(-θ)` with its sign pinned against the exact expectation value; correlators computed
   both exactly (`psi† * (A(a) ⊗ A(b)) * psi`) and via `measure(shots:)`; a Bell pair's
   S = 2√2 against a product-state control and a Tsirelson-bound sweep; a `CHSHChartView`

@@ -17,7 +17,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 ##  Features
 
 - ✅ Complex number arithmetic  
-- ✅ Matrix operations (including Kronecker products)  
+- ✅ Matrix operations (`+ - *`, scalar multiply, Kronecker products)  
 - ✅ Tensor products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`  
 - ✅ Dirac (bra–ket) notation: `Ket`/`Bra`, postfix `†` (dagger), inner & outer products  
 - ✅ State vector simulation  
@@ -118,6 +118,10 @@ declared in `Sources/SwiftQiskitCore/Quantum/Dirac.swift`, and the infix tensor 
 | `*` | `Ket * Bra` | `Matrix` | outer product \|ψ⟩⟨φ\| | `Quantum/Dirac.swift` |
 | `*` | `Bra * Matrix` | `Bra` | ⟨ψ\|U — enables expectation values `ψ† * U * ψ` | `Quantum/Dirac.swift` |
 | `*` | `Matrix * Matrix` | `Matrix` | matrix product AB | `Math/Matrix.swift` |
+| `+` | `Matrix + Matrix` | `Matrix` | entrywise sum A + B | `Math/Matrix.swift` |
+| `-` | `Matrix - Matrix` | `Matrix` | entrywise difference A − B | `Math/Matrix.swift` |
+| `*` | `Matrix * Double` / `Double * Matrix` | `Matrix` | scalar multiple c·M | `Math/Matrix.swift` |
+| `*` | `Matrix * Complex` / `Complex * Matrix` | `Matrix` | scalar multiple c·M | `Math/Matrix.swift` |
 
 Scalar `Complex` arithmetic (`+ - * /` and `Double` scaling) lives in `Math/Complex.swift`
 and is not listed here — it acts on numbers, not on qubit states or gates.

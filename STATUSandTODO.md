@@ -26,6 +26,8 @@ The project is actively evolving, and major features are planned.
 - Measurement with shots & counts
 - Tensor (Kronecker) products: `tensor(_:)` / `⊗` on `Matrix` and `StateVector`
   (see `PlaygroundDocs/09TENSORPLAN.md` and the user guide `PlaygroundDocs/09TENSORHELP.md`)
+- Matrix arithmetic: `+ -` and scalar multiply (`Double`/`Complex`, either operand order) on
+  `Matrix` (`Math/Matrix.swift`, tested in `MatrixArithmeticTests.swift`)
 - Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
   (`Quantum/Dirac.swift`, demonstrated in playground page `08Dirac`;
   user guide `PlaygroundDocs/08DIRACHELP.md`)
@@ -92,6 +94,12 @@ The project is actively evolving, and major features are planned.
       `StateVector`; `QuantumCircuit` gate embedding now reuses `Matrix.tensor(_:)`
       — with `TensorProductTests.swift`, playground page `09Tensor`, the
       design notes in `PlaygroundDocs/09TENSORPLAN.md`, and the user guide `PlaygroundDocs/09TENSORHELP.md`.
+- [x] Matrix arithmetic in Core (`Math/Matrix.swift`): `+`, `-`, and scalar multiply
+      (`Matrix * Double`/`Complex`, either operand order) — closing a gap several pages had
+      previously routed around with page-level helpers (`19Noise`'s `addM`/`scaleM`, `21Trotter`'s
+      `addM`/`scaleM`, `18VQE`'s and `15CHSH`'s entrywise term accumulation). Those pages are
+      unchanged and still work; new code can use the operators directly. Tested in
+      `MatrixArithmeticTests.swift`.
 
 ## Gate-tour and entanglement playground pages (this fork)
 

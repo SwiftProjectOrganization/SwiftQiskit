@@ -14,9 +14,10 @@ hand.
 
 ## Section by section
 
-**Section 1 — the Hamiltonian.** `Matrix` has no `+` or scalar multiply, so
-H = g0·I⊗I + g1·Z⊗I + g2·I⊗Z + g3·Z⊗Z + g4·Y⊗Y + g5·X⊗X is assembled entrywise (page 12's
-QFT† idiom), with the Pauli tensor products built via Core's `⊗`.
+**Section 1 — the Hamiltonian.** `Matrix` had no `+` or scalar multiply when this page was
+written, so H = g0·I⊗I + g1·Z⊗I + g2·I⊗Z + g3·Z⊗Z + g4·Y⊗Y + g5·X⊗X is assembled entrywise
+(page 12's QFT† idiom), with the Pauli tensor products built via Core's `⊗`. (Both operators
+exist now on `Matrix` — `Math/Matrix.swift` — but this page is unchanged.)
 
 **Section 2 — the ansatz.** `x(0); ry(θ,1); cx(1,0)` prepares
 cos(θ/2)|10⟩ + sin(θ/2)|01⟩ — one real parameter, provably confined to the {|01⟩,|10⟩}

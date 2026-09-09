@@ -12,8 +12,9 @@ with **no `SwiftQiskitCore` changes**:
   Jordan–Wigner transform, near its equilibrium bond length — the standard example from the
   VQE literature (O'Malley et al., 2016), reused across most VQE tutorials because it is small
   enough to diagonalize by hand for grading.
-- `Matrix` has no `+` or scalar multiply, so H is assembled entrywise from six Pauli terms
-  (page 12's QFT† idiom, page 15's tilted observable) — Pauli tensor products via Core's `⊗`.
+- `Matrix` had no `+` or scalar multiply at the time, so H is assembled entrywise from six
+  Pauli terms (page 12's QFT† idiom, page 15's tilted observable) — Pauli tensor products via
+  Core's `⊗`. (Both operators exist now — `Math/Matrix.swift` — but this page is unchanged.)
 - A single-parameter ansatz (`x(0); ry(θ,1); cx(1,0)`) stays exactly inside the
   {|01⟩, |10⟩} subspace for every θ, so the exact ground energy is a closed-form 2×2
   eigenvalue — no eigensolver needed to check the optimizer's answer.

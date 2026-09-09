@@ -28,17 +28,6 @@ struct AdditionalGatesTests {
         return true
     }
 
-    /// Scalar multiple c·M (Matrix has no scalar-multiply operator)
-    private func scale(_ m: Matrix, by c: Complex) -> Matrix {
-        var result = Matrix(rows: m.rows, cols: m.cols)
-        for i in 0..<m.rows {
-            for j in 0..<m.cols {
-                result[i, j] = c * m[i, j]
-            }
-        }
-        return result
-    }
-
     // MARK: - Pauli-Y
 
     @Test func `Pauli-Y is unitary and self-inverse`() {
@@ -60,7 +49,7 @@ struct AdditionalGatesTests {
     }
 
     @Test func `Y equals i times XZ`() {
-        let ixz = scale(PauliXGate.matrix * PauliZGate.matrix, by: .i)
+        let ixz = Complex.i * (PauliXGate.matrix * PauliZGate.matrix)
         #expect(approxEqual(PauliYGate.matrix, ixz))
     }
 
@@ -108,9 +97,9 @@ struct AdditionalGatesTests {
     @Test func `Pi rotations are Paulis up to global phase -i`() {
         let minusI = Complex(0, -1)
 
-        #expect(approxEqual(RXGate.matrix(theta: .pi), scale(PauliXGate.matrix, by: minusI)))
-        #expect(approxEqual(RYGate.matrix(theta: .pi), scale(PauliYGate.matrix, by: minusI)))
-        #expect(approxEqual(RZGate.matrix(theta: .pi), scale(PauliZGate.matrix, by: minusI)))
+        #expect(approxEqual(RXGate.matrix(theta: .pi), minusI * PauliXGate.matrix))
+        #expect(approxEqual(RYGate.matrix(theta: .pi), minusI * PauliYGate.matrix))
+        #expect(approxEqual(RZGate.matrix(theta: .pi), minusI * PauliZGate.matrix))
     }
 
     @Test func `RY rotates zero by half the angle`() {
@@ -130,7 +119,7 @@ struct AdditionalGatesTests {
         let theta = 1.3
         let globalPhase = Complex(cos(theta / 2), -sin(theta / 2))
 
-        let expected = scale(PhaseGate.matrix(theta: theta), by: globalPhase)
+        let expected = globalPhase * PhaseGate.matrix(theta: theta)
         #expect(approxEqual(RZGate.matrix(theta: theta), expected))
     }
 

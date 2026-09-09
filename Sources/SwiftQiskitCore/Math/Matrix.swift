@@ -95,6 +95,68 @@ public extension Matrix {
     }
 }
 
+// MARK: - Additive Operations
+public extension Matrix {
+
+    /// Entrywise sum A + B; dimensions must match.
+    static func + (lhs: Matrix, rhs: Matrix) -> Matrix {
+        precondition(lhs.rows == rhs.rows && lhs.cols == rhs.cols,
+                     "Matrix dimensions must match for addition")
+
+        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
+        for i in 0..<lhs.rows {
+            for j in 0..<lhs.cols {
+                result[i, j] = lhs[i, j] + rhs[i, j]
+            }
+        }
+        return result
+    }
+
+    /// Entrywise difference A − B; dimensions must match.
+    static func - (lhs: Matrix, rhs: Matrix) -> Matrix {
+        precondition(lhs.rows == rhs.rows && lhs.cols == rhs.cols,
+                     "Matrix dimensions must match for subtraction")
+
+        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
+        for i in 0..<lhs.rows {
+            for j in 0..<lhs.cols {
+                result[i, j] = lhs[i, j] - rhs[i, j]
+            }
+        }
+        return result
+    }
+}
+
+// MARK: - Scalar Operations
+public extension Matrix {
+
+    /// Scalar multiple c·M
+    static func * (lhs: Matrix, rhs: Complex) -> Matrix {
+        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
+        for i in 0..<lhs.rows {
+            for j in 0..<lhs.cols {
+                result[i, j] = lhs[i, j] * rhs
+            }
+        }
+        return result
+    }
+
+    /// Scalar multiple c·M
+    static func * (lhs: Complex, rhs: Matrix) -> Matrix {
+        rhs * lhs
+    }
+
+    /// Scalar multiple c·M
+    static func * (lhs: Matrix, rhs: Double) -> Matrix {
+        lhs * Complex(rhs)
+    }
+
+    /// Scalar multiple c·M
+    static func * (lhs: Double, rhs: Matrix) -> Matrix {
+        rhs * Complex(lhs)
+    }
+}
+
 // MARK: - Identity Matrix
 public extension Matrix {
 

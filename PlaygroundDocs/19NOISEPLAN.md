@@ -9,9 +9,11 @@ appears. This page closes that gap with **no `SwiftQiskitCore` changes**:
 
 - ρ = |ψ⟩⟨ψ| reuses the existing outer product `Ket * Bra`
   (`Sources/SwiftQiskitCore/Quantum/Dirac.swift:119-127`).
-- `Matrix` has no `+`, scalar multiply, or trace (`Sources/SwiftQiskitCore/Math/Matrix.swift`),
-  so page-level `addM`/`scaleM`/`trace` helpers are required — the same shape as page 12's
-  QFT† and page 18's Hamiltonian, both built entrywise for the same reason.
+- `Matrix` had no `+`, scalar multiply, or trace at the time
+  (`Sources/SwiftQiskitCore/Math/Matrix.swift`), so page-level `addM`/`scaleM`/`trace` helpers
+  are required — the same shape as page 12's QFT† and page 18's Hamiltonian, both built
+  entrywise for the same reason. (`+` and scalar multiply exist on `Matrix` now; `trace` is
+  still page-level only — this page is unchanged either way.)
 - Kraus channels ρ' = Σ Kᵢ ρ Kᵢ† are assembled from `Matrix *` and the existing `†` adjoint.
 - Mixed-state Bloch coordinates reuse `Ket`/Pauli machinery already in Core; only the shared
   `BlochVector` type needs a small additive change (below) to plot a vector shorter than 1.

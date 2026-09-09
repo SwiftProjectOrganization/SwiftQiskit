@@ -10,7 +10,8 @@ fixed in advance by a shared variable. It closes out the protocols/foundations a
 pages 13–14. It fits v0.1 with **no changes to `SwiftQiskitCore`**:
 
 - Measuring "along a tilted axis" needs the observable A(θ) = cos θ·Z + sin θ·X, and
-  `Matrix` has no `+` or scalar multiply, so (page 12's QFT† idiom) it is built entrywise.
+  `Matrix` had no `+` or scalar multiply at the time (page 12's QFT† idiom), so it is built
+  entrywise. (Both operators exist now — `Math/Matrix.swift` — but this page is unchanged.)
 - Measuring A(θ) via the existing gate set is `ry(-θ)` followed by an ordinary
   computational-basis measurement/expectation. The *sign* of that rotation is not obvious
   from the gate's docstring alone, so it is pinned numerically against the exact

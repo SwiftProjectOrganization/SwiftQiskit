@@ -8,9 +8,11 @@ evolving a state in time. This page closes that gap with **no `SwiftQiskitCore` 
 
 - The target Hamiltonian, a transverse-field Ising chain, is assembled entrywise from Pauli
   tensor products via `⊗` — page 18's idiom for H₂, reused for a different physical system.
-- `Matrix` has no `+`/scalar-multiply/`expm`, so page-level `addM`/`scaleM`/`expm` helpers are
-  required (`expm` by scaling-and-squaring Taylor series, built only on `Matrix *`) — the
-  ground truth against which the gate-based Trotter circuit is graded.
+- `Matrix` had no `+`/scalar-multiply/`expm` at the time, so page-level `addM`/`scaleM`/`expm`
+  helpers are required (`expm` by scaling-and-squaring Taylor series, built only on `Matrix *`)
+  — the ground truth against which the gate-based Trotter circuit is graded. (`+` and scalar
+  multiply exist on `Matrix` now; `expm` is still page-level only — this page is unchanged
+  either way.)
 - The key gate identity, exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, uses only existing
   circuit methods (`cx`, `rz`) and Core's exact `RZGate` (which *is* exp(−iθZ/2) with no
   approximation, `Sources/SwiftQiskitCore/Gates/Rotation.swift:48-63`).
