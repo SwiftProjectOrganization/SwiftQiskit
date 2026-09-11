@@ -199,6 +199,13 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   chart of both final distributions on the shared `CHSHChartView`, with cross-references to
   Grover (page 11) and Hamiltonian simulation (page 21)
   (plan in `PlaygroundDocs/22WALKPLAN.md`, user guide in `PlaygroundDocs/22WALKHELP.md`).
+- `40ComplexAndMatrices` — first of the `40+` pages, numbered separately because they
+  accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book rather than continuing the
+  01–22 sequence above: every code fragment from that book's Chapter 2, in order —
+  `Complex` construction/`*`/`/`/conjugate/magnitude, the Born rule, phase via Euler's
+  formula, plain `[Complex]` vector helpers, inner products and normalization, `Matrix` as a
+  transformation and why multiplication order matters, unitarity and why exact `==` lies on
+  `H`, and the tensor product `⊗` (no live view, no companion `PlaygroundDocs/` guide).
 
 Playground notes:
 

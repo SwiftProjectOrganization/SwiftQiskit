@@ -60,6 +60,15 @@
    (∝t) spreading against a classical diffusive (∝√t) comparison, and why the |0⟩-coin
    distribution is lopsided while |+i⟩'s is symmetric.
 
+ Pages numbered `40` and up accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book
+ rather than continuing the 01–22 sequence above.
+
+ - [40ComplexAndMatrices](40ComplexAndMatrices) — the code from INTRODUCTION Chapter 2, in
+   order: `Complex` construction, `*`/`/`, conjugate and magnitude, the Born rule, phase via
+   Euler's formula, plain `[Complex]` vectors, inner products and normalization, `Matrix` as
+   a transformation (and why order matters), unitarity and why exact `==` lies on `H`, and
+   the tensor product `⊗`.
+
  ## User guides
 
  Several pages have companion documents in `PlaygroundDocs/` at the repo root. The
