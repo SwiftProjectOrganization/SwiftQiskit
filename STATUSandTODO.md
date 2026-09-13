@@ -80,6 +80,12 @@ The project is actively evolving, and major features are planned.
       output, the orbit-camera/perspective-projection model behind `Bloch3DView`
       (near/far wireframe opacity, silhouette scaling, drag-to-orbit), and how the page's
       starting state matches page `08Dirac`'s initial qubit.
+- [ ] `SwiftQiskitGUI` (this package's own SwiftPM-executable UI) still has no Bloch-sphere
+      Display equivalent to `SwiftQiskitApp`'s `BlochDisplayView` — a known divergence, tracked
+      in `SwiftQiskitApp/Docs/Todo.md`. `SwiftQiskitApp/INTRODUCTION.md` Chapter 6 (the 3D Bloch
+      sphere) now leans on that Display sheet's θ/φ readout to earn a ◐ ("partial") app badge
+      instead of ○ ("not expressible") — the same chapter would need to stay ○ for
+      `SwiftQiskitGUI` until the Display button is ported over.
 
 ## Bra/ket & tensor-product additions (this fork)
 
