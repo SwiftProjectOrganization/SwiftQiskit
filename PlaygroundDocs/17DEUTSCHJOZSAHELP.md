@@ -100,7 +100,12 @@ func bvOracle(_ s: Int) -> (QuantumCircuit) -> Void {
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first.
 - **Verdict looks flipped** — check the final Hadamard layer only touches the *input* qubits
-  (`0..<n`), not the ancilla; re-Hadamarding the ancilla undoes its |−⟩ phase-kickback state.
+  (`0..<n`), not the ancilla. Note that re-Hadamarding the ancilla too is *not* what causes a
+  flipped verdict: the ancilla stays an exact, unentangled |−⟩ throughout, so a second `H` on it
+  just deterministically returns it to |1⟩ (`H` is self-inverse) without touching the input
+  qubits' verdict at all. If the verdict looks wrong, check instead that `x(ancilla)` ran before
+  the opening Hadamard layer, and that the oracle only ever `cx`'s *into* the ancilla, never out
+  of it.
 - **Shot counts don't split ~50/50 on the ancilla bit** — that's expected variance at 200
   shots; increase the shot count for a tighter split, or check the verdict off `probabilities`
   instead (Section 3), which is exact.
