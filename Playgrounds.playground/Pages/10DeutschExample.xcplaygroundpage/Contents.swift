@@ -125,6 +125,34 @@ print("after final h(0):  \(pretty(walk.run()))")
 // Expected: (|10⟩ − |11⟩)/√2 = |1⟩|−⟩
 // Qubit 0 is now *exactly* |1⟩: measuring it must give 1 → balanced.
 
+// `cx` is the entangling gate page 07 built the Bell state from, so it's
+// worth checking directly that nothing analogous happens here. Reusing
+// page 09's factorization criterion (α₀₀·α₁₁ = α₀₁·α₁₀ iff the state is a
+// product |v⟩⊗|w⟩, not entangled):
+
+func factorsAsProduct(_ state: StateVector) -> Bool {
+    let (a00, a01, a10, a11) = (state[0], state[1], state[2], state[3])
+    return (a00 * a11 - a01 * a10).magnitude < 1e-9
+}
+
+print("\nfactors as a product state at every stage?")
+let rewalk = QuantumCircuit(qubits: 2)
+rewalk.x(1)
+print("  after x(1):       \(factorsAsProduct(rewalk.run()))")
+rewalk.h(0); rewalk.h(1)
+print("  after h(0),h(1):  \(factorsAsProduct(rewalk.run()))")
+rewalk.cx(0, 1)
+print("  after cx(0,1):    \(factorsAsProduct(rewalk.run()))")
+rewalk.h(0)
+print("  after final h(0): \(factorsAsProduct(rewalk.run()))")
+// Expected: true at every stage, including right after cx(0,1) — contrast
+// with page 07's Bell state (h(0);cx(0,1) from |00⟩), which is false. Same
+// gate, opposite outcome: here cx only ever multiplies q0's |1⟩ branch by
+// the scalar (−1)^f(x) (§ above), which keeps q0 and q1 in a product state
+// the whole time. "The phase sits on q0" is therefore literal, not a
+// figure of speech — q0's own state is the complete story, with nothing
+// held back in a correlation with the ancilla.
+
 // ============================================================
 // Section 4 — One query, certain answer, for all four oracles
 // ============================================================

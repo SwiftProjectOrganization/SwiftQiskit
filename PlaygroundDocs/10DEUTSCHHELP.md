@@ -51,6 +51,15 @@ A constant f phases both branches of \|+⟩ equally (an invisible global phase);
 flips the relative sign, turning \|+⟩ into \|−⟩. The final Hadamard maps \|+⟩ → \|0⟩ and
 \|−⟩ → \|1⟩, so a single measurement of qubit 0 reads off the parity.
 
+**The register never entangles.** `cx` is the same gate page 07 used to build the Bell
+state, so it is worth being explicit that nothing analogous happens here: at every stage of
+the circuit above — including immediately after `cx(0,1)` — the 2-qubit state still factors
+as a product `\|ψ⟩⊗\|−⟩` (checked with page 09's criterion, α₀₀·α₁₁ = α₀₁·α₁₀). The oracle
+only ever multiplies q0's `\|1⟩` branch by the scalar (−1)^f(x); it never correlates q0 with
+the ancilla the way the Bell-state `cx` correlates its two qubits. That is what makes "the
+phase sits on q0" literally true rather than a figure of speech — q0's own state is the whole
+story, with nothing held back in a correlation with q1.
+
 ## The four oracles
 
 Every 1-bit oracle is buildable from gates the library already has:
@@ -86,6 +95,19 @@ after final h(0):  |10⟩: 0.707…   |11⟩: -0.707…
 
 The `cx` line is the kickback in action: the ancilla is unchanged, but the input qubit's
 \|1⟩ branch (where f(x) = 1) picked up the minus sign — \|+⟩ became \|−⟩.
+
+The same walkthrough, checked for entanglement at each stage:
+
+```text
+factors as a product state at every stage?
+  after x(1):       true
+  after h(0),h(1):  true
+  after cx(0,1):    true
+  after final h(0): true
+```
+
+`true` throughout — including right after `cx(0,1)` — against `false` for page 07's Bell
+state built from the same gate. The register never entangles.
 
 Verdicts are deterministic — exactly 0 or 1, no statistics needed:
 

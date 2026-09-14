@@ -105,8 +105,10 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   why the Bell state does not factor (entanglement)
   (design notes in `PlaygroundDocs/09TENSORPLAN.md`, user guide in `PlaygroundDocs/09TENSORHELP.md`).
 - `10DeutschExample` — Deutsch's algorithm (console only): the four 1-bit oracles from
-  `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, deterministic
-  constant-vs-balanced verdicts from a single query, and shot statistics
+  `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, a factorization check
+  (page 09's `α₀₀·α₁₁ = α₀₁·α₁₀` criterion) confirming the register never entangles despite
+  the `cx`, unlike page 07's Bell state, deterministic constant-vs-balanced verdicts from a
+  single query, and shot statistics
   (plan in `PlaygroundDocs/10DEUTSCHPLAN.md`, user guide in `PlaygroundDocs/10DEUTSCHHELP.md`).
 - `11GroverExample` — Grover's search (console only): CZ built as `h(1);cx(0,1);h(1)`,
   X-conjugated phase oracles, an inversion-about-the-mean walkthrough, exact 1-iteration
