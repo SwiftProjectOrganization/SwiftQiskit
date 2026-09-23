@@ -734,8 +734,9 @@ Project status, what works in v0.1, and the roadmap live in
 ##  References
 
 1. [Ali Nasser](https://github.com/a360n/SwiftQiskit)
-2. [Medium](https://medium.com/@brianenochson/our-quantum-future-part-1-quantum-computing-introduction-f03aa4fc5f7f)
-3. [Quantum Mechanics](https://www.amazon.com/Quantum-Mechanics-Theoretical-Leonard-Susskind-ebook/dp/B00FD36G1Q?ref_=ast_author_dp_rw&th=1&psc=1&dib=eyJ2IjoiMSJ9.RkHbIvheK8CPtFzsBgBe7r23a7uhLIlprKHFiYC4BOCvoD6WBdvaQA79CYfZj1_xwUNgGM2xOFd-NGea4XGiB8p7tZll3hdPz1B1IWaIf9jLZuA7h2hoqtpM43Ebaii5rpmm3tHvNMEoAEbVniy-PWV35vm2I2ePmaG4bFhykzpwVySzN3XKJPylPmR4lL1GdKme919H-EXrNmLDhJZ7p8eEeOHQzQIdUK8zwBuPWQY.BXHnclSf8mfD4zk9Rtha8_j22VdyFHEKXfjT5yVZ2Ew&dib_tag=AUTHOR)
+2.[Quantum Computing for everyone](https://www.amazon.com/Quantum-Computing-Everyone-Mit-Press/dp/0262539535/ref=sr_1_1?crid=2FZXZMKUHTCMY&dib=eyJ2IjoiMSJ9.P7qqxqmMDjw-ATyR5LpVdh5xPQ4Y0b2Dzmdh3sxSRGv9O0zg3c4tC3cxXmuFSARdd16gdrlAtvEt4sjIXeZS4pYp3-V78bvNcF2QvOz5I8GsSjxKQvXwCqZE3pb_p8kHyldF_pJ2hZW2HNzJmFYV_MWw4BFvDKddzLBrDhMzSWEH8F_MRHIb2nt27dEMEVnUZNOByHEF6ZmBu_-HunbuU8Z7zWhQF2AvZUFBhHNOtHU.JVmku_grNC3YTp28qmqeX5hDii-RdfSijIAJlmX2gGE&dib_tag=se&keywords=chris+bernhardt%2C+quantum+computing+for+everyone&qid=1790170950&sprefix=Chris+Bern%2Caps%2C224&sr=8-1)
+3. [Medium](https://medium.com/@brianenochson/our-quantum-future-part-1-quantum-computing-introduction-f03aa4fc5f7f)
+4. [Quantum Mechanics](https://www.amazon.com/Quantum-Mechanics-Theoretical-Leonard-Susskind-ebook/dp/B00FD36G1Q?ref_=ast_author_dp_rw&th=1&psc=1&dib=eyJ2IjoiMSJ9.RkHbIvheK8CPtFzsBgBe7r23a7uhLIlprKHFiYC4BOCvoD6WBdvaQA79CYfZj1_xwUNgGM2xOFd-NGea4XGiB8p7tZll3hdPz1B1IWaIf9jLZuA7h2hoqtpM43Ebaii5rpmm3tHvNMEoAEbVniy-PWV35vm2I2ePmaG4bFhykzpwVySzN3XKJPylPmR4lL1GdKme919H-EXrNmLDhJZ7p8eEeOHQzQIdUK8zwBuPWQY.BXHnclSf8mfD4zk9Rtha8_j22VdyFHEKXfjT5yVZ2Ew&dib_tag=AUTHOR)
 
 
 
