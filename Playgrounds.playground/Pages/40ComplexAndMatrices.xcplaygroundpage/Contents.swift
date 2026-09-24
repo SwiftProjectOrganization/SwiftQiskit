@@ -22,7 +22,7 @@ let b = Complex(1, -2)
 print(a * b, a / b)
 // (3+4i)(1-2i) = 11 - 2i; (3+4i)/(1-2i) = -1+2i
 
-let z = Complex(3, 2)
+let z = Complex(1, -2)
 print(z * z.conjugate, z.magnitudeSquared)
 // z · z̄ is always real — exactly why it can serve as a probability (§2.3)
 
@@ -59,9 +59,17 @@ func addVec(_ a: [Complex], _ b: [Complex]) -> [Complex] {
 func scale(_ c: Complex, _ v: [Complex]) -> [Complex] {
     v.map { c * $0 }
 }
-print(addVec([Complex(1, 0), Complex(0, 1)], [Complex(2, 0), Complex(0, -1)]))
+
+let a1 = Complex(1, 0)
+let b1 = Complex(0, 1)
+print(a1 + b1)
+
+let m1 = [Complex(1, 0), Complex(0, 1)]
+let m2 = [Complex(2, 0), Complex(0, -1)]
+
+print(addVec(m1, m2))
 print(scale(Complex.i, [Complex(1, 0), Complex(2, 0)]))
-// the library has no vector arithmetic of its own on plain [Complex] — these are one-line
+// The library has no vector arithmetic of its own on plain [Complex] — these are one-line
 // zip/map helpers; Chapter 3 hands this job to StateVector
 
 // ------------------------------------------------------------
