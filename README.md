@@ -10,7 +10,8 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 2. Playgrounds 10 to 22 contain many different quantum computing examples.
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
-5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package.
+5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package. SwiftQiskitGUI has been dropped.
+6. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application.
 
 ---
 

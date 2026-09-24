@@ -10,7 +10,8 @@ plus this fork's working TODO list.
 - Core quantum simulation is implemented
 - API is subject to change
 - Performance is not yet optimized
-- GUI tools are optional and under development
+- GUI tools are available in separate projects or through the template system
+- An extensive set of playgrounds is included in /Playgounds and documented in /PlaygroundDocs
 
 The project is actively evolving, and major features are planned.
 
@@ -41,7 +42,6 @@ The project is actively evolving, and major features are planned.
       → `Gates/PauliY.swift`, `Gates/Phase.swift` (P(θ), S, S†, T, T†),
       `Gates/Rotation.swift` (RX/RY/RZ); circuit API `y/s/sdg/t/tdg/p/rx/ry/rz`,
       tested in `AdditionalGatesTests.swift`
-- [ ] Circuit visualization (ASCII / SwiftUI)
 - [x] Noise models — addressed at the playground-example level: page `19Noise` builds Kraus
       channels (bit-flip, phase-flip, depolarizing, amplitude damping) as page-level `Matrix`
       operations. Core itself still has no `DensityMatrix` type or built-in noise simulation —
