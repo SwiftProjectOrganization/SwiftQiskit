@@ -39,7 +39,7 @@ S = √Z, now in Core: `s(0)` / `sdg(0)` after `h(0)`. (`Ket.plusI` / `Ket.minus
 `Quantum/Dirac.swift` build the same states directly from amplitudes.)
 
 The math lives in `BlochVector` (playground `Sources/`), which reuses the `Complex`
-arithmetic from `SwiftQiskitCore` (`conjugate`, `*`, `magnitudeSquared`) and guards the
+arithmetic from `SwiftQiskit` (`conjugate`, `*`, `magnitudeSquared`) and guards the
 single-qubit requirement with `precondition(state.dimension == 2)`.
 
 ## The page's sections
@@ -134,12 +134,12 @@ playground page".
 ## Using it in your own code
 
 `BlochVector` and `BlochSphereView` live in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works). On any page:
+`SwiftQiskit` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works). On any page:
 
 ```swift
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Any single-qubit circuit → a point on the sphere
 let qc = QuantumCircuit(qubits: 1)

@@ -1,7 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Deutsch's algorithm — one query beats two

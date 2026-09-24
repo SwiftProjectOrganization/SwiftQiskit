@@ -80,12 +80,10 @@ The project is actively evolving, and major features are planned.
       output, the orbit-camera/perspective-projection model behind `Bloch3DView`
       (near/far wireframe opacity, silhouette scaling, drag-to-orbit), and how the page's
       starting state matches page `08Dirac`'s initial qubit.
-- [ ] `SwiftQiskitGUI` (this package's own SwiftPM-executable UI) still has no Bloch-sphere
-      Display equivalent to `SwiftQiskitApp`'s `BlochDisplayView` — a known divergence, tracked
-      in `SwiftQiskitApp/Docs/Todo.md`. `SwiftQiskitApp/INTRODUCTION.md` Chapter 6 (the 3D Bloch
-      sphere) now leans on that Display sheet's θ/φ readout to earn a ◐ ("partial") app badge
-      instead of ○ ("not expressible") — the same chapter would need to stay ○ for
-      `SwiftQiskitGUI` until the Display button is ported over.
+- [x] The `SwiftQiskitGUI` target (this package's own SwiftPM-executable UI) was removed. It had
+      drifted behind `SwiftQiskitApp` — which has the Bloch-sphere `BlochDisplayView`, the
+      measurement-model refactor, and several views the package copy lacked — with no upside to
+      maintaining two UIs. `SwiftQiskitApp` is now the only SwiftUI front-end for this package.
 
 ## Bra/ket & tensor-product additions (this fork)
 
@@ -187,7 +185,7 @@ page 13 adds a Bloch-sphere live view:
 
 Four more pages, closing gaps pages 01–18 left open: every earlier page assumed a perfect,
 pure, noiseless state read out by direct amplitude access, and none of them simulated physics
-or interference-driven distributions. All four ship with **no `SwiftQiskitCore` changes**;
+or interference-driven distributions. All four ship with **no `SwiftQiskit` changes**;
 page 19 adds one small additive initializer to the playground's shared `BlochVector`.
 
 - [x] Noise — page `19Noise`: the density matrix ρ = |ψ⟩⟨ψ| via the existing `Ket * Bra`

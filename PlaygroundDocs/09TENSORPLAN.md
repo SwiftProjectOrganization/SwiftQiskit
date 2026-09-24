@@ -3,7 +3,7 @@
 ## Context
 
 SwiftQiskit currently has a tensor product only as a file-private `kron()` helper inside
-`Sources/SwiftQiskitCore/Circuit/QuantumCircuit.swift` (line 114), used to embed single-qubit
+`Sources/SwiftQiskit/Circuit/QuantumCircuit.swift` (line 114), used to embed single-qubit
 gates into n-qubit registers. Users of the library (and the playground pages) cannot compute
 tensor products themselves — e.g. building composite gates like `H ⊗ H`, or combining states
 `|ψ⟩ ⊗ |φ⟩`. Promoting this to a public API is also groundwork for the roadmap items in
@@ -14,7 +14,7 @@ with `QuantumCircuit` refactored to use it, and unit tests.
 
 ## Changes
 
-### 1. `Sources/SwiftQiskitCore/Math/Matrix.swift`
+### 1. `Sources/SwiftQiskit/Math/Matrix.swift`
 
 - Declare the custom operator once, at file scope:
   ```swift
@@ -33,7 +33,7 @@ with `QuantumCircuit` refactored to use it, and unit tests.
   `QuantumCircuit.swift:114-126` (same style: preconditions not needed — any dimensions are
   valid for a Kronecker product).
 
-### 2. `Sources/SwiftQiskitCore/Quantum/StateVector.swift`
+### 2. `Sources/SwiftQiskit/Quantum/StateVector.swift`
 
 - Add a `// MARK: - Tensor Product` extension:
   ```swift
@@ -48,14 +48,14 @@ with `QuantumCircuit` refactored to use it, and unit tests.
   `self[i] * other[j]`; construct via the existing `init(_:)` (its auto-normalization is a
   no-op for already-normalized inputs). This matches the project's qubit-0-is-MSB convention.
 
-### 3. `Sources/SwiftQiskitCore/Circuit/QuantumCircuit.swift`
+### 3. `Sources/SwiftQiskit/Circuit/QuantumCircuit.swift`
 
 - Delete the file-private `kron()` and `identity(_:)` helpers.
 - In `embedSingleQubitGate`, replace `kron(result!, factor)` with `result! ⊗ factor`
   (or `result!.tensor(factor)`) and `identity(2)` with `Matrix.identity(size: 2)`.
 - No behavior change — `h/x/z` gate embedding must produce identical matrices.
 
-### 4. Tests — new `Tests/SwiftQiskitCoreTests/TensorProductTests.swift`
+### 4. Tests — new `Tests/SwiftQiskitTests/TensorProductTests.swift`
 
 Swift `Testing` framework (`@Test`, `#expect`), matching `BellStateTests.swift` style:
 

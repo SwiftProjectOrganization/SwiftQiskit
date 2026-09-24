@@ -146,11 +146,11 @@ The Section 8 sweep shows every coprime base at once — including the one unluc
 
 ## Using the algorithm in your own code
 
-The whole order-finder is plain `SwiftQiskitCore` calls plus two hand-built matrices:
+The whole order-finder is plain `SwiftQiskit` calls plus two hand-built matrices:
 
 ```swift
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
 func modPow(_ b: Int, _ e: Int, _ m: Int) -> Int {
@@ -201,7 +201,7 @@ Troubleshooting note below.
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`. On Xcode 27 betas see also
+  compile errors in `Sources/SwiftQiskit/`. On Xcode 27 betas see also
   `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (this page is console-only, so the
   SwiftUI-specific bugs there should not affect it).
 - **`apply` precondition failure** — `apply(_:)` demands a full 2ⁿ×2ⁿ matrix. An operator

@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // The 3-qubit bit-flip code — protecting one qubit from noise
@@ -20,7 +20,7 @@ import SwiftQiskitCore
 //   q0, q1, q2 — the encoded data (q0 also holds |ψ⟩ before encoding)
 //   q3, q4     — syndrome ancillas
 //
-// `SwiftQiskitCore` has no Toffoli and no partial measurement, so the
+// `SwiftQiskit` has no Toffoli and no partial measurement, so the
 // coherent correction — "look at the syndrome, then flip the accused
 // qubit" — is built as a single 32×32 permutation matrix fed to
 // `apply(_:)`, in the spirit of pages 11–12's hand-built gates.

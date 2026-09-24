@@ -129,11 +129,11 @@ f(x) = x (balanced):  10: ~500   11: ~500     ← leftmost bit always 1
 
 ## Using the algorithm in your own code
 
-The page's building blocks are plain `SwiftQiskitCore` calls, so the same pattern works in
+The page's building blocks are plain `SwiftQiskit` calls, so the same pattern works in
 any target that imports the library:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 /// Steps 1–4 of Deutsch's algorithm; the oracle is queried exactly once.
 func deutschCircuit(oracle: (QuantumCircuit) -> Void) -> QuantumCircuit {
@@ -159,7 +159,7 @@ for constant f, exactly 1.0 for balanced f.
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`. On Xcode 27 betas see also
+  compile errors in `Sources/SwiftQiskit/`. On Xcode 27 betas see also
   `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (this page is console-only, so the
   SwiftUI-specific bugs there should not affect it).
 - **`cx` precondition failure** — `cx(control, target)` works on any pair of qubits of an

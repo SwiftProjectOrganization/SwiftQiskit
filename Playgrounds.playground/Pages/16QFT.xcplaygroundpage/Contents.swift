@@ -1,7 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // The quantum Fourier transform — the gate decomposition

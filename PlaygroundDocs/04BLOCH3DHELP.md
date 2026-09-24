@@ -136,13 +136,13 @@ For the fixed 2D oblique projection this page's camera model replaces, see
 ## Using it in your own code
 
 `Bloch3DView` and `BlochExplorerView` live in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works). `Bloch3DView`
+`SwiftQiskit` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works). `Bloch3DView`
 takes the same `BlochVector` as `BlochSphereView`, so any single-qubit circuit works:
 
 ```swift
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 let qc = QuantumCircuit(qubits: 1)
 qc.h(0)

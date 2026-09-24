@@ -1,7 +1,7 @@
 # Dirac notation — help & usage guide
 
 User-facing guide to the `08Dirac` playground page, which walks through the bra–ket API in
-`Sources/SwiftQiskitCore/Quantum/Dirac.swift`. Unlike the algorithm pages there is no
+`Sources/SwiftQiskit/Quantum/Dirac.swift`. Unlike the algorithm pages there is no
 separate design/plan document — `Dirac.swift` and its doc comments are the reference.
 
 ## What Dirac notation does
@@ -12,7 +12,7 @@ inner product (a single complex overlap amplitude); putting a ket before a bra, 
 the outer product (a matrix). One symbol, the dagger †, converts between all of these:
 ket ↔ bra, and matrix ↔ its adjoint (conjugate transpose).
 
-In SwiftQiskitCore:
+In SwiftQiskit:
 
 - `Ket` is a typealias of `StateVector`; basis kets come from binary labels (`Ket("01")`)
   or the named constants `.zero/.one/.plus/.minus/.plusI/.minusI`.
@@ -44,7 +44,7 @@ The identities the page demonstrates:
 
 ## The page's sections
 
-Most sections mirror tests in `Tests/SwiftQiskitCoreTests/DiracNotationTests.swift`,
+Most sections mirror tests in `Tests/SwiftQiskitTests/DiracNotationTests.swift`,
 turning their `#expect` assertions into printed checks:
 
 | Section | Mirrors test(s) | What it shows |
@@ -148,11 +148,11 @@ Reading notes:
 
 ## Using Dirac notation in your own code
 
-Everything except the live view is plain `SwiftQiskitCore` API, so the same patterns work
+Everything except the live view is plain `SwiftQiskit` API, so the same patterns work
 in any target that imports the library:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Overlaps and probabilities
 let psi = Ket([Complex(0.6), Complex(0.8)])
@@ -183,7 +183,7 @@ and ⊗ concatenates labels with the left operand in the high-order bits.
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`.
+  compile errors in `Sources/SwiftQiskit/`.
 - **No live view / SwiftUI errors** — this page uses `PlaygroundSupport` and `Bloch3DView`,
   so the Xcode 27 beta workarounds apply: see `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta
   workarounds" (libcups shim in DerivedData, and no `@State` in page code).

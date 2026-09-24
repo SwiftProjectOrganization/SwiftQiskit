@@ -4,7 +4,7 @@
 
 No page shows interference producing a *distribution* rather than answering an oracle question
 (Deutsch/DJ/BV) or amplifying a marked item (Grover). This page closes that gap with
-**no `SwiftQiskitCore` changes**:
+**no `SwiftQiskit` changes**:
 
 - The conditional shift is a hand-built permutation matrix applied via `apply(_:)` — the same
   idiom as page 12's modular-multiplication permutations and page 14's 32×32 correction
@@ -16,7 +16,7 @@ No page shows interference producing a *distribution* rather than answering an o
 
 ## The math, and what the plan verified
 
-All figures were computed by compiling `SwiftQiskitCore` standalone with `swiftc` and running
+All figures were computed by compiling `SwiftQiskit` standalone with `swiftc` and running
 the page's exact math in a driver executable.
 
 - **Register size, corrected from the original sketch.** A coin qubit (q0) plus a position
@@ -88,7 +88,7 @@ distributions at t=7 as two series — no new shared view.
 
 ## Verification
 
-1. Every number above was computed by compiling `SwiftQiskitCore`'s sources standalone with
+1. Every number above was computed by compiling `SwiftQiskit`'s sources standalone with
    `swiftc` (bypassing an `ENABLE_DEBUG_DYLIB` requirement on `RunCodeSnippet` for
    executable-target previews) and running the page's exact math in a driver executable. The
    cyclic-coordinate stddev bug was caught by this process — the first run produced

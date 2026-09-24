@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // VQE — the variational quantum eigensolver

@@ -37,7 +37,7 @@ q2: |0⟩ ───────⊕───────────────�
 | 4 | *measure q0 → a, q1 → b; send (a,b)* | the classical channel |
 | 5 | X^b then Z^a on q2 | Bob's correction |
 
-**Steps 4–5 in this simulator.** `SwiftQiskitCore` has no mid-circuit measurement, so the
+**Steps 4–5 in this simulator.** `SwiftQiskit` has no mid-circuit measurement, so the
 page uses the **deferred-measurement principle**: a correction conditioned on a measured bit
 is equivalent to a quantum-controlled gate applied *before* measuring. So X^b becomes
 `cx(1, 2)` and Z^a becomes CZ(0, 2), built as `h(2); cx(0,2); h(2)` (page 11's idiom). Every
@@ -144,7 +144,7 @@ the first one — that is the whole protocol in one picture.
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 /// Teleport q0's state to q2, with the corrections deferred into gates.
 func teleportCircuit(prepare: (QuantumCircuit) -> Void) -> QuantumCircuit {
@@ -172,7 +172,7 @@ branch.apply(projector)      // collapses to ab = 01, renormalized
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`.
+  compile errors in `Sources/SwiftQiskit/`.
 - **`Failed to load linked library cups`** — the Xcode 27 beta evaluator bug; this page
   declares a `View` inline, which is the case that needs the shim. Re-copy it immediately
   before each run (`PLAYGROUNDSUPPORT.md`).

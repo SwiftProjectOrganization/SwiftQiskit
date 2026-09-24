@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // State tomography — what a real device actually gives you

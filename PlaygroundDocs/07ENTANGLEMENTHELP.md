@@ -4,7 +4,7 @@ User-facing guide to the `07Entanglement` playground page — an annotated walkt
 builds the 2-qubit Bell state |Φ⁺⟩ via `h` + `cx`, inspects its amplitudes, probabilities,
 and measurement counts, then extends the same recipe to a 3-qubit GHZ state using `cx`
 across non-adjacent qubits. As with `05Gates`/`06Superposition` there is no separate
-design/plan document — the page and `Tests/SwiftQiskitCoreTests/BellStateTests.swift` /
+design/plan document — the page and `Tests/SwiftQiskitTests/BellStateTests.swift` /
 `CNOTTests.swift` are the reference.
 
 ## What the page shows
@@ -103,7 +103,7 @@ Reading notes:
   it shows the effect of each additional `cx` in isolation.
 - **`cx(0, 2)` is a non-adjacent CNOT** — control qubit 0, target qubit 2, skipping over
   qubit 1 — built via `CNOTGate.matrix(qubits:control:target:)`'s general permutation
-  construction, not a fixed 2-qubit matrix. `Tests/SwiftQiskitCoreTests/CNOTTests.swift`
+  construction, not a fixed 2-qubit matrix. `Tests/SwiftQiskitTests/CNOTTests.swift`
   builds its own GHZ example with a different (adjacent) wiring, `cx(0, 1)` then
   `cx(1, 2)` — both reach the same |000⟩/|111⟩ state, just via different control/target
   pairs, so don't read the difference as one of them being wrong.
@@ -116,7 +116,7 @@ Reading notes:
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Bell state
 let qc = QuantumCircuit(qubits: 2)

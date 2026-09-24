@@ -8,7 +8,7 @@ whichever page guide sent you here.
 **Scope.** The file name leads with "live views" because that's what most people arrive
 looking for, but the guide covers the whole shared module, including the one file that
 has nothing to do with live views: `BlochVector.swift` is plain math (`import Foundation`
-+ `import SwiftQiskitCore`, no SwiftUI) and pages 01/02/03 print its values to the console
++ `import SwiftQiskit`, no SwiftUI) and pages 01/02/03 print its values to the console
 independently of anything they render. Everything else in
 `Playgrounds.playground/Sources/` is a SwiftUI `View`.
 
@@ -25,7 +25,7 @@ playground root compiles into an auxiliary module that every page imports
 - **Everything a page touches must be `public`**: types, initializers, properties,
   methods. Swift's synthesized memberwise initializers are only `internal`, so each
   shared type needs an explicit `public init`.
-- `Sources/` files may `import SwiftQiskitCore` (and `SwiftUI`, etc.) because the
+- `Sources/` files may `import SwiftQiskit` (and `SwiftUI`, etc.) because the
   playground sets `buildActiveScheme='true'` — the `SwiftQiskit` scheme builds first.
 - Shared code compiles once, so pages run faster than if the same code were inline.
 - `Sources/` is **not** covered by `swift build` or the test suite; it only compiles
@@ -53,7 +53,7 @@ type may live — see "Page-inline vs `Sources/`" below.
 The non-view type. Maps a single-qubit state |ψ⟩ = α|0⟩ + β|1⟩ to Bloch coordinates:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let qc = QuantumCircuit(qubits: 1)
 qc.h(0)
@@ -90,7 +90,7 @@ Fixed 2D oblique projection (y → right, z → up, x foreshortened toward the v
 ```swift
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 let bloch = BlochVector(QuantumCircuit(qubits: 1).run())   // |0⟩
 PlaygroundPage.current.setLiveView(
@@ -214,7 +214,7 @@ PlaygroundPage.current.setLiveView(
    initializers, properties. Swift's synthesized memberwise inits are only `internal`,
    so shared views need a written-out `public init` (see `BlochSphereView.init`).
 6. **The scheme must build.** Pages set `buildActiveScheme='true'`; `Sources/` may
-   `import SwiftQiskitCore` (and `SwiftUI`) because the SwiftQiskit scheme builds first.
+   `import SwiftQiskit` (and `SwiftUI`) because the SwiftQiskit scheme builds first.
 7. **Xcode 27 beta only (machine-specific):** any page importing SwiftUI may hit the
    missing-`libcups.dylib` evaluator bug; the shim recipe is in `PLAYGROUNDSUPPORT.md`
    § "Xcode 27 beta workarounds". Rerun it after Clean Build Folder — or after almost any
@@ -250,9 +250,9 @@ The decision rule:
 command line:
 
 ```bash
-xcrun swiftc -emit-module -module-name SwiftQiskitCore \
-    -emit-module-path /tmp/sqkit/SwiftQiskitCore.swiftmodule \
-    Sources/SwiftQiskitCore/**/*.swift
+xcrun swiftc -emit-module -module-name SwiftQiskit \
+    -emit-module-path /tmp/sqkit/SwiftQiskit.swiftmodule \
+    Sources/SwiftQiskit/**/*.swift
 xcrun swiftc -typecheck -I /tmp/sqkit Playgrounds.playground/Sources/*.swift
 ```
 
@@ -269,7 +269,7 @@ math. The `@State` bug is SwiftUI-macro-specific; the libcups bug fires for any 
 imports SwiftUI; the rest apply to shared code generally.
 
 - **Page won't run / no output at all** — the `SwiftQiskit` scheme must build first;
-  check for compile errors in `Sources/SwiftQiskitCore/`.
+  check for compile errors in `Sources/SwiftQiskit/`.
 - **`Cannot find 'X' in scope`** — the `Sources/` declaration (or its `init`) isn't
   `public`, or the file isn't in the playground's top-level `Sources/` folder.
 - **A shared type's `init` "doesn't exist"** — Swift's synthesized memberwise

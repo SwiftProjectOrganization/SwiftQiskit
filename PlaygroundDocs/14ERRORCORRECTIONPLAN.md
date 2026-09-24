@@ -7,7 +7,7 @@ factored number, a teleported qubit. Quantum error correction (QEC) is the page 
 what has to happen *before* any of that is reliable on real hardware — and it is the natural
 next stop after page 13 introduced multi-qubit entanglement as a resource rather than a
 curiosity. The 3-qubit repetition code is the simplest nontrivial code and fits v0.1 with
-**no changes to `SwiftQiskitCore`**:
+**no changes to `SwiftQiskit`**:
 
 - The correction step — "look at the two-bit syndrome, then flip whichever qubit it
   accuses" — is a Toffoli-with-mixed-controls, three times over. There is no Toffoli gate
@@ -74,7 +74,7 @@ state.
 
 ## Explicitly not doing
 
-- No `SwiftQiskitCore` changes — no Toffoli, no partial/mid-circuit measurement, no density
+- No `SwiftQiskit` changes — no Toffoli, no partial/mid-circuit measurement, no density
   matrices or noise channels (all stay on the `STATUSandTODO.md` roadmap).
 - No Shor's 9-qubit concatenated code, no 5-qubit or surface codes — a 9-data-qubit version
   of this page's circuit needs 2¹³-dimensional matrices per operation, which is out of reach
@@ -84,7 +84,7 @@ state.
 ## Verification
 
 1. Every numeric claim was checked with `RunCodeSnippet` (xcode-tools) against
-   `SwiftQiskitCore` before and after writing the page, in smaller batches once the preview
+   `SwiftQiskit` before and after writing the page, in smaller batches once the preview
    service showed instability on the largest combined snippets (each batch individually
    ran clean with matching numbers, and one early full run covered every section at once):
    - syndrome table {00, 10, 11, 01}; correction matrix exactly unitary;

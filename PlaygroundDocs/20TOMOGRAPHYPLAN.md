@@ -6,7 +6,7 @@ Every page from 01 through 19 reads a state's amplitudes directly off the `State
 something no real device permits. `measure(shots:)` is used for statistics (pages 06, 07, 15,
 17) but never to *reconstruct* an unknown state. This page is the honest version of "what a
 real device gives you," and it depends on page 19's mixed states for its most important
-result. **No `SwiftQiskitCore` changes:**
+result. **No `SwiftQiskit` changes:**
 
 - Basis rotations reuse existing circuit gates: `h(0)` for the X basis, `sdg(0); h(0)` for the
   Y basis (verified below against page 19's `plusI`/`minusI` basis kets, not asserted).
@@ -91,7 +91,7 @@ additive initializer; no further shared-code change.
 
 ## Verification
 
-1. Every number above was computed by compiling `SwiftQiskitCore` standalone with `swiftc` and
+1. Every number above was computed by compiling `SwiftQiskit` standalone with `swiftc` and
    running the page's exact math in a driver executable, including the basis-rotation order
    check (run both orders on `|+i⟩` before picking one) and the pure-vs-mixed unphysical
    frequency contrast (initially run only on `|+⟩`, which gave a misleading ~100% frequency at

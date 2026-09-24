@@ -1,7 +1,7 @@
 # Gates, one at a time — help & usage guide
 
 User-facing guide to the `05Gates` playground page — a gentle, gate-by-gate tour of every
-built-in gate in `Sources/SwiftQiskitCore/Gates/` and `Circuit/QuantumCircuit.swift`'s
+built-in gate in `Sources/SwiftQiskit/Gates/` and `Circuit/QuantumCircuit.swift`'s
 fluent API (`h/x/y/z/s/sdg/t/tdg/p/rx/ry/rz/cx`). It's the playground's first use of
 `QuantumCircuit` itself — earlier pages either worked with raw `Ket`/`StateVector`
 (`01Qubits`) or were Bloch-sphere live views (`02`–`04`). As with `01Qubits`/`02Bloch2d`
@@ -49,7 +49,7 @@ evaluator bugs described in `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds
 ## Expected results
 
 Sidebar values (verified against `Gates/PauliY.swift`, `Gates/Phase.swift`,
-`Gates/Rotation.swift`, and `Tests/SwiftQiskitCoreTests/AdditionalGatesTests.swift`; up to
+`Gates/Rotation.swift`, and `Tests/SwiftQiskitTests/AdditionalGatesTests.swift`; up to
 floating-point rounding):
 
 | Section | Expression | Value |
@@ -110,7 +110,7 @@ Every gate here is a plain `QuantumCircuit` method — no need to touch the unde
 by hand) and `11GroverExample` § 8 (a hand-built CCZ applied via `apply(_:)`) do:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let qc = QuantumCircuit(qubits: 1)
 qc.h(0)                  // superposition
@@ -128,7 +128,7 @@ let counts = qc2.measure(shots: 1000)   // SimulationResult — roughly half-and
 - **Nothing prints when the page runs** — expected; this page has no `print` calls. Check
   the results sidebar (or Quick Look on individual lines), not the console.
 - **Page won't run / no results at all** — the SwiftQiskit scheme must build first; check
-  for compile errors in `Sources/SwiftQiskitCore/`.
+  for compile errors in `Sources/SwiftQiskit/`.
 - **A "match" section (7, 8) looks off by a sign or a tiny fraction** — check you're
   comparing `.amplitudes`, not `.probabilities`; the global-phase differences noted above
   (Section 9) are invisible in probabilities but visible in raw amplitudes.

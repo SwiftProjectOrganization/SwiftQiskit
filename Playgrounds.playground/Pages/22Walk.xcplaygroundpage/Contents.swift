@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // The discrete-time quantum walk — interference as a resource

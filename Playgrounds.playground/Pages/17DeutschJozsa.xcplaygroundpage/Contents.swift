@@ -1,7 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Deutsch–Jozsa and Bernstein–Vazirani — one query, n bits

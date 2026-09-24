@@ -64,7 +64,7 @@ Reading notes:
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let qc = QuantumCircuit(qubits: 4)
 for qubit in 0..<4 {

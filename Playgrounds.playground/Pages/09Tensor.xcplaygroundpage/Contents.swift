@@ -1,7 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Tensor products — and how the unit tests check them
@@ -13,7 +13,7 @@ import SwiftQiskitCore
 // in PlaygroundDocs/09TENSORPLAN.md).
 //
 // Each section below mirrors one test in
-// Tests/SwiftQiskitCoreTests/TensorProductTests.swift, turning its
+// Tests/SwiftQiskitTests/TensorProductTests.swift, turning its
 // #expect assertions into printed checks you can watch run.
 
 let tolerance = 1e-10

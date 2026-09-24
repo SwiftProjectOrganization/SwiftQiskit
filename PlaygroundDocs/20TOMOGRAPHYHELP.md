@@ -96,7 +96,7 @@ shot-reconstructed marginal, which lands very close to â€” but not exactly at â€
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let H = HadamardGate.matrix
 let Sdg = SDaggerGate.matrix

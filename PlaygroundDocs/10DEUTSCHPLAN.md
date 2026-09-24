@@ -8,7 +8,7 @@ natural first one: given a black-box f: {0,1} → {0,1}, decide whether it is **
 (f(0) = f(1)) or **balanced** (f(0) ≠ f(1)) with a *single* oracle query, where classically
 two evaluations are required. It also happens to fit the v0.1 API limits exactly: the circuit
 needs 2 qubits, and all four possible oracles are buildable from `x(1)` and `cx(0, 1)` — the
-one CNOT form the library supports. No changes to `SwiftQiskitCore` are needed.
+one CNOT form the library supports. No changes to `SwiftQiskit` are needed.
 
 > **Update (2026-08-13):** `cx(control, target)` is now general — any distinct pair on an
 > n-qubit circuit, via `CNOTGate.matrix(qubits:control:target:)`. The construction above
@@ -76,7 +76,7 @@ Console-only page in the sectioned style of `09Tensor` (banner comments, printed
 ## Verification
 
 1. Playground pages compile only inside Xcode, so validate the logic first with
-   `RunCodeSnippet` (xcode-tools) running the page's core code against `SwiftQiskitCore`:
+   `RunCodeSnippet` (xcode-tools) running the page's core code against `SwiftQiskit`:
    all four oracles must yield P(q0=1) ∈ {0, 1} matching constant/balanced.
 2. `BuildProject` — the SwiftQiskit scheme must keep building for pages to run.
 3. Open `10DeutschExample` in Xcode and run it; the printed output is annotated inline

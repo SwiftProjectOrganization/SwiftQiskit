@@ -4,7 +4,7 @@
 
 No page in the set simulates physics — the original motivation for quantum computers
 (Feynman's 1982 proposal). Page 18's VQE gets closest, but it minimizes an energy rather than
-evolving a state in time. This page closes that gap with **no `SwiftQiskitCore` changes**:
+evolving a state in time. This page closes that gap with **no `SwiftQiskit` changes**:
 
 - The target Hamiltonian, a transverse-field Ising chain, is assembled entrywise from Pauli
   tensor products via `⊗` — page 18's idiom for H₂, reused for a different physical system.
@@ -15,11 +15,11 @@ evolving a state in time. This page closes that gap with **no `SwiftQiskitCore` 
   either way.)
 - The key gate identity, exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, uses only existing
   circuit methods (`cx`, `rz`) and Core's exact `RZGate` (which *is* exp(−iθZ/2) with no
-  approximation, `Sources/SwiftQiskitCore/Gates/Rotation.swift:48-63`).
+  approximation, `Sources/SwiftQiskit/Gates/Rotation.swift:48-63`).
 
 ## The math, and what the plan verified
 
-All figures were computed by compiling `SwiftQiskitCore` standalone with `swiftc` and running
+All figures were computed by compiling `SwiftQiskit` standalone with `swiftc` and running
 the page's exact math in a driver executable.
 
 - **`expm` self-check.** exp(−iθX/2) computed via the page's own Taylor/scaling-and-squaring
@@ -88,7 +88,7 @@ Trotterized points as two scatter series) — no new shared view, no new exposur
 
 ## Verification
 
-1. Every number above was computed by compiling `SwiftQiskitCore`'s sources standalone with
+1. Every number above was computed by compiling `SwiftQiskit`'s sources standalone with
    `swiftc` (bypassing an `ENABLE_DEBUG_DYLIB` requirement on `RunCodeSnippet` for
    executable-target previews) and running the page's exact math in a driver executable.
    `expm` was validated against `RXGate` *before* being trusted for the ZZ-identity and

@@ -34,16 +34,16 @@ this:
 - **Everything a page touches must be `public`**: types, initializers, properties, and
   methods. Swift's synthesized memberwise initializers are only `internal`, so each
   shared type needs an explicit `public init`.
-- Sources files may `import SwiftQiskitCore` (and `SwiftUI`, etc.) because the playground
+- Sources files may `import SwiftQiskit` (and `SwiftUI`, etc.) because the playground
   sets `buildActiveScheme='true'` — the SwiftQiskit scheme is built before pages run.
 - Shared code compiles once, so pages run faster than when the same code is inline.
 - Like all playground code, `Sources/` is **not** covered by `swift build` or the test
   suite; it only compiles inside Xcode. To type-check it from the command line:
 
   ```bash
-  xcrun swiftc -emit-module -module-name SwiftQiskitCore \
-      -emit-module-path /tmp/sqkit/SwiftQiskitCore.swiftmodule \
-      Sources/SwiftQiskitCore/**/*.swift
+  xcrun swiftc -emit-module -module-name SwiftQiskit \
+      -emit-module-path /tmp/sqkit/SwiftQiskit.swiftmodule \
+      Sources/SwiftQiskit/**/*.swift
   xcrun swiftc -typecheck -I /tmp/sqkit Playgrounds.playground/Sources/*.swift
   ```
 

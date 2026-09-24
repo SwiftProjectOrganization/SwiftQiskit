@@ -83,7 +83,7 @@ counting qubits   best estimate   error     P
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 func cp(_ qc: QuantumCircuit, _ theta: Double, _ control: Int, _ target: Int) {
     qc.p(theta / 2, control)

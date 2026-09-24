@@ -4,26 +4,20 @@ import PackageDescription
 let package = Package(
     name: "SwiftQiskit",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17)
+        .macOS("27.0"),
+        .iOS("27.0")
     ],
     products: [
         // Core library
         .library(
             name: "SwiftQiskit",
-            targets: ["SwiftQiskitCore"]
+            targets: ["SwiftQiskit"]
         ),
 
         // CLI example
         .executable(
             name: "SwiftQiskitExamples",
             targets: ["SwiftQiskitExamples"]
-        ),
-
-        // SwiftUI GUI
-        .executable(
-            name: "SwiftQiskitGUI",
-            targets: ["SwiftQiskitGUI"]
         )
     ],
     targets: [
@@ -31,8 +25,8 @@ let package = Package(
         // Core quantum engine
         // =========================
         .target(
-            name: "SwiftQiskitCore",
-            path: "Sources/SwiftQiskitCore"
+            name: "SwiftQiskit",
+            path: "Sources/SwiftQiskit"
         ),
 
         // =========================
@@ -40,7 +34,7 @@ let package = Package(
         // =========================
         .executableTarget(
             name: "SwiftQiskitExamples",
-            dependencies: ["SwiftQiskitCore"],
+            dependencies: ["SwiftQiskit"],
             path: "Examples"
         ),
 
@@ -48,29 +42,9 @@ let package = Package(
         // Tests
         // =========================
         .testTarget(
-            name: "SwiftQiskitCoreTests",
-            dependencies: ["SwiftQiskitCore"],
-            path: "Tests/SwiftQiskitCoreTests"
-        ),
-
-        // =========================
-        // SwiftUI GUI App
-        // =========================
-        .executableTarget(
-            name: "SwiftQiskitGUI",
-            dependencies: ["SwiftQiskitCore"],
-            swiftSettings: [
-                .unsafeFlags(["-parse-as-library"])
-            ]
-        ),
-
-        // =========================
-        // GUI model tests
-        // =========================
-        .testTarget(
-            name: "SwiftQiskitGUITests",
-            dependencies: ["SwiftQiskitGUI", "SwiftQiskitCore"],
-            path: "Tests/SwiftQiskitGUITests"
+            name: "SwiftQiskitTests",
+            dependencies: ["SwiftQiskit"],
+            path: "Tests/SwiftQiskitTests"
         )
     ]
 )

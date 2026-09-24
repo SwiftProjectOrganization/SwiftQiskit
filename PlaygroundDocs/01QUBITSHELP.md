@@ -2,7 +2,7 @@
 
 User-facing guide to the `01Qubits` playground page — the first page after the table of
 contents, and the playground's introduction to the Dirac-notation API
-(`Sources/SwiftQiskitCore/Quantum/Dirac.swift`, `Quantum/StateVector.swift`). As with
+(`Sources/SwiftQiskit/Quantum/Dirac.swift`, `Quantum/StateVector.swift`). As with
 `02Bloch2d`/`08Dirac` there is no separate design/plan document; the page, its doc
 comments, `Circuit/QuantumCircuit.swift`, `Gates/Phase.swift`, and the shared
 `Playgrounds.playground/Sources/BlochVector.swift` are the reference.
@@ -149,10 +149,10 @@ plus section titles and padding, the widest content this early in the playground
 
 ## Using it in your own code
 
-Everything on this page except the live view is plain `SwiftQiskitCore` API:
+Everything on this page except the live view is plain `SwiftQiskit` API:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Named single-qubit states
 let plusI: Ket = .plusI                     // (|0⟩ + i|1⟩)/√2

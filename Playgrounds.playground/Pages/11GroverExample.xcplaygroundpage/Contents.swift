@@ -1,7 +1,7 @@
 //: [Previous](@previous)
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Grover's algorithm — searching with √N queries

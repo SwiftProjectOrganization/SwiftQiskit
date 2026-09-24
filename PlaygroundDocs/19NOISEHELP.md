@@ -94,7 +94,7 @@ center along the same direction, and `fully depolarized` sitting exactly at the 
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 func addM(_ a: Matrix, _ b: Matrix) -> Matrix {
     var r = Matrix(rows: a.rows, cols: a.cols)

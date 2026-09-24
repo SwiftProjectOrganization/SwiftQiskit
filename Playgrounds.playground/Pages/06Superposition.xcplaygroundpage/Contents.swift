@@ -1,6 +1,6 @@
 //: [Previous](@previous)
 
-import SwiftQiskitCore
+import SwiftQiskit
 
 // A small page-local helper: zero-pad a basis index to a fixed-width binary
 // label. `String.leftPadding` (used internally by `QuantumCircuit.measure(shots:)`)

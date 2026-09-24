@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Section 1 — Bloch vector math
@@ -22,7 +22,7 @@ import SwiftQiskitCore
 // folder, so every page can use them.
 
 // ============================================================
-// Section 2 — Demo states built with SwiftQiskitCore
+// Section 2 — Demo states built with SwiftQiskit
 // ============================================================
 
 // |0⟩ — empty circuit

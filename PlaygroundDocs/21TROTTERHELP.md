@@ -84,7 +84,7 @@ n=2 (orange dots, visibly off the curve) and n=8 (green dots, tracking it closel
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 // exp(-iθ·Z⊗Z/2) via the exact gate identity — no expm needed at runtime.
 func zzRotation(_ theta: Double) -> Matrix {

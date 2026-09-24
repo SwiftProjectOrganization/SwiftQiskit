@@ -73,7 +73,7 @@ n    quantum queries   classical DJ (worst case)   classical BV
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let n = 3, ancilla = n, total = n + 1
 

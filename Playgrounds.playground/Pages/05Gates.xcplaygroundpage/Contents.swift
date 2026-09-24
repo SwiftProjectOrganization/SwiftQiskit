@@ -1,6 +1,6 @@
 //: [Previous](@previous)
 
-import SwiftQiskitCore
+import SwiftQiskit
 
 // This page is results-sidebar style, like `01Qubits` — no `print` calls.
 // Every gate below runs on a fresh 1-qubit circuit starting at |0⟩; watch the

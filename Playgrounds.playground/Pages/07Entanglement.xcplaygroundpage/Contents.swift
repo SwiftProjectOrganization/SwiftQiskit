@@ -1,6 +1,6 @@
 //: [Previous](@previous)
 
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Section 1 — Bell State  |Φ⁺⟩ = (|00⟩ + |11⟩) / √2

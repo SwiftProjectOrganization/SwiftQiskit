@@ -7,7 +7,7 @@ search hit, a factored number, a teleported qubit, a corrected error. The CHSH i
 a different kind of page: its payoff is a physics fact, not a speedup — the correlations a
 Bell pair produces are provably impossible for any theory where Alice and Bob's outcomes are
 fixed in advance by a shared variable. It closes out the protocols/foundations arc alongside
-pages 13–14. It fits v0.1 with **no changes to `SwiftQiskitCore`**:
+pages 13–14. It fits v0.1 with **no changes to `SwiftQiskit`**:
 
 - Measuring "along a tilted axis" needs the observable A(θ) = cos θ·Z + sin θ·X, and
   `Matrix` had no `+` or scalar multiply at the time (page 12's QFT† idiom), so it is built
@@ -92,7 +92,7 @@ the product-state and Tsirelson-sweep controls; and the angle sweep rendered on
 
 ## Explicitly not doing
 
-- No `SwiftQiskitCore` changes — A(θ) stays a page-level hand-built `Matrix`, exactly like
+- No `SwiftQiskit` changes — A(θ) stays a page-level hand-built `Matrix`, exactly like
   page 12's QFT† and page 14's correction permutation.
 - No general N-party or higher-dimension Bell inequality (GHZ/Mermin, CGLMP) — CHSH is the
   canonical two-party, two-setting case and the natural stopping point.
@@ -103,7 +103,7 @@ the product-state and Tsirelson-sweep controls; and the angle sweep rendered on
 ## Verification
 
 1. Every section's numbers were computed with `RunCodeSnippet` (xcode-tools) against
-   `SwiftQiskitCore` before finalizing the page, in three batches (Sections 1–2, 3–4, 5–6)
+   `SwiftQiskit` before finalizing the page, in three batches (Sections 1–2, 3–4, 5–6)
    after the preview service showed instability on very large combined snippets — each
    batch ran clean:
    - 16/16 strategies enumerated, max \|S\| = 2;
@@ -116,7 +116,7 @@ the product-state and Tsirelson-sweep controls; and the angle sweep rendered on
    - product state S = 1.4142; angle-sweep ceiling exactly 2.8284 (Tsirelson);
    - the θ-sweep table's quantum/classical columns match the hand-derived values exactly
      (agreeing at 0, π/2, π; ~0.207 apart at π/4, 3π/4).
-2. `CHSHChartView.swift` type-checked against the built `SwiftQiskitCore` module with the
+2. `CHSHChartView.swift` type-checked against the built `SwiftQiskit` module with the
    command-line recipe in `PLAYGROUNDSUPPORT.md` — clean, no errors.
 3. `BuildProject` — the SwiftQiskit scheme must keep building for pages to run.
 4. Open `15CHSH` in Xcode and run it; on Xcode 27 betas, re-copy the `libcups` shim

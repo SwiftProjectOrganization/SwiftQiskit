@@ -10,7 +10,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 2. Playgrounds 10 to 22 contain many different quantum computing examples.
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
-5. In addition to the included expanded version of SwiftQiskitGUI, a separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting MacOS, IOS and iPadOS is available..
+5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package.
 
 ---
 
@@ -39,7 +39,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 ##  Special Qubit States
 
 Named single-qubit basis kets, defined as `Ket` (= `StateVector`) constants in
-`Sources/SwiftQiskitCore/Quantum/Dirac.swift`:
+`Sources/SwiftQiskit/Quantum/Dirac.swift`:
 
 | Constant | State | Definition | Bloch sphere |
 |----------|-------|------------|--------------|
@@ -58,7 +58,7 @@ Multi-qubit basis kets come from the binary-label initializer, e.g. `Ket("01")` 
 ##  Quantum Gates
 
 
-**Built-in gates** — each is a `public enum` in `Sources/SwiftQiskitCore/Gates/` exposing
+**Built-in gates** — each is a `public enum` in `Sources/SwiftQiskit/Gates/` exposing
 `static let matrix: Matrix` (parameterized gates expose `static func matrix(theta:)`),
 with a matching convenience method on `QuantumCircuit`:
 
@@ -101,8 +101,8 @@ compositions and applied with `circuit.apply(_:)` (or, on pages 19–22, which d
 ##  Special Operators
 
 Custom operators on the quantum types (`Ket` = `StateVector`): the postfix dagger `†` is
-declared in `Sources/SwiftQiskitCore/Quantum/Dirac.swift`, and the infix tensor product `⊗`
-(at `MultiplicationPrecedence`) in `Sources/SwiftQiskitCore/Math/Matrix.swift`:
+declared in `Sources/SwiftQiskit/Quantum/Dirac.swift`, and the infix tensor product `⊗`
+(at `MultiplicationPrecedence`) in `Sources/SwiftQiskit/Math/Matrix.swift`:
 
 | Operator | Expression | Result | Meaning | Defined in |
 |----------|------------|--------|---------|------------|
@@ -151,45 +151,30 @@ Enjoy exploring the quantum world
 ```text
 SwiftQiskit/
 ├── Sources/
-│   └── SwiftQiskitCore/
-│   │   ├── Math/
-│   │   │   ├── Complex.swift
-│   │   │   └── Matrix.swift
-│   │   ├── Quantum/
-│   │   │   ├── StateVector.swift
-│   │   │   ├── Dirac.swift
-│   │   │   └── SimulationResult.swift
-│   │   ├── Gates/
-│   │   │   ├── Hadamard.swift
-│   │   │   ├── PauliX.swift
-│   │   │   ├── PauliY.swift
-│   │   │   ├── PauliZ.swift
-│   │   │   ├── Phase.swift
-│   │   │   ├── Rotation.swift
-│   │   │   └── CNOT.swift
-│   │   ├── Circuit/
-│   │   │   └── QuantumCircuit.swift
-│   │   ├── Utils/
-│   │   │   └── String+Padding.swift
-│   │   └── SwiftQiskitCore.swift
-│   └── SwiftQiskitGUI/
-│       ├── main.swift
-│       ├── ContentView.swift
-│       ├── CircuitModel.swift
-│       ├── CircuitLayout.swift
-│       ├── CircuitWiresView.swift
-│       ├── CircuitBuilderView.swift
-│       ├── CompactBuilderView.swift
-│       ├── CircuitGridView.swift
-│       ├── GatePaletteView.swift
-│       ├── GateTileView.swift
-│       ├── ParameterPopover.swift
-│       ├── ResultsView.swift
-│       └── HistogramView.swift
+│   └── SwiftQiskit/
+│       ├── Math/
+│       │   ├── Complex.swift
+│       │   └── Matrix.swift
+│       ├── Quantum/
+│       │   ├── StateVector.swift
+│       │   ├── Dirac.swift
+│       │   └── SimulationResult.swift
+│       ├── Gates/
+│       │   ├── Hadamard.swift
+│       │   ├── PauliX.swift
+│       │   ├── PauliY.swift
+│       │   ├── PauliZ.swift
+│       │   ├── Phase.swift
+│       │   ├── Rotation.swift
+│       │   └── CNOT.swift
+│       ├── Circuit/
+│       │   └── QuantumCircuit.swift
+│       └── Utils/
+│           └── String+Padding.swift
 ├── Examples/
 │   └── main.swift
 ├── Tests/
-│   └── SwiftQiskitCoreTests/
+│   └── SwiftQiskitTests/
 │       ├── BellStateTests.swift
 │       ├── TensorProductTests.swift
 │       ├── DiracNotationTests.swift
@@ -270,8 +255,8 @@ SwiftQiskit/
 ### Requirements
 
 The package itself (`Package.swift`) declares `swift-tools-version: 5.9` and targets
-macOS 14+ / iOS 17+ (bumped from macOS 13+/iOS 16+ for `SwiftQiskitGUI`'s use of
-`@Observable` and two-parameter `onChange(of:initial:_:)`).
+macOS 27+ / iOS 27+, matching the deployment target of its consumer apps
+(`SwiftQiskitApp`, `SwiftQiskitWalkDemo`).
 
 This fork's playground pages, however, are developed and tested against **Xcode 27.0 beta**
 and **macOS 27 beta** — some SwiftUI live-view pages need the beta-specific workarounds in
@@ -303,7 +288,7 @@ The Bell state **|Φ⁺⟩** is defined as:
 ### Code Example
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let circuit = QuantumCircuit(qubits: 2)
 
@@ -319,8 +304,7 @@ for (state, count) in result.sortedCounts {
     print("\(state): \(count) (\(String(format: "%.2f", probability)))")
 }
 ```
-> Note: The core module is currently imported as `SwiftQiskitCore`. This is the same code as
-> `Examples/main.swift`, run via `swift run SwiftQiskitExamples`.
+> Note: This is the same code as `Examples/main.swift`, run via `swift run SwiftQiskitExamples`.
 
 ### Expected Measurement Output
 
@@ -365,7 +349,7 @@ Visualizes single-qubit states on the **Bloch sphere** using a SwiftUI `Canvas` 
 
 - **Bloch vector math** — maps a state |ψ⟩ = α|0⟩ + β|1⟩ to sphere coordinates
   (x = 2·Re(ᾱβ), y = 2·Im(ᾱβ), z = |α|² − |β|²) plus the spherical angles θ and φ,
-  reusing the `Complex` arithmetic from `SwiftQiskitCore`.
+  reusing the `Complex` arithmetic from `SwiftQiskit`.
 - **Rendering** — a 2D orthographic projection of the sphere with axes, drawn by the
   shared `BlochSphereView`, each sphere accompanied by a numeric readout.
 - **Gallery** — six canonical states built with real circuits and shown side by side:
@@ -455,7 +439,7 @@ User guide in `PlaygroundDocs/08DIRACHELP.md`.
 ### 09Tensor
 
 Tensor-product walkthrough (console only), mirroring
-`Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section:
+`Tests/SwiftQiskitTests/TensorProductTests.swift` section by section:
 
 - `tensor(_:)` / `⊗` on `Matrix` and `StateVector`, and the mixed-product
   identity (A ⊗ B)(C ⊗ D) = (AC) ⊗ (BD).
@@ -633,7 +617,7 @@ Design notes in `PlaygroundDocs/18VQEPLAN.md`; user guide in `PlaygroundDocs/18V
 ### 19Noise
 
 Open systems: the density matrix, and how noise enters a state-vector simulator with **no
-`SwiftQiskitCore` changes**, plus a live Bloch gallery:
+`SwiftQiskit` changes**, plus a live Bloch gallery:
 
 - **ρ and coherence** — the density matrix ρ = |ψ⟩⟨ψ| from the existing `Ket * Bra` outer
   product; a classical mixture ½|0⟩⟨0| + ½|1⟩⟨1| contrasted against the superposition |+⟩⟨+| —

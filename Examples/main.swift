@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // =====================================
 // Bell State Example

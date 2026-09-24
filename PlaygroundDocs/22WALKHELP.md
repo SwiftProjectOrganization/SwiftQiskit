@@ -94,7 +94,7 @@ one.
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let numSites = 16
 let dim = 32   // coin (2) × position (16)

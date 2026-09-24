@@ -52,7 +52,7 @@ q4: |0⟩ ───────────────⊕───┼───�
 | 01 | q2 flipped |
 
 **Why the correction is a hand-built matrix.** "Flip q0 if the syndrome is 10" is a
-Toffoli-with-mixed-controls (control on q3 = 1, q4 = 0, target q0) — `SwiftQiskitCore` has
+Toffoli-with-mixed-controls (control on q3 = 1, q4 = 0, target q0) — `SwiftQiskit` has
 no Toffoli gate. Following pages 11–12's precedent, the whole three-case correction is one
 32×32 permutation matrix, built by decoding each basis index's syndrome bits and computing
 which index it maps to, then applied with `apply(_:)`.
@@ -168,7 +168,7 @@ uncorrected teleportation branch — and the last sphere lands back on the first
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 /// The 3-qubit repetition-code correction: a 32x32 permutation that
 /// flips whichever data qubit (of q0,q1,q2) the syndrome (q3,q4)

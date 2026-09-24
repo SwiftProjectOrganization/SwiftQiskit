@@ -6,7 +6,7 @@ Pages `10DeutschExample`, `11GroverExample` and `12ShorExample` are all *oracle/
 algorithms: one register, a black box, interference, a verdict. Teleportation is the first
 page to use entanglement as a **communication resource** — the protocol that gives the
 Bell pair an operational meaning — and its dual, superdense coding, closes the loop on the
-same resource. It fits the v0.1 API with **no changes to `SwiftQiskitCore`**:
+same resource. It fits the v0.1 API with **no changes to `SwiftQiskit`**:
 
 - The correction step normally reads "measure q0, q1, then apply a *classically
   conditioned* X/Z to q2". `StateVector.measure()` collapses the whole register
@@ -84,7 +84,7 @@ annotations), plus a SwiftUI live view. Structure:
 
 ## Explicitly not doing
 
-- No `SwiftQiskitCore` changes — no mid-circuit measurement, no classically conditioned
+- No `SwiftQiskit` changes — no mid-circuit measurement, no classically conditioned
   gates, no CZ/Toffoli in Core (all stay on the `STATUSandTODO.md` roadmap).
 - No entanglement-swapping or repeater extension, no teleportation of a *half* of an
   entangled pair (both would need the same deferred-measurement machinery at 4+ qubits and
@@ -93,7 +93,7 @@ annotations), plus a SwiftUI live view. Structure:
 
 ## Verification
 
-1. Logic validated with `RunCodeSnippet` (xcode-tools) against `SwiftQiskitCore` before the
+1. Logic validated with `RunCodeSnippet` (xcode-tools) against `SwiftQiskit` before the
    page was written, and the page's console section re-run afterward to confirm every
    `// Expected:` annotation:
    - all four branch probabilities 0.2500 and fidelities 1.0000 after X^b Z^a;

@@ -5,12 +5,12 @@
 Pages 01–18 all assume a perfect, isolated, **pure** state — even `14ErrorCorrection` models
 errors as discrete coherent `rx(θ)` rotations, not decoherence. The density matrix, the object
 that makes mixtures, decoherence, and reduced states of entangled systems expressible, never
-appears. This page closes that gap with **no `SwiftQiskitCore` changes**:
+appears. This page closes that gap with **no `SwiftQiskit` changes**:
 
 - ρ = |ψ⟩⟨ψ| reuses the existing outer product `Ket * Bra`
-  (`Sources/SwiftQiskitCore/Quantum/Dirac.swift:119-127`).
+  (`Sources/SwiftQiskit/Quantum/Dirac.swift:119-127`).
 - `Matrix` had no `+`, scalar multiply, or trace at the time
-  (`Sources/SwiftQiskitCore/Math/Matrix.swift`), so page-level `addM`/`scaleM`/`trace` helpers
+  (`Sources/SwiftQiskit/Math/Matrix.swift`), so page-level `addM`/`scaleM`/`trace` helpers
   are required — the same shape as page 12's QFT† and page 18's Hamiltonian, both built
   entrywise for the same reason. (`+` and scalar multiply exist on `Matrix` now; `trace` is
   still page-level only — this page is unchanged either way.)
@@ -20,7 +20,7 @@ appears. This page closes that gap with **no `SwiftQiskitCore` changes**:
 
 ## The math, and what the plan verified
 
-All figures below were computed by compiling `SwiftQiskitCore` standalone with `swiftc` and
+All figures below were computed by compiling `SwiftQiskit` standalone with `swiftc` and
 running the exact page math (not paraphrased) — see Verification.
 
 - **Trace preservation** Σ Kᵢ†Kᵢ = I, checked as the max entrywise deviation from I₂ at p = 0.3
@@ -102,7 +102,7 @@ change**.
 
 ## Verification
 
-1. Every number above was computed by compiling `SwiftQiskitCore`'s sources directly with
+1. Every number above was computed by compiling `SwiftQiskit`'s sources directly with
    `swiftc` into a standalone dylib (bypassing an `ENABLE_DEBUG_DYLIB` requirement on
    `RunCodeSnippet` for executable-target previews) and running the page's exact math in a
    driver executable — not a paraphrase.

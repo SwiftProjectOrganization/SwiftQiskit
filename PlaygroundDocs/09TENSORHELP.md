@@ -8,9 +8,9 @@ in `09TENSORPLAN.md`.
 The Kronecker (tensor) product ⊗ is how quantum mechanics builds composite systems: matrices
 combine into multi-qubit gates, and state vectors combine into multi-qubit registers. Without
 it, "apply H to qubit 0 of a 2-qubit circuit" would have no matrix meaning — with it, that
-operation *is* the 4×4 matrix H ⊗ I. SwiftQiskitCore exposes it as a `tensor(_:)` method plus
+operation *is* the 4×4 matrix H ⊗ I. SwiftQiskit exposes it as a `tensor(_:)` method plus
 the `⊗` operator on both `Matrix` and `StateVector` (the operator is declared in
-`Sources/SwiftQiskitCore/Math/Matrix.swift`).
+`Sources/SwiftQiskit/Math/Matrix.swift`).
 
 The rules the page demonstrates:
 
@@ -29,7 +29,7 @@ The rules the page demonstrates:
 
 ## The page's sections
 
-Each section mirrors one test in `Tests/SwiftQiskitCoreTests/TensorProductTests.swift`,
+Each section mirrors one test in `Tests/SwiftQiskitTests/TensorProductTests.swift`,
 turning its `#expect` assertions into printed checks (Section 7 is the deliberate exception —
 the flip side of the story, not a test):
 
@@ -99,11 +99,11 @@ Reading notes:
 
 ## Using ⊗ in your own code
 
-Both operands of the page are plain `SwiftQiskitCore` API, so the same patterns work in any
+Both operands of the page are plain `SwiftQiskit` API, so the same patterns work in any
 target that imports the library (`tensor(_:)` is the ASCII spelling of `⊗`):
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Build a multi-qubit gate from single-qubit parts…
 let hh = HadamardGate.matrix ⊗ HadamardGate.matrix   // H ⊗ H, a 4×4 unitary
@@ -126,7 +126,7 @@ yields the Bell state.
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`. On Xcode 27 betas see also
+  compile errors in `Sources/SwiftQiskit/`. On Xcode 27 betas see also
   `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (this page is console-only, so the
   SwiftUI-specific bugs there should not affect it).
 - **Can't type `⊗`** — it is the Unicode character U+2297 (circled times), declared as a

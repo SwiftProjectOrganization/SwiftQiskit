@@ -154,13 +154,13 @@ state in the x–y panel) reaches the circle's edge.
 ## Using it in your own code
 
 `BlochProjectionView` lives in the playground's `Sources/` folder, not in
-`SwiftQiskitCore` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works, and for why the
+`SwiftQiskit` (see `PlaygroundDocs/90LIVEVIEWHELP.md` for how that sharing works, and for why the
 view takes any two labelled numbers rather than being limited to Bloch components):
 
 ```swift
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 let theta = Double.pi / 3
 let phi = Double.pi / 4

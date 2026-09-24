@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // Single qubit examples. See 02Bloch2d for more qubit examples.
 let q0: Ket = .zero

@@ -131,10 +131,10 @@ P:  0.7813  0.9453  0.3301  0.0122
 
 ## Using the algorithm in your own code
 
-The 2-qubit building blocks are plain `SwiftQiskitCore` calls:
+The 2-qubit building blocks are plain `SwiftQiskit` calls:
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 func cz(_ qc: QuantumCircuit) { qc.h(1); qc.cx(0, 1); qc.h(1) }
 
@@ -177,7 +177,7 @@ pattern scales — see the page's Section 8.
 ## Troubleshooting
 
 - **Page won't run / no output** — the SwiftQiskit scheme must build first; check for
-  compile errors in `Sources/SwiftQiskitCore/`. On Xcode 27 betas see also
+  compile errors in `Sources/SwiftQiskit/`. On Xcode 27 betas see also
   `PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds" (this page is console-only, so the
   SwiftUI-specific bugs there should not affect it).
 - **`cx` precondition failure** — `cx(control, target)` works on any pair of qubits of an

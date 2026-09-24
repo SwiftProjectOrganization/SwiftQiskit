@@ -7,7 +7,7 @@ sequel scales the same circuit to n bits, where the payoff sharpens: Deutsch–J
 worst case grows exponentially in n while the quantum query count stays at exactly 1, and
 Bernstein–Vazirani turns "one query" into "recover an entire n-bit secret." Neither needs
 anything page 10 doesn't already have — same circuit shape, `cx`-built oracles, one extra
-register width parameter. **No `SwiftQiskitCore` changes.**
+register width parameter. **No `SwiftQiskit` changes.**
 
 ## The math, and what the plan verified
 
@@ -52,14 +52,14 @@ aren't); Bernstein–Vazirani reusing the identical circuit; a query-count compa
 - No classical oracle-query simulator to *measure* the classical worst case empirically —
   Section 6's numbers are the standard closed-form results, stated and cited, not derived from
   a simulation (there's nothing to simulate: a classical decision tree over a black box isn't
-  something `SwiftQiskitCore` models).
+  something `SwiftQiskit` models).
 - No n > 3 by default — 3 input qubits (16 total states) keeps every printed distribution
   legible; the query-count table separately covers n up to 5 to show the scaling without
   printing giant amplitude tables.
 
 ## Verification
 
-1. Every printed number was computed with `RunCodeSnippet` against `SwiftQiskitCore`, running
+1. Every printed number was computed with `RunCodeSnippet` against `SwiftQiskit`, running
    the exact final page code (not a paraphrase).
 2. `BuildProject` — the SwiftQiskit scheme must keep building for pages to run.
 3. `swift test` / `RunAllTests` under `SwiftQiskit-Package` — no Core changes, no regression

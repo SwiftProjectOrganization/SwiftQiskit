@@ -5,7 +5,7 @@
 `10DeutschExample` introduced the playground's first quantum algorithm. Grover's algorithm
 is the natural second one: unstructured search over N = 2ⁿ items in O(√N) oracle queries
 where classically ~N/2 are needed on average. Like the Deutsch page, it fits the v0.1 API
-with **no changes to `SwiftQiskitCore`**:
+with **no changes to `SwiftQiskit`**:
 
 - The missing controlled-Z is `h(1); cx(0,1); h(1)` — exactly the one CNOT form v0.1
   supports (H X H = Z on the target).
@@ -84,7 +84,7 @@ checks with `// Expected:` annotations; no SwiftUI live view). Structure:
 ## Verification
 
 1. Playground pages compile only inside Xcode, so validate the logic first with
-   `RunCodeSnippet` (xcode-tools) running the page's code against `SwiftQiskitCore`:
+   `RunCodeSnippet` (xcode-tools) running the page's code against `SwiftQiskit`:
    all four 2-qubit oracles must yield P(marked) = 1 after one iteration, and the
    3-qubit case must peak at ≈ 0.9453 at k = 2. (Done during implementation — including
    catching a hand-written walkthrough oracle that used `x(0)` where the |10⟩ oracle

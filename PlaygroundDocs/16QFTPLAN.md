@@ -6,7 +6,7 @@ Page 12 (`12ShorExample`) needed the inverse QFT for phase estimation but built 
 entrywise matrix, with an explicit note that the textbook gate decomposition — Hadamards and
 controlled phase rotations, then a bit reversal — needed phase gates the library didn't expose
 at the time (`12ShorExample.xcplaygroundpage/Contents.swift:171-182`). That gap can now be
-closed with **no `SwiftQiskitCore` changes**:
+closed with **no `SwiftQiskit` changes**:
 
 - A controlled phase gate CP(θ) is the standard identity
   `P(θ/2)_c · CX(c,t) · P(−θ/2)_t · CX(c,t) · P(θ/2)_t` — five calls to gates the circuit API
@@ -64,7 +64,7 @@ a precision comparison at 3 vs. 6 counting qubits.
 
 ## Explicitly not doing
 
-- No `SwiftQiskitCore` changes — `cp` stays a page-level helper, exactly like CZ/CCZ on pages
+- No `SwiftQiskit` changes — `cp` stays a page-level helper, exactly like CZ/CCZ on pages
   11 and 13, and A(θ) on page 15.
 - No rewrite of page 12 to use the gate-level QFT — it stays as is, and this page explains why
   the entrywise matrix was the right call there (it sidesteps bit-reversal bookkeeping when
@@ -74,7 +74,7 @@ a precision comparison at 3 vs. 6 counting qubits.
 
 ## Verification
 
-1. Every section's numbers were computed with `RunCodeSnippet` against `SwiftQiskitCore`
+1. Every section's numbers were computed with `RunCodeSnippet` against `SwiftQiskit`
    before finalizing the page, run as one exact copy of the final page code (not a paraphrase)
    to make sure refactoring the QFT builders into append-style helpers didn't change any
    result.

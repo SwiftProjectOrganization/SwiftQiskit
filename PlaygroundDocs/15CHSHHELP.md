@@ -115,7 +115,7 @@ scattered near the blue curve. The visible gap between the blue and red lines ar
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 /// The observable "spin along the axis tilted theta from Z toward X".
 func A(_ theta: Double) -> Matrix {

@@ -6,7 +6,7 @@ Pages 10–17 all run a *fixed* circuit — the algorithm is compiled ahead of t
 once (or sampled many times). None of them show the loop that defines the NISQ era: a
 parameterized circuit prepares a trial state, a Hamiltonian's expectation value is measured on
 it, and a classical optimizer nudges the parameter to lower that energy. VQE closes that gap
-with **no `SwiftQiskitCore` changes**:
+with **no `SwiftQiskit` changes**:
 
 - The target is the 2-qubit qubit Hamiltonian for H₂ in a minimal (STO-3G) basis after the
   Jordan–Wigner transform, near its equilibrium bond length — the standard example from the
@@ -76,12 +76,12 @@ line/scatter chart used by pages 15 and 18.
 - No multi-parameter ansatz or general-purpose classical optimizer (Nelder–Mead, COBYLA) — one
   parameter keeps the energy landscape a single 2D curve, plottable and graded exactly against
   a closed-form answer. A richer ansatz is future scope, not this page's job.
-- No `SwiftQiskitCore` changes — H stays a page-level hand-built `Matrix`, exactly like page
+- No `SwiftQiskit` changes — H stays a page-level hand-built `Matrix`, exactly like page
   12's QFT† and page 15's A(θ).
 
 ## Verification
 
-1. Every printed number was computed with `RunCodeSnippet` against `SwiftQiskitCore`, running
+1. Every printed number was computed with `RunCodeSnippet` against `SwiftQiskit`, running
    the exact final page code for Sections 1–6 (the live-view Section 7 isn't runnable outside
    Xcode's playground evaluator).
 2. `BuildProject` — the SwiftQiskit scheme must keep building for pages to run.

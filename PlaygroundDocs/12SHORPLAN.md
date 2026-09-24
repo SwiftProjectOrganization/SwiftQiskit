@@ -6,7 +6,7 @@
 algorithm is its natural finale — the polynomial-time factoring algorithm that made
 quantum computing famous, and the destination `10DEUTSCHHELP.md` already promised. The page
 is a **compiled** Shor: N = 15 is fixed, and it fits the v0.1 API with **no changes to
-`SwiftQiskitCore`**:
+`SwiftQiskit`**:
 
 - Modular multiplication U_a |w⟩ = |a·w mod 15⟩ is a basis-state *permutation* (a is
   coprime to 15), so U_a and its controlled powers are permutation matrices fed to
@@ -107,7 +107,7 @@ with `// Expected:` annotations; no SwiftUI live view). Structure:
 ## Verification
 
 1. Playground pages compile only inside Xcode, so the logic was validated first with
-   `RunCodeSnippet` (xcode-tools) against `SwiftQiskitCore`: U₇ exactly unitary with orbit
+   `RunCodeSnippet` (xcode-tools) against `SwiftQiskit`: U₇ exactly unitary with orbit
    1 → 7 → 4 → 13 → 1; QFT† unitary to ~7e-16 with QFT†₂ = H; the a = 7 circuit's counting
    marginals exactly {0, 2, 4, 6: ¼ each} with the predicted stage-2/3 amplitudes; the
    Section 8 sweep table including a = 14's trivial factors; one `run()` timed at ~40 ms,

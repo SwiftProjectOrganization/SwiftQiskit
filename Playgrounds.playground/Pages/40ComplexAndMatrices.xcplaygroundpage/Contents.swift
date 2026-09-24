@@ -11,7 +11,7 @@
  */
 
 import Foundation
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ------------------------------------------------------------
 // §2.2 — Complex numbers: construction, * and /, conjugate, magnitude

@@ -18,19 +18,18 @@ CLI equivalents:
 swift build                        # build everything
 swift test                        # run unit tests
 swift run SwiftQiskitExamples     # Bell-state CLI demo
-swift run SwiftQiskitGUI          # SwiftUI macOS/iOS app
 ```
 
 ## Targets
 
 | Target | Path | Purpose |
 |---|---|---|
-| `SwiftQiskitCore` | `Sources/SwiftQiskitCore/` | Core simulation library |
+| `SwiftQiskit` | `Sources/SwiftQiskit/` | Core simulation library |
 | `SwiftQiskitExamples` | `Examples/` | CLI Bell-state demo |
-| `SwiftQiskitGUI` | `Sources/SwiftQiskitGUI/` | SwiftUI macOS/iOS app (built with `-parse-as-library`); `ContentView` picks a regular (macOS/iPad) or compact (iPhone) layout by size class |
 
-**Import gotcha:** the library *product* is named `SwiftQiskit` but the *module* is
-`SwiftQiskitCore` — always `import SwiftQiskitCore`.
+The library *product* and the *module* are both named `SwiftQiskit` — `import SwiftQiskit`.
+The SwiftUI front-end lives in the sibling `SwiftQiskitApp` repo, not in this package; there is
+no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of the app).
 
 ## Architecture (bottom-up)
 
@@ -100,7 +99,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`
   (user guide in `PlaygroundDocs/08DIRACHELP.md`).
 - `09Tensor` — tensor-product walkthrough (console only) mirroring
-  `Tests/SwiftQiskitCoreTests/TensorProductTests.swift` section by section: `Matrix`/
+  `Tests/SwiftQiskitTests/TensorProductTests.swift` section by section: `Matrix`/
   `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
   why the Bell state does not factor (entanglement)
   (design notes in `PlaygroundDocs/09TENSORPLAN.md`, user guide in `PlaygroundDocs/09TENSORHELP.md`).
@@ -211,7 +210,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 
 Playground notes:
 
-- Pages `import SwiftQiskitCore` and set `buildActiveScheme='true'`, so the **SwiftQiskit scheme
+- Pages `import SwiftQiskit` and set `buildActiveScheme='true'`, so the **SwiftQiskit scheme
   must build** for pages to run — keep the library compiling at all times.
 - Pages are linked sequentially with `//: [Previous](@previous)` / `//: [Next](@next)` markers.
 - Code shared by multiple pages lives in `Playgrounds.playground/Sources/` — an auxiliary
@@ -240,7 +239,7 @@ Playground notes:
 
 ## Testing
 
-- Tests live in `Tests/SwiftQiskitCoreTests/` (`BellStateTests.swift`,
+- Tests live in `Tests/SwiftQiskitTests/` (`BellStateTests.swift`,
   `TensorProductTests.swift`, `DiracNotationTests.swift`, `CNOTTests.swift`,
   `AdditionalGatesTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
@@ -249,7 +248,7 @@ Playground notes:
   SPM package (no `.xcscheme`/`.xctestplan` files on disk). The per-product `SwiftQiskit`
   scheme's implicit test plan contains **no test targets**, so `RunAllTests`/`GetTestList`
   report 0 tests under it — run tests under the `SwiftQiskit-Package` scheme instead
-  (its plan includes `SwiftQiskitCoreTests`). `swift test` from the repo root works
+  (its plan includes `SwiftQiskitTests`). `swift test` from the repo root works
   regardless of the active scheme.
 - Measurement tests are statistical (e.g. 40–60% tolerance over 1000 shots) — expect
   probabilistic assertions, not exact counts.

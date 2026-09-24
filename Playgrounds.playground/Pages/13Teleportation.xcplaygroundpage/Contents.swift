@@ -3,7 +3,7 @@
 import Foundation
 import SwiftUI
 import PlaygroundSupport
-import SwiftQiskitCore
+import SwiftQiskit
 
 // ============================================================
 // Quantum teleportation — moving a qubit with two classical bits
@@ -27,7 +27,7 @@ import SwiftQiskitCore
 //   2. measure q0 → a, q1 → b, send (a,b) to Bob classically
 //   3. Bob applies X^b Z^a to q2
 //
-// `SwiftQiskitCore` has no mid-circuit measurement, so this page uses
+// `SwiftQiskit` has no mid-circuit measurement, so this page uses
 // the *deferred-measurement principle*: replace "measure then apply a
 // classical-controlled correction" with a plain controlled gate
 // (cx / cz) applied to all branches at once. Sections 1–3 first look

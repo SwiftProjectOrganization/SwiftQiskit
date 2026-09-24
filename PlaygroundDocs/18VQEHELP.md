@@ -91,7 +91,7 @@ clustering tightly into the well near θ ≈ -0.230 by the tenth point.
 ## Using it in your own code
 
 ```swift
-import SwiftQiskitCore
+import SwiftQiskit
 
 let g: [Double] = [-0.4804, 0.3435, -0.4347, 0.5716, 0.0910, 0.0910]
 let I2 = Matrix.identity(size: 2)
