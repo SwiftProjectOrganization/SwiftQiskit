@@ -45,7 +45,8 @@ The project is actively evolving, and major features are planned.
 - [x] Noise models — addressed at the playground-example level: page `19Noise` builds Kraus
       channels (bit-flip, phase-flip, depolarizing, amplitude damping) as page-level `Matrix`
       operations. Core itself still has no `DensityMatrix` type or built-in noise simulation —
-      that remains open if a first-class Core feature is wanted.
+      see "Proposed Core extensions — open systems" below for what a first-class Core feature
+      would look like.
 - [ ] `SimulationResult.parityExpectation(qubits:)` — a ±1 parity-product average over
       `counts` (one qubit position per factor, 0→+1/1→−1). Would replace the
       `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
@@ -53,7 +54,9 @@ The project is actively evolving, and major features are planned.
       Needs tests if added to Core.
 - [ ] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
       `(self† * observable * self).real` — low priority, since the Dirac idiom is already
-      one line once adopted (see page `15CHSH`'s `exactCorrelator`).
+      one line once adopted (see page `15CHSH`'s `exactCorrelator`). Also listed under
+      "Proposed Core extensions — open systems" below, since Chapter 21's findings hit the
+      same gap independently.
 - [ ] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
       a, a′ fixed) to a genuine multi-angle search over all four settings, if a true
       confirmation of the bound (rather than a consistency check) is wanted.
@@ -112,8 +115,9 @@ The project is actively evolving, and major features are planned.
 - [x] Matrix arithmetic in Core (`Math/Matrix.swift`): `+`, `-`, and scalar multiply
       (`Matrix * Double`/`Complex`, either operand order) — closing a gap several pages had
       previously routed around with page-level helpers (`19Noise`'s `addM`/`scaleM`, `21Trotter`'s
-      `addM`/`scaleM`, `18VQE`'s and `15CHSH`'s entrywise term accumulation). Those pages are
-      unchanged and still work; new code can use the operators directly. Tested in
+      `addM`/`scaleM`, `18VQE`'s and `15CHSH`'s entrywise term accumulation). `19Noise` now uses
+      the operators directly (its `trace` helper is the only one left); `21Trotter`, `18VQE`,
+      and `15CHSH` are unchanged and still work with their own helpers. Tested in
       `MatrixArithmeticTests.swift`.
 
 ## Gate-tour and entanglement playground pages (this fork)
@@ -232,3 +236,42 @@ page 19 adds one small additive initializer to the playground's shared `BlochVec
       coin contrast showing the walk's asymmetry is interference, not a flaw — with a live
       chart of both final distributions and cross-references to Grover (page 11) and
       Hamiltonian simulation (page 21) (`PlaygroundDocs/22WALKPLAN.md`, `PlaygroundDocs/22WALKHELP.md`).
+
+## Proposed Core extensions — open systems (from the app's Chapter 21 findings)
+
+Writing the SwiftQiskitApp book's Noise chapter (`Docs/Introduction/21-Noise.md`) surfaced a
+set of Core gaps that page `19Noise` and that chapter both route around today with page/app-
+level helpers. None of these are implemented yet; they're recorded here as the working list for
+turning open-systems support into a first-class Core feature (see the Roadmap's "Noise models"
+entry above):
+
+- [ ] `Matrix.trace` — sum of the diagonal entries; retires `19Noise`'s last page-level helper.
+- [ ] `DensityMatrix` type: `init(_:StateVector)`/`init(mixture:)`, `purity`, `probabilities`,
+      `expectation(_:)`, `apply(_:) -> DensityMatrix`, `partialTrace(keeping:)` (generalizing
+      `19Noise`'s 2-qubit `partialTraceLast` to n qubits and an arbitrary subset),
+      `blochVector` (nil unless 2×2), `vonNeumannEntropy` (closed form for 2×2 via the Bloch
+      magnitude; a Jacobi eigensolver for larger ρ).
+- [ ] `KrausChannel` type: `operators`, `isTracePreserving(tolerance:)`, `apply(to:qubit:)`
+      (embedding a 2×2 channel onto one qubit of an n-qubit ρ, the same idiom
+      `CNOTGate.matrix(qubits:control:target:)` already uses for a 2×2 gate), and factories
+      `bitFlip`/`phaseFlip`/`depolarizing`/`amplitudeDamping`/`phaseDamping` (the last one new —
+      dephasing without energy loss, not in `19Noise`).
+- [ ] Noisy circuit execution: a `NoiseModel` mapping gate applications to a `KrausChannel`,
+      `QuantumCircuit.runDensityMatrix(noise:) -> DensityMatrix`, and
+      `runTrajectories(noise:shots:) -> SimulationResult` (the Monte-Carlo unraveling
+      generalized to full circuits). Would let page `14ErrorCorrection`'s p_L = 3p² − 2p³ be
+      reproduced empirically under a real bit-flip noise model instead of one hand-injected `x`
+      gate — flagged there as "not doing" in `14ERRORCORRECTIONPLAN.md`'s analogue.
+- [ ] `DensityMatrix.fidelity(to:StateVector)` and `StateVector.expectation(_:Matrix)` — the
+      latter would simplify `19Noise`'s `blochOf` helper to one line and help `20Tomography`,
+      which measures exactly these three expectation values per qubit.
+- [ ] A single package-level `BlochVector` (pure-state and `DensityMatrix`-driven initializers),
+      replacing the three hand-vendored copies (`Playgrounds.playground/Sources/BlochVector.swift`,
+      `SwiftQiskitApp/BlochVector.swift`, and the app's `blochOf(_:Matrix)`) — do together with
+      `DensityMatrix`.
+- [ ] Tests (Swift `Testing`, shape of `AdditionalGatesTests.swift`): trace preservation for all
+      five channels at a few p/γ values; `DensityMatrix.purity`/`vonNeumannEntropy` on a known
+      pure state, a maximally mixed state, and a partially mixed state with a hand-computed
+      eigenvalue pair; `partialTrace` qubit isolation (mirroring
+      `SwiftQiskitApp/SwiftQiskitAppTests/BlochVectorTests.swift`'s reduced-vector-isolation
+      test); `runTrajectories` converging to `runDensityMatrix`'s prediction within shot noise.

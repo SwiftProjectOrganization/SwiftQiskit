@@ -57,7 +57,7 @@ Pauli, which his two classical bits let him undo:
 | 00 | \|ψ⟩ | I |
 | 01 | X\|ψ⟩ | X |
 | 10 | Z\|ψ⟩ | Z |
-| 11 | XZ\|ψ⟩ | XZ |
+| 11 | XZ\|ψ⟩ | ZX (X, then Z) |
 
 ## Superdense coding — the dual
 
@@ -98,7 +98,7 @@ ab   P(ab)    correction   fidelity
 00   0.2500    I            1.0000
 01   0.2500    X            1.0000
 10   0.2500    Z            1.0000
-11   0.2500    XZ           1.0000
+11   0.2500    ZX           1.0000
 ```
 
 After the deferred corrections, the register factors:
@@ -158,7 +158,8 @@ func teleportCircuit(prepare: (QuantumCircuit) -> Void) -> QuantumCircuit {
 }
 
 let qc = teleportCircuit { $0.ry(Double.pi / 3, 0); $0.rz(Double.pi / 4, 0) }
-let bob = StateVector([qc.run()[0], qc.run()[1]])   // q2's slice — exactly |ψ⟩
+let finalState = qc.run()
+let bob = StateVector([finalState[0], finalState[1]])   // q2's slice: ½|ψ⟩, renormalized to |ψ⟩ by init
 ```
 
 To inspect one measurement branch instead, project with the Dirac layer:
@@ -177,7 +178,7 @@ branch.apply(projector)      // collapses to ab = 01, renormalized
   declares a `View` inline, which is the case that needs the shim. Re-copy it immediately
   before each run (`PLAYGROUNDSUPPORT.md`).
 - **Fidelity below 1 in your own variant** — check the correction order. Bob applies X^b
-  *then* Z^a; swapping them costs a relative sign on one branch (ZX = −XZ), which is
-  harmless as a global phase only if it is applied uniformly.
+  *then* Z^a (the matrix Z^a X^b); swapping them costs a relative sign on one branch
+  (ZX = −XZ), which is harmless as a global phase only if it is applied uniformly.
 - **`cx` precondition failure** — control and target must be distinct and in range;
   `cx` itself works on any pair.

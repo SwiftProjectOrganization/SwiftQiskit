@@ -23,17 +23,18 @@ ever measuring α or β directly:
 Qubit 0 is the most-significant/leftmost bit. q0–q2 are data, q3–q4 are syndrome ancillas.
 
 ```text
-q0: |ψ⟩ ──■────■───────────■──────────────■────■───
-          │    │           │              │    │
-q1: |0⟩ ──⊕────│───■───────┼───■──────────⊕────│───
-               │   │       │   │
-q2: |0⟩ ───────⊕───┼───■───┼───┼───■──────────⊕───
-                   │   │   │   │   │
-q3: |0⟩ ───────────⊕───┼───┼───┼───┼── [correction]
-                       │   │   │
-q4: |0⟩ ───────────────⊕───┼───┼─────────────────
-                            (error here, e.g. x(0))
+q0: |ψ⟩ ─■──■──┆──■──────────┤──■──■─
+q1: |0⟩ ─⊕──│──┆──│──■──■────┤──│──⊕─
+q2: |0⟩ ────⊕──┆──│──│──│──■──┤──⊕────
+q3: |0⟩ ──────────⊕──⊕──│──│──┤───────
+q4: |0⟩ ──────────────────⊕──⊕──┤───────
 ```
+
+Columns, left to right: `cx(0,1)`, `cx(0,2)` (encode) — the error, `x(q)` for exactly one
+of q0, q1, q2 (marked `┆` on those three wires only; q3, q4 are never touched by it) —
+`cx(0,3)`, `cx(1,3)`, `cx(1,4)`, `cx(2,4)` (syndrome) — the correction (marked `┤` across
+all five wires: it's one 32×32 permutation matrix reading q3, q4 and flipping the accused
+data qubit, not a per-qubit gate) — `cx(0,2)`, `cx(0,1)` (decode).
 
 | Step | Code | Effect |
 |---|---|---|
@@ -53,9 +54,16 @@ q4: |0⟩ ───────────────⊕───┼───�
 
 **Why the correction is a hand-built matrix.** "Flip q0 if the syndrome is 10" is a
 Toffoli-with-mixed-controls (control on q3 = 1, q4 = 0, target q0) — `SwiftQiskit` has
-no Toffoli gate. Following pages 11–12's precedent, the whole three-case correction is one
-32×32 permutation matrix, built by decoding each basis index's syndrome bits and computing
-which index it maps to, then applied with `apply(_:)`.
+no Toffoli gate directly (one could be built from `h`/`t`/`tdg`/`cx` — the standard
+Clifford+T decomposition page 11's "Using the algorithm in your own code" section already
+alludes to for a related multi-controlled gate — but that runs several gates deep, once
+per accused qubit).
+Following pages 11–12's precedent, the whole three-case correction is one 32×32 permutation
+matrix instead, built by decoding each basis index's syndrome bits and computing which
+index it maps to, then applied with `apply(_:)`. (A more resource-frugal version of this
+code skips the two syndrome ancillas entirely, extracting the syndrome from the data
+qubits' own parities instead — out of scope here, but worth knowing if you extend this
+page.)
 
 ## Why the correction works on *every* error strength
 
@@ -107,10 +115,10 @@ fidelities come out identical to the bit-flip case.
 encoded (α|000⟩+β|111⟩):  |00000⟩: 0.8001 − 0.3314i   |11100⟩: 0.4619 + 0.1913i
 
 error   syndrome (q3 q4)   P
-none     00              0.7500
-q0       10              0.7500
-q1       11              0.7500
-q2       01              0.7500
+none     00              1.0000
+q0       10              1.0000
+q1       11              1.0000
+q2       01              1.0000
 
 correction matrix is unitary: true
 

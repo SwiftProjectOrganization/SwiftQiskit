@@ -87,11 +87,19 @@ for (name, errs) in [("none", []), ("q0  ", [0]), ("q1  ", [1]), ("q2  ", [2])] 
     for i in 0..<32 where state.probabilities[i] > maxP {
         maxP = state.probabilities[i]; maxIdx = i
     }
-    let bits = lbl(maxIdx, 5)
-    print("\(name)     \(bits.suffix(2))              \(String(format: "%.4f", maxP))")
+    let suffix = lbl(maxIdx, 5).suffix(2)
+    // The syndrome itself is certain; summing over every basis state
+    // that shares this ancilla suffix (both the |000⟩ and |111⟩
+    // branches) gives its real probability, not just the larger of
+    // the two data branches (0.7500 = |α|²).
+    let syndromeP = (0..<32)
+        .filter { lbl($0, 5).suffix(2) == suffix }
+        .reduce(0.0) { $0 + state.probabilities[$1] }
+    print("\(name)     \(suffix)              \(String(format: "%.4f", syndromeP))")
 }
-// Expected: none→00, q0→10, q1→11, q2→01 — every syndrome value
-// distinct, so it uniquely names the flipped qubit (or "none").
+// Expected: none→00, q0→10, q1→11, q2→01, every P = 1.0000 — every
+// syndrome value distinct, so it uniquely names the flipped qubit (or
+// "none"), and it fires with certainty.
 
 // ============================================================
 // Section 3 — coherent correction
@@ -384,7 +392,10 @@ let noCorrectionState = decodeWithoutCorrection(errors: [0])
 // index: |q0 1 1 1 0⟩ is index q0·16 + 8 + 4 + 2 = q0·16 + 14.
 let noCorrectionQ0 = StateVector([noCorrectionState[14], noCorrectionState[30]])
 let decodedState = withDecode(errors: [0]).run()
-let correctedQ0 = StateVector([decodedState[0], decodedState[1]])
+// After decode, q1 = q2 = 0 and the syndrome (still 10 for a q0 error)
+// survives unerased on q3, q4 — so q0's amplitudes sit at q0·16 + 2
+// (indices 2 and 18), not 0 and 1, which are exactly zero here.
+let correctedQ0 = StateVector([decodedState[2], decodedState[18]])
 
 PlaygroundPage.current.setLiveView(
     ErrorCorrectionGalleryView(stages: [

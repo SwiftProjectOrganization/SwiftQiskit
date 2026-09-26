@@ -96,29 +96,16 @@ center along the same direction, and `fully depolarized` sitting exactly at the 
 ```swift
 import SwiftQiskit
 
-func addM(_ a: Matrix, _ b: Matrix) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] + b[i, j] } }
-    return r
-}
-func scaleM(_ a: Matrix, _ s: Double) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] * s } }
-    return r
-}
 func rho(_ psi: Ket) -> Matrix { psi * (psi†) }
 
 let I2 = Matrix.identity(size: 2)
 func phaseFlipKraus(_ p: Double) -> [Matrix] {
-    [scaleM(I2, (1 - p).squareRoot()), scaleM(PauliZGate.matrix, p.squareRoot())]
+    [I2 * (1 - p).squareRoot(), PauliZGate.matrix * p.squareRoot()]
 }
 func applyChannel(_ ks: [Matrix], _ r: Matrix) -> Matrix {
-    var out: Matrix? = nil
-    for k in ks {
-        let term = k * r * (k†)
-        out = out == nil ? term : addM(out!, term)
-    }
-    return out!
+    var out = Matrix(rows: 2, cols: 2)
+    for k in ks { out = out + k * r * (k†) }
+    return out
 }
 
 var r = rho(Ket.plus)

@@ -41,7 +41,7 @@ The payoff check: after step 4 the register **factors** as \|+⟩ ⊗ \|+⟩ ⊗
 the no-cloning theorem showing up as an equality rather than a prohibition.
 
 Superdense coding runs the resource the other way: the same Bell pair, the same four
-unitaries {I, X, Z, ZX} applied to Alice's qubit alone, and `cx(0,1); h(0)` decodes two
+unitaries {I, X, Z, XZ} applied to Alice's qubit alone, and `cx(0,1); h(0)` decodes two
 classical bits from one transmitted qubit with P = 1.
 
 ## Changes

@@ -251,11 +251,12 @@ print("\nvia 2|s⟩⟨s| − I:  \(pretty(viaDirac.run(), qubits: 2))")
 // ============================================================
 // N = 4 is a special case where one iteration is exact. For n > 2
 // qubits the oracle needs a multi-controlled Z. cx now works between
-// any pair of qubits, but a *doubly*-controlled Z still cannot be
-// built from H/X/Z/CNOT alone (it needs phase-type gates the library
-// doesn't have yet) — `apply(_:)` takes any full 2ⁿ×2ⁿ matrix, and
-// CCZ is just the identity with the |111⟩ entry negated. h(_:) and
-// x(_:) embed into registers of any size, so nothing else changes.
+// any pair of qubits, and t/tdg supply the phase-type gates a real
+// Toffoli-style decomposition would need, but that decomposition runs
+// several H/T/CNOT gates deep — `apply(_:)` takes any full 2ⁿ×2ⁿ
+// matrix, and CCZ is just the identity with the |111⟩ entry negated,
+// so building it directly is simpler. h(_:) and x(_:) embed into
+// registers of any size, so nothing else changes.
 
 var ccz = Matrix.identity(size: 8)
 ccz[7, 7] = Complex(-1)
@@ -298,7 +299,7 @@ for k in 1...4 {
     let p = grover3(marked: 5, iterations: k).run().probabilities[5]
     print("      \(k)           \(String(format: "%.4f", p))")
 }
-// Expected: 0.7813, 0.9453, 0.3301, 0.0122 — rising to the k = 2
+// Expected: 0.7812, 0.9453, 0.3301, 0.0122 — rising to the k = 2
 // peak, then rotating past the target again.
 
 let counts3 = grover3(marked: 5, iterations: 2).measure(shots: 1000)
