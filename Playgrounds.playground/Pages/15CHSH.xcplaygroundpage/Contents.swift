@@ -92,17 +92,17 @@ print("\nshared-direction model, 200,000 trials per correlator: S ≈ \(fmt(lhvS
 // Section 2 — measuring along a tilted axis
 // ============================================================
 // A(θ) = cos θ·Z + sin θ·X is the observable "spin along the axis
-// tilted θ from Z toward X" — built entrywise, since `Matrix` has no
-// `+` or scalar multiply (page 12's QFT† idiom). Measuring A(θ) is
-// `ry(−θ)` followed by an ordinary computational-basis measurement;
-// the sign is pinned numerically against the exact expectation value
-// before any CHSH number is trusted.
+// tilted θ from Z toward X" — built from `Matrix`'s scalar `*` and
+// `+` (page 12's QFT† idiom predates both operators). Measuring A(θ)
+// is `ry(−θ)` followed by an ordinary computational-basis
+// measurement; the sign is pinned numerically against the exact
+// expectation value before any CHSH number is trusted.
+
+let Z = Matrix([[Complex(1), Complex(0)], [Complex(0), Complex(-1)]])
+let X = Matrix([[Complex(0), Complex(1)], [Complex(1), Complex(0)]])
 
 func A(_ theta: Double) -> Matrix {
-    Matrix([
-        [Complex(cos(theta), 0), Complex(sin(theta), 0)],
-        [Complex(sin(theta), 0), Complex(-cos(theta), 0)]
-    ])
+    cos(theta) * Z + sin(theta) * X
 }
 
 let testQubit = QuantumCircuit(qubits: 1)
@@ -112,15 +112,13 @@ let testPsi = testQubit.run()
 
 print("\nangle    exact ⟨A(θ)⟩   via ry(−θ)+Z")
 for angle in [0.0, Double.pi / 6, Double.pi / 4, Double.pi / 2] {
-    let matrix = A(angle)
-    var exact = Complex.zero
-    for i in 0...1 { for j in 0...1 { exact = exact + testPsi[i].conjugate * matrix[i, j] * testPsi[j] } }
+    let exact = (testPsi† * A(angle) * testPsi).real
 
     var rotated = testPsi
     rotated.apply(RYGate.matrix(theta: -angle))
     let viaMeasurement = rotated.probabilities[0] - rotated.probabilities[1]
 
-    print("\(fmt(angle))   \(fmt(exact.real))         \(fmt(viaMeasurement))")
+    print("\(fmt(angle))   \(fmt(exact))         \(fmt(viaMeasurement))")
 }
 // Expected: the two columns agree at every angle. angle=0 gives
 // 0.5000 — page 04/08's ⟨Z⟩ for this same qubit; angle=π/2 gives
@@ -130,19 +128,16 @@ for angle in [0.0, Double.pi / 6, Double.pi / 4, Double.pi / 2] {
 // Section 3 — correlators two ways
 // ============================================================
 // On a Bell pair, E(a,b) = ⟨ψ|A(a)⊗A(b)|ψ⟩ computed exactly with the
-// Dirac/Core `⊗`, and independently as a shot-sampled average of
-// ±1 = "same"/"different" outcomes after `ry(-a,0); ry(-b,1)`.
+// Dirac/Core `⊗` and `†`, and independently as a shot-sampled average
+// of ±1 = "same"/"different" outcomes after `ry(-a,0); ry(-b,1)`.
 
 let bell = QuantumCircuit(qubits: 2)
 bell.h(0)
 bell.cx(0, 1)
 let bellState = bell.run()
 
-func exactCorrelator(_ x: Double, _ y: Double) -> Double {
-    let observable = A(x) ⊗ A(y)
-    var v = Complex.zero
-    for i in 0..<4 { for j in 0..<4 { v = v + bellState[i].conjugate * observable[i, j] * bellState[j] } }
-    return v.real
+func exactCorrelator(_ x: Double, _ y: Double, state: StateVector) -> Double {
+    (state† * (A(x) ⊗ A(y)) * state).real
 }
 
 func sampledCorrelator(_ x: Double, _ y: Double, shots: Int) -> Double {
@@ -162,7 +157,7 @@ func sampledCorrelator(_ x: Double, _ y: Double, shots: Int) -> Double {
 
 print("\nsetting pair      exact E    sampled E   cos(a−b)")
 for (x, y, name) in [(a, b, "(a, b)  "), (a, bp, "(a, b') "), (ap, b, "(a', b) "), (ap, bp, "(a', b')")] {
-    print("\(name)   \(fmt(exactCorrelator(x, y)))    \(fmt(sampledCorrelator(x, y, shots: 4000)))     \(fmt(cos(x - y)))")
+    print("\(name)   \(fmt(exactCorrelator(x, y, state: bellState)))    \(fmt(sampledCorrelator(x, y, shots: 4000)))     \(fmt(cos(x - y)))")
 }
 // Expected: exact E always equals cos(a−b) to four decimals; sampled
 // E lands within ~±0.03 of it (4000 shots, statistical).
@@ -173,8 +168,8 @@ for (x, y, name) in [(a, b, "(a, b)  "), (a, bp, "(a, b') "), (ap, b, "(a', b) "
 // a = 0, a′ = π/2, b = π/4, b′ = 3π/4 make each |E| = 1/√2 with
 // signs that all add constructively in S.
 
-let exactS = exactCorrelator(a, b) - exactCorrelator(a, bp)
-    + exactCorrelator(ap, b) + exactCorrelator(ap, bp)
+let exactS = exactCorrelator(a, b, state: bellState) - exactCorrelator(a, bp, state: bellState)
+    + exactCorrelator(ap, b, state: bellState) + exactCorrelator(ap, bp, state: bellState)
 print("\nexact S = \(fmt(exactS))   (2√2 = \(fmt(2 * sqrt(2))))")
 // Expected: 2.8284 — above the classical 2, and Section 1 showed
 // that bound is exhaustive, not just unbeaten by one model.
@@ -196,30 +191,27 @@ product.h(0)
 product.h(1)          // |+⟩⊗|+⟩ — no `cx`, so no entanglement
 let productState = product.run()
 
-func productCorrelator(_ x: Double, _ y: Double) -> Double {
-    let observable = A(x) ⊗ A(y)
-    var v = Complex.zero
-    for i in 0..<4 { for j in 0..<4 { v = v + productState[i].conjugate * observable[i, j] * productState[j] } }
-    return v.real
-}
-let productS = productCorrelator(a, b) - productCorrelator(a, bp)
-    + productCorrelator(ap, b) + productCorrelator(ap, bp)
+let productS = exactCorrelator(a, b, state: productState) - exactCorrelator(a, bp, state: productState)
+    + exactCorrelator(ap, b, state: productState) + exactCorrelator(ap, bp, state: productState)
 print("\nproduct state |+⟩⊗|+⟩: S = \(fmt(productS))")
 // Expected: 1.4142 = √2 — comfortably inside |S| ≤ 2.
 
 // Quantum mechanics violates the classical bound but doesn't reach
-// the algebraic maximum of 4 either: sweep the second setting and
-// confirm the ceiling is exactly 2√2 (Tsirelson's bound).
+// the algebraic maximum of 4 either: sweep only the second setting
+// (b, with b′ = b + π/2), holding the first pair fixed at a = 0,
+// a′ = π/2, and confirm the ceiling this slice reaches is exactly
+// 2√2 (consistent with, though not itself a full proof of,
+// Tsirelson's bound).
 var maxSweptS = 0.0
 var probe = 0.0
 while probe < Double.pi {
-    let s = exactCorrelator(0, probe) - exactCorrelator(0, probe + Double.pi / 2)
-        + exactCorrelator(Double.pi / 2, probe) + exactCorrelator(Double.pi / 2, probe + Double.pi / 2)
+    let s = exactCorrelator(0, probe, state: bellState) - exactCorrelator(0, probe + Double.pi / 2, state: bellState)
+        + exactCorrelator(Double.pi / 2, probe, state: bellState) + exactCorrelator(Double.pi / 2, probe + Double.pi / 2, state: bellState)
     maxSweptS = max(maxSweptS, abs(s))
     probe += 0.001
 }
-print("max |S| over a full angle sweep: \(fmt(maxSweptS))   (Tsirelson: \(fmt(2 * sqrt(2))))")
-// Expected: 2.8284 again — the sweep's ceiling and the hand-picked
+print("max |S| over b (a = 0, a′ = π/2 fixed): \(fmt(maxSweptS))   (Tsirelson: \(fmt(2 * sqrt(2))))")
+// Expected: 2.8284 again — this slice's ceiling and the hand-picked
 // angles from Section 4 agree; nothing beats 2√2.
 
 // ============================================================
