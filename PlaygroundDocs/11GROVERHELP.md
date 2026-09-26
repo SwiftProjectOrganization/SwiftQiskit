@@ -124,7 +124,7 @@ rising to the optimal k = 2, then rotating past the target:
 
 ```text
 k:  1       2       3       4
-P:  0.7813  0.9453  0.3301  0.0122
+P:  0.7812  0.9453  0.3301  0.0122
 
 1000 shots at k = 2:  101: ~945, the other seven states sharing the rest
 ```
@@ -161,9 +161,10 @@ diffusion(qc)
 print(qc.runAndMeasure())      // 2 — always, P(marked) is exactly 1
 ```
 
-Beyond 2 qubits, `cx` still works on any pair — but a *doubly*-controlled Z cannot be
-built from H/X/Z/CNOT alone. `apply(_:)` takes any full 2ⁿ×2ⁿ matrix, so a
-multi-controlled Z is one line:
+Beyond 2 qubits, `cx` still works on any pair, and `t`/`tdg` supply the phase-type
+gates a real Toffoli-style decomposition would need — but that decomposition runs
+several H/T/CNOT gates deep. `apply(_:)` takes any full 2ⁿ×2ⁿ matrix, so building a
+multi-controlled Z directly is one line instead:
 
 ```swift
 var ccz = Matrix.identity(size: 8)
