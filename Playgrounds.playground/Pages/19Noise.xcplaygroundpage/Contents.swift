@@ -14,22 +14,13 @@ import SwiftQiskit
 // noise, and reduced states of entangled systems expressible: the
 // density matrix ρ.
 //
-// `Matrix` has no `+`, scalar multiply, or trace, so those are added
-// here as page-level helpers — the same shape as page 12's QFT† and
-// page 18's Hamiltonian, both built entrywise for the same reason.
+// `Matrix` has `+`, `-`, and scalar multiply now (`Math/Matrix.swift`); only
+// `trace` is still missing, so it alone stays a page-level helper — the
+// same shape as page 12's QFT† and page 18's Hamiltonian, both built
+// entrywise for the same reason.
 
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
-func addM(_ a: Matrix, _ b: Matrix) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] + b[i, j] } }
-    return r
-}
-func scaleM(_ a: Matrix, _ s: Double) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] * s } }
-    return r
-}
 func trace(_ a: Matrix) -> Complex {
     var s = Complex.zero
     for i in 0..<a.rows { s = s + a[i, i] }
@@ -53,7 +44,7 @@ let Z = PauliZGate.matrix
 // a mixture doesn't have.
 
 let rhoPlus = rho(Ket.plus)
-let rhoMix = scaleM(addM(rho(Ket.zero), rho(Ket.one)), 0.5)
+let rhoMix = (rho(Ket.zero) + rho(Ket.one)) * 0.5
 
 print("ρ(|+⟩):        diag \(fmt(rhoPlus[0,0].real)), \(fmt(rhoPlus[1,1].real))   off-diag \(rhoPlus[0,1])")
 print("ρ(mixture):    diag \(fmt(rhoMix[0,0].real)), \(fmt(rhoMix[1,1].real))   off-diag \(rhoMix[0,1])")
@@ -70,16 +61,16 @@ print("purity: |+⟩ = \(fmt(purity(rhoPlus))),  mixture = \(fmt(purity(rhoMix))
 // (Σ Kᵢ†Kᵢ = I) is checked before any channel is trusted.
 
 func bitFlipKraus(_ p: Double) -> [Matrix] {
-    [scaleM(I2, (1 - p).squareRoot()), scaleM(X, p.squareRoot())]
+    [I2 * (1 - p).squareRoot(), X * p.squareRoot()]
 }
 func phaseFlipKraus(_ p: Double) -> [Matrix] {
-    [scaleM(I2, (1 - p).squareRoot()), scaleM(Z, p.squareRoot())]
+    [I2 * (1 - p).squareRoot(), Z * p.squareRoot()]
 }
 func depolarizingKraus(_ p: Double) -> [Matrix] {
-    [scaleM(I2, (1 - 0.75 * p).squareRoot()),
-     scaleM(X, (p / 4).squareRoot()),
-     scaleM(Y, (p / 4).squareRoot()),
-     scaleM(Z, (p / 4).squareRoot())]
+    [I2 * (1 - 0.75 * p).squareRoot(),
+     X * (p / 4).squareRoot(),
+     Y * (p / 4).squareRoot(),
+     Z * (p / 4).squareRoot()]
 }
 func ampDampingKraus(_ g: Double) -> [Matrix] {
     var k0 = Matrix(rows: 2, cols: 2)
@@ -90,12 +81,9 @@ func ampDampingKraus(_ g: Double) -> [Matrix] {
 }
 
 func traceResidual(_ ks: [Matrix]) -> Double {
-    var sum: Matrix? = nil
-    for k in ks {
-        let term = (k†) * k
-        sum = sum == nil ? term : addM(sum!, term)
-    }
-    let diff = addM(sum!, scaleM(I2, -1))
+    var sum = Matrix(rows: 2, cols: 2)
+    for k in ks { sum = sum + (k†) * k }
+    let diff = sum - I2
     var maxAbs = 0.0
     for i in 0..<2 { for j in 0..<2 { maxAbs = max(maxAbs, diff[i, j].magnitude) } }
     return maxAbs
@@ -116,12 +104,9 @@ print("  amp-damping:   \(String(format: "%.2e", traceResidual(ampDampingKraus(0
 // assumed.
 
 func applyChannel(_ ks: [Matrix], _ r: Matrix) -> Matrix {
-    var out: Matrix? = nil
-    for k in ks {
-        let term = k * r * (k†)
-        out = out == nil ? term : addM(out!, term)
-    }
-    return out!
+    var out = Matrix(rows: 2, cols: 2)
+    for k in ks { out = out + k * r * (k†) }
+    return out
 }
 
 print("\nn    off-diag (measured)   (1-2p)ⁿ predicted   [p = 0.1]")
