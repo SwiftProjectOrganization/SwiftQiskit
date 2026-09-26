@@ -18,6 +18,14 @@ inverse QFT run backward through phase estimation on a made-up phase.
 `diag(1,1,1,e^{iθ})` it should produce. At θ = π this is exactly CZ, the same gate pages 11
 and 15 built by hand for other reasons.
 
+Two of the angles this ladder needs land exactly on palette gates already in the library: since
+T = P(π/4), T† = P(−π/4), S = P(π/2), and S† = P(−π/2), CP(π/2) is exactly
+`t(c); cx(c,t); tdg(t); cx(c,t); t(t)`, and CP(π) is exactly
+`s(c); cx(c,t); sdg(t); cx(c,t); s(t)` — no `p` calls needed at all. A 2-qubit QFT only ever
+needs CP(π/2); a 3-qubit QFT needs both CP(π/2) and CP(π), plus one angle, CP(π/4), that falls
+off that grid (its P(π/8) has no fixed-gate equivalent here). That's exactly what lets the
+companion SwiftQiskitApp book's Chapter 16 earn a ● app badge.
+
 **Section 2 — the QFT circuit.** For each qubit j (0 = most-significant): a Hadamard, then
 CP(2π/2^(k−j+1)) controlled by every later qubit k. Checked against page 12's entrywise
 formula on all 8 basis states of a 3-qubit register — they agree to ~1e-15.
