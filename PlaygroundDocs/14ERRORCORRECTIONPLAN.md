@@ -11,9 +11,11 @@ curiosity. The 3-qubit repetition code is the simplest nontrivial code and fits 
 
 - The correction step — "look at the two-bit syndrome, then flip whichever qubit it
   accuses" — is a Toffoli-with-mixed-controls, three times over. There is no Toffoli gate
-  and no partial/mid-circuit measurement in Core, so (following page 11's CCZ idiom and
-  page 12's permutation-matrix idiom) it is built as a single 32×32 basis-state permutation
-  fed to `QuantumCircuit.apply(_:)`.
+  directly in Core (one could be built from `h`/`t`/`tdg`/`cx`, the standard Clifford+T
+  decomposition, several gates deep per accused qubit) and no partial/mid-circuit
+  measurement, so (following page 11's CCZ idiom and page 12's permutation-matrix idiom) it
+  is built as a single 32×32 basis-state permutation fed to `QuantumCircuit.apply(_:)`
+  instead.
 - Because the correction is never conditioned on an actual measurement, it is applied
   *coherently* to the full superposition. This turns out to be the page's most interesting
   fact for free: a continuous `rx(θ)` error digitizes into a discrete correction with
