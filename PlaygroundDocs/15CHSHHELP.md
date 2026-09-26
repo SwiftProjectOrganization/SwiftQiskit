@@ -31,23 +31,26 @@ model's correlator, as a function of the angle difference, is exactly the line 1
 later as the classical comparison curve.
 
 **Section 2 — measuring along a tilted axis.** A(θ) = cos θ·Z + sin θ·X is "spin measured
-along an axis tilted θ from Z toward X." There's no `+` on `Matrix`, so it's built entrywise
-(page 12's QFT† trick). Measuring it is `ry(-θ)` then an ordinary computational-basis read —
-and the page checks this against the exact expectation value before trusting anything
-downstream, using the same test qubit as pages 04/08 so the θ=0 and θ=π/2 cases reproduce
-their published ⟨Z⟩ and ⟨X⟩ values exactly.
+along an axis tilted θ from Z toward X," built directly from `Matrix`'s scalar `*` and `+`
+(page 12's entrywise QFT† trick predates both operators). Measuring it is `ry(-θ)` then an
+ordinary computational-basis read — and the page checks this against the exact expectation
+value before trusting anything downstream, using the same test qubit as pages 04/08 so the
+θ=0 and θ=π/2 cases reproduce their published ⟨Z⟩ and ⟨X⟩ values exactly.
 
 **Section 3 — correlators two ways.** On a Bell pair, every E(a,b) is computed both exactly
-(`psi† * (A(a) ⊗ A(b)) * psi`) and by sampling 4000 shots after rotating each qubit into its
-measurement basis. Both agree with cos(a − b).
+(`state† * (A(a) ⊗ A(b)) * state`, via the one `exactCorrelator(_:_:state:)` helper) and by
+sampling 4000 shots after rotating each qubit into its measurement basis. Both agree with
+cos(a − b).
 
 **Section 4 — the violation.** At a = 0, a′ = π/2, b = π/4, b′ = 3π/4, all four correlators
 have magnitude 1/√2 and their signs add constructively: S = 2√2 exactly.
 
 **Section 5 — the controls.** A product state (`h` on both qubits, no `cx`) gives S = √2 —
-entanglement is *necessary* for the violation, not incidental. A fine sweep over the second
-setting confirms the ceiling is exactly 2√2 — quantum mechanics beats the classical bound but
-doesn't reach the algebraic maximum of 4 (Tsirelson's bound).
+entanglement is *necessary* for the violation, not incidental. A fine sweep over only the
+second setting (b, with b′ = b + π/2, holding a = 0 and a′ = π/2 fixed) finds this slice's
+ceiling is exactly 2√2 — consistent with Tsirelson's bound (quantum mechanics beats the
+classical bound but doesn't reach the algebraic maximum of 4), though a single-slice sweep
+isn't itself a full proof of that bound.
 
 **Section 6 — the sweep, plotted.** E(θ) = ⟨A(0)⊗A(θ)⟩ as an exact cos θ curve, 500-shot
 samples, and the Section 1 classical line, all on one chart — the visible gap between the
@@ -88,7 +91,7 @@ exact S = 2.8284   (2√2 = 2.8284)
 sampled S ≈ 2.83   (statistical, ±~0.05)
 
 product state |+⟩⊗|+⟩: S = 1.4142
-max |S| over a full angle sweep: 2.8284   (Tsirelson: 2.8284)
+max |S| over b (a = 0, a′ = π/2 fixed): 2.8284   (Tsirelson: 2.8284)
 
 θ        quantum cos θ   classical line
 0.0000    1.0000          1.0000

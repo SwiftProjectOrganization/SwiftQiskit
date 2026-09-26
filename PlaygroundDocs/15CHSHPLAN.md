@@ -9,9 +9,11 @@ Bell pair produces are provably impossible for any theory where Alice and Bob's 
 fixed in advance by a shared variable. It closes out the protocols/foundations arc alongside
 pages 13–14. It fits v0.1 with **no changes to `SwiftQiskit`**:
 
-- Measuring "along a tilted axis" needs the observable A(θ) = cos θ·Z + sin θ·X, and
-  `Matrix` had no `+` or scalar multiply at the time (page 12's QFT† idiom), so it is built
-  entrywise. (Both operators exist now — `Math/Matrix.swift` — but this page is unchanged.)
+- Measuring "along a tilted axis" needs the observable A(θ) = cos θ·Z + sin θ·X. `Matrix`
+  had no `+` or scalar multiply when this page was first written (page 12's QFT† idiom
+  predates both), so A(θ) was originally built entrywise; the page now uses those operators
+  directly (`cos(theta) * Z + sin(theta) * X`), and the correlator helpers use the Dirac
+  `state† * M * state` idiom instead of hand-rolled sum loops.
 - Measuring A(θ) via the existing gate set is `ry(-θ)` followed by an ordinary
   computational-basis measurement/expectation. The *sign* of that rotation is not obvious
   from the gate's docstring alone, so it is pinned numerically against the exact
@@ -45,8 +47,9 @@ states). Confirmed numerically:
 - Product state \|+⟩⊗\|+⟩ (no `cx`): S = 1.4142 = √2 — inside the classical-looking-fine
   range but note this isn't the LHV bound check (that's Section 1); it's the "entanglement
   is necessary" check. A fine-grained sweep over the second setting, holding a = 0, a′ = π/2
-  fixed, finds a hard ceiling at exactly 2.8284 — Tsirelson's bound, confirmed rather than
-  asserted.
+  fixed, finds a hard ceiling at exactly 2.8284 within that slice — consistent with
+  Tsirelson's bound, though a single-slice sweep isn't a full confirmation of it across all
+  four settings (that would need a genuine multi-angle search — left as a TODO).
 
 ## Changes
 
