@@ -46,6 +46,17 @@ The project is actively evolving, and major features are planned.
       channels (bit-flip, phase-flip, depolarizing, amplitude damping) as page-level `Matrix`
       operations. Core itself still has no `DensityMatrix` type or built-in noise simulation —
       that remains open if a first-class Core feature is wanted.
+- [ ] `SimulationResult.parityExpectation(qubits:)` — a ±1 parity-product average over
+      `counts` (one qubit position per factor, 0→+1/1→−1). Would replace the
+      `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
+      page `18VQE`'s ZZ-term measurement and page `20Tomography`'s shot-based estimators.
+      Needs tests if added to Core.
+- [ ] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
+      `(self† * observable * self).real` — low priority, since the Dirac idiom is already
+      one line once adopted (see page `15CHSH`'s `exactCorrelator`).
+- [ ] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
+      a, a′ fixed) to a genuine multi-angle search over all four settings, if a true
+      confirmation of the bound (rather than a consistency check) is wanted.
 - [ ] Performance optimizations
 - [ ] Stable public API (v1.0)
 
@@ -153,10 +164,12 @@ page 13 adds a Bloch-sphere live view:
       (`PlaygroundDocs/14ERRORCORRECTIONPLAN.md`, `PlaygroundDocs/14ERRORCORRECTIONHELP.md`).
 - [x] CHSH inequality — page `15CHSH`: all 16 deterministic local-hidden-variable strategies
       enumerated exhaustively (max \|S\| = 2) plus a shared-direction model that saturates
-      the bound, the tilted observable A(θ) = cos θ·Z + sin θ·X built entrywise and measured
-      via `ry(-θ)` with the sign pinned against the exact expectation value, correlators
-      computed both exactly and via `measure(shots:)`, a Bell pair's S = 2√2 against a
-      product-state control and a Tsirelson-bound sweep, and a `CHSHChartView` live chart
+      the bound, the tilted observable A(θ) = cos θ·Z + sin θ·X built with `Matrix`'s scalar
+      `*`/`+` operators and measured via `ry(-θ)` with the sign pinned against the exact
+      expectation value, correlators computed both exactly (the Dirac `state† * M * state`
+      idiom) and via `measure(shots:)`, a Bell pair's S = 2√2 against a product-state control
+      and a sweep over the second setting consistent with Tsirelson's bound, and a
+      `CHSHChartView` live chart
       (`PlaygroundDocs/15CHSHPLAN.md`, `PlaygroundDocs/15CHSHHELP.md`).
 - [x] The QFT gate decomposition — page `16QFT`: a controlled phase CP(θ) derived from
       `p`+`cx`, the QFT ladder (Hadamards, CP cascade, swap network) checked against page

@@ -139,11 +139,11 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 - `15CHSH` — the CHSH inequality: all 16 deterministic local-hidden-variable strategies
   enumerated exhaustively (max |S| = 2), plus a shared-direction hidden-variable model that
   saturates the bound and doubles as the classical comparison curve; the tilted observable
-  A(θ) = cos θ·Z + sin θ·X built as a hand-written 2×2 literal (predates `Matrix`'s `+`/scalar
-  operators) and measured via
+  A(θ) = cos θ·Z + sin θ·X built with `Matrix`'s scalar `*`/`+` operators and measured via
   `ry(-θ)` with its sign pinned against the exact expectation value; correlators computed
-  both exactly (`psi† * (A(a) ⊗ A(b)) * psi`) and via `measure(shots:)`; a Bell pair's
-  S = 2√2 against a product-state control and a Tsirelson-bound sweep; a `CHSHChartView`
+  both exactly (`state† * (A(a) ⊗ A(b)) * state`) and via `measure(shots:)`; a Bell pair's
+  S = 2√2 against a product-state control and a sweep over the second setting consistent
+  with Tsirelson's bound; a `CHSHChartView`
   live chart of the violation (plan in `PlaygroundDocs/15CHSHPLAN.md`, user guide in
   `PlaygroundDocs/15CHSHHELP.md`).
 - `16QFT` — the quantum Fourier transform as a gate circuit (console only): a controlled
