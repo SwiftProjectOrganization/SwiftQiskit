@@ -98,8 +98,10 @@ qc.cx(0, 1)
 qc.h(0)
 let bellBasisState = qc.run()
 print("\nafter cx(0,1); h(0):  \(pretty(bellBasisState, qubits: 3))")
-// Expected: all eight amplitudes populated, magnitude 0.4001 or
-// 0.2310 depending on the prefix — grouped by ab below.
+// Expected: all eight amplitudes populated, magnitude 0.4330
+// (½·cos(π/6)) where the last two bits b and c agree, or 0.2500
+// (½·sin(π/6)) where they differ — not set by the ab prefix; grouped
+// by ab below.
 
 // ============================================================
 // Section 3 — the four branches, via Dirac projectors
@@ -113,7 +115,7 @@ let branchCorrections: [String: Matrix] = [
     "00": Matrix.identity(size: 2),
     "01": PauliXGate.matrix,
     "10": PauliZGate.matrix,
-    "11": PauliXGate.matrix * PauliZGate.matrix
+    "11": PauliZGate.matrix * PauliXGate.matrix   // (X^b Z^a)† = Z^a X^b
 ]
 
 print("\nab   P(ab)    correction   fidelity")
@@ -132,7 +134,7 @@ for a in 0...1 {
         var corrected = bobBranch
         corrected.apply(branchCorrections[label]!)
         let fidelity = (corrected† * psi).magnitudeSquared
-        let name = label == "00" ? "I " : label == "01" ? "X " : label == "10" ? "Z " : "XZ"
+        let name = label == "00" ? "I " : label == "01" ? "X " : label == "10" ? "Z " : "ZX"
         print("\(label)   \(String(format: "%.4f", probAB))    \(name)           \(String(format: "%.4f", fidelity))")
     }
 }
@@ -284,10 +286,11 @@ for a in 0...1 {
     for b in 0...1 {
         let label = "\(a)\(b)"
         var branch = psi
-        // The correction matrix X^b Z^a is also what *creates* the
-        // branch: applying it to |ψ⟩ gives Bob's uncorrected state
-        // exactly, and applying it twice returns ±|ψ⟩ (X² = Z² = I,
-        // (XZ)² = −I) — a global phase the Bloch point can't see.
+        // The correction matrix (Z^a X^b) also *creates* the branch,
+        // up to a global phase: applying it to |ψ⟩ gives ±(X^b Z^a)|ψ⟩,
+        // Bob's uncorrected state, and applying it twice returns
+        // ±|ψ⟩ (X² = Z² = I, (ZX)² = −I) — a phase the Bloch point
+        // can't see either way.
         branch.apply(branchCorrections[label]!)
         uncorrectedBranches.append(("ab=\(label)", BlochVector(branch)))
     }
