@@ -74,10 +74,25 @@ state.
 - `STATUSandTODO.md`: an entry alongside pages 10–13.
 - `PLAYGROUNDSUPPORT.md`: a row in "Which pages use what".
 
+## Update (retrofit onto `NoiseModel`)
+
+Section 6 now also reproduces p_L = 3p² − 2p³ a second way: instead of only enumerating the 8
+classical flip patterns by hand, it drives the page's own encode → syndrome → correction →
+decode circuit through Core's `NoiseModel`/`KrausChannel.bitFlip`/`runDensityMatrix`/
+`runTrajectories` (the machinery page `19Noise` was retrofitted onto). The trick is an
+"idle tick" `p(0, q)` on each data qubit between encoding and syndrome extraction — the only
+single-qubit gates in the circuit, since `cx`/`apply(_:)` are recorded as multi-qubit and a
+`NoiseModel(singleQubitGate:)` alone leaves those noiseless — plus starting from logical \|0⟩
+(no prep gate) since noise on a prep gate would be unprotectable regardless of the code. See
+`14ERRORCORRECTIONHELP.md`'s "Where it breaks" section for the full reasoning. No `SwiftQiskit`
+changes were needed. `KrausChannelTests.swift` already checks the same formula directly against
+`KrausChannel`/`DensityMatrix` (no page change there); this update is specifically about the
+page's own presentation using its own circuit.
+
 ## Explicitly not doing
 
-- No `SwiftQiskit` changes — no Toffoli, no partial/mid-circuit measurement, no density
-  matrices or noise channels (all stay on the `STATUSandTODO.md` roadmap).
+- No `SwiftQiskit` changes — no Toffoli, no partial/mid-circuit measurement. Density matrices
+  and noise channels are used now (see "Update" above), via existing Core types.
 - No Shor's 9-qubit concatenated code, no 5-qubit or surface codes — a 9-data-qubit version
   of this page's circuit needs 2¹³-dimensional matrices per operation, which is out of reach
   for v0.1's dense `QuantumCircuit` representation (see the page's Section 8).

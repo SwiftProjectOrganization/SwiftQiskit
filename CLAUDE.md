@@ -237,7 +237,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   `apply(_:)` (Core has no Toffoli), an `rx(θ)` sweep showing a continuous error digitized
   to exact fidelity 1.0000 at every θ, the distance-3 failure mode (two errors alias to a
   wrong syndrome, giving a silent logical X) with the enumerated logical error rate
-  p_L = 3p² − 2p³, and phase-flip protection via Hadamard conjugation (H Z H = X); Bloch
+  p_L = 3p² − 2p³ — reproduced a second way, exactly (`runDensityMatrix`) and by Monte Carlo
+  (`runTrajectories`), by driving the page's own circuit through a `KrausChannel.bitFlip`
+  `NoiseModel` — and phase-flip protection via Hadamard conjugation (H Z H = X); Bloch
   live view of corrected vs. uncorrected q0
   (plan in `PlaygroundDocs/14ERRORCORRECTIONPLAN.md`, user guide in `PlaygroundDocs/14ERRORCORRECTIONHELP.md`).
 - `15CHSH` — the CHSH inequality: all 16 deterministic local-hidden-variable strategies

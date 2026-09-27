@@ -542,7 +542,9 @@ fragile qubit without ever looking at it directly, with a Bloch-sphere live view
   cos²(θ/2)/sin²(θ/2) branch weights.
 - **Where distance 3 breaks** — two simultaneous errors alias to the wrong syndrome,
   producing a silent, fully "corrected" logical X; the exact logical error rate
-  p_L = 3p² − 2p³ is confirmed by enumeration.
+  p_L = 3p² − 2p³ is confirmed by enumeration, then reproduced a second way by driving the
+  page's own circuit through a `KrausChannel.bitFlip` `NoiseModel`, exactly
+  (`runDensityMatrix`) and by Monte Carlo (`runTrajectories`).
 - **Phase flips for free** — Hadamard-conjugating the same code (H Z H = X) turns a Z error
   into the X error the rest of the page already fixes.
 

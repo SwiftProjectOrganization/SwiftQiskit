@@ -295,8 +295,8 @@ entry above):
       Reproducing page `14ErrorCorrection`'s p_L = 3p² − 2p³ under a real bit-flip channel
       (instead of one hand-injected `x` gate — flagged there as "not doing" in
       `14ERRORCORRECTIONPLAN.md`'s analogue) is checked directly against `KrausChannel`/
-      `DensityMatrix` in `KrausChannelTests.swift`; retrofitting the *page itself* onto a
-      `NoiseModel`-driven `runDensityMatrix`/`runTrajectories` call is still open — see
+      `DensityMatrix` in `KrausChannelTests.swift`. Retrofitting the *page itself* onto a
+      `NoiseModel`-driven `runDensityMatrix`/`runTrajectories` call is now done too — see
       "Suggested implementation sequence" below.
 - [x] `DensityMatrix.fidelity(to:StateVector)` — remaining half of this pair;
       `StateVector.expectation(_:Matrix)` (the other half — [x] above) would simplify
@@ -569,8 +569,12 @@ gathered here so they can be sequenced against the Core work above rather than t
 - [ ] A Toffoli tile in `GatePaletteView`/`GateKind` — `ccx` (above) is now implemented, so this
       is unblocked. The single highest cross-chapter-leverage app change on this list: Chapters
       14, 17 (Shor), and 25 all hit the same "no Toffoli" wall independently.
-- [ ] An `rzz` tile (and `rxx`/`ryy`) — those gates (above) are now implemented, so this is
-      unblocked. Turns today's three-tap `cx; rz; cx` sequence into one tap.
+- [x] An `rzz` tile (and `rxx`/`ryy`) — those gates (above) are now implemented, so this is
+      unblocked. Turns today's three-tap `cx; rz; cx` sequence into one tap. Done in the
+      `SwiftQiskitApp` repo: `GateKind.rzz/rxx/ryy` (each with a θ parameter), a symmetric
+      two-tap placement flow distinguished from `cx`'s control/target flow by a new
+      `GateKind.isControlled`, a palette section, and both qubits of the placed gate
+      rendering as boxed tiles (unlike `cx`'s dot/⊕).
 - [ ] A position-marginal / histogram-grouping view in `ResultsView` —
       `marginalProbabilities`/`SimulationResult` grouping (above) are now implemented, so this
       is unblocked. Today `ResultsView` only shows the raw per-basis-state state vector and shot
@@ -670,18 +674,21 @@ Now that step 6's open-systems track has landed, its own retrofit is open too:
       `partialTraceLast`/`entropy` helpers with `DensityMatrix`/`KrausChannel` directly — done;
       only `fmt` and a small `traceResidual` (for the numeric residual `isTracePreserving()`
       doesn't expose) remain as page-level helpers.
-- [ ] Page `14ErrorCorrection`: reproduce its enumerated p_L = 3p² − 2p³ empirically under a
-      real `NoiseModel`/`KrausChannel.bitFlip` (via `runDensityMatrix`/`runTrajectories`)
-      instead of one hand-injected `x` gate — flagged there as "not doing" in
-      `14ERRORCORRECTIONPLAN.md`'s analogue, now unblocked. `KrausChannelTests.swift` already
-      checks the same formula directly against `KrausChannel`/`DensityMatrix` (no page
-      change), so this item is specifically about the page's own presentation.
+- [x] Page `14ErrorCorrection`: reproduces its enumerated p_L = 3p² − 2p³ empirically under a
+      real `NoiseModel`/`KrausChannel.bitFlip` (via `runDensityMatrix`/`runTrajectories`) in
+      addition to the original hand-injected `x` gate — flagged there as "not doing" in
+      `14ERRORCORRECTIONPLAN.md`'s analogue, now done. The circuit's own `cx`/`apply(_:)` steps
+      are recorded as multi-qubit, so a `singleQubitGate`-only `NoiseModel` needs an idle-tick
+      `p(0, q)` on each data qubit as the hook for the noise; the logical input is \|0⟩ so a
+      prep-gate error (unprotectable regardless) never enters. `KrausChannelTests.swift`
+      already checked the same formula directly against `KrausChannel`/`DensityMatrix` (no page
+      change there); this item was specifically about the page's own presentation.
 
 **`SwiftQiskitApp`:**
 
 1. The signed-range θ popover — no Core dependency, do this first.
 2. The Toffoli tile — after Core step 2; highest leverage across pages/chapters 12, 14, 22.
-3. The `rzz` tile — also after Core step 2.
+3. The `rzz` tile — also after Core step 2. **Done.**
 4. The marginal/grouped `ResultsView` — after Core step 3.
 5. The Energy panel — Core step 4 is done, so this is unblocked.
 6. The shared views module (`CHSHChartView`/`BlochVector`) — any time; purely presentational.

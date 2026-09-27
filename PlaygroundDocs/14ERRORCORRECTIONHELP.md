@@ -92,6 +92,22 @@ p_L = 3p² − 2p³
 which only beats the unencoded error rate p below the break-even point p = ½ — encoding
 helps against weak, independent noise and actively hurts against strong noise.
 
+That formula comes from a hand-rolled classical model — a per-qubit coin flip, majority-vote
+decoded by hand. The page also confirms the same number a second way, by actually running its
+own encode → syndrome → correction → decode circuit through Core's `NoiseModel`/`KrausChannel.
+bitFlip`/`runDensityMatrix`/`runTrajectories` (`19Noise`'s open-systems machinery). A
+`NoiseModel` only fires after a *single-qubit* gate or a *multi-qubit* gate (`cx`/`apply(_:)`
+both count as multi-qubit — they're recorded as touching every qubit they reach), so a model
+with only `singleQubitGate: .bitFlip(p)` set leaves every `cx` and the `correction` permutation
+untouched. The three data qubits need one single-qubit gate each between encoding and syndrome
+extraction to hang the noise on — `p(0, q)` (the phase gate at angle zero, the identity) is
+that hook: it does nothing on its own but gives the noise model a place to act. The logical
+input is \|0⟩ (no prep gate) rather than \|1⟩, because a real error on a *prep* gate would land
+before encoding, where nothing can fix it — bit-flip noise is symmetric, so \|0⟩ and \|1⟩ give
+the same p_L without raising that separate issue. `runDensityMatrix` reproduces the enumerated
+formula exactly (same physical process, computed a different way); `runTrajectories` lands
+within shot noise of it and varies from run to run.
+
 ## Phase flips, for free
 
 The same code protects against Z errors if you look at it in the X basis: `h` the three
@@ -151,6 +167,19 @@ p       p_L (encoded)   p (unencoded)   formula 3p²−2p³
 0.30    0.2160          0.3000          0.2160
 0.50    0.5000          0.5000          0.5000
 
+p       enumerated   runDensityMatrix   runTrajectories   unencoded
+0.05    0.0073          0.0072            0.0085            0.0500
+0.10    0.0280          0.0280            0.0285            0.1000
+0.20    0.1040          0.1040            0.1165            0.2000
+0.30    0.2160          0.2160            0.2460            0.3000
+0.50    0.5000          0.5000            0.5025            0.5000
+```
+
+The `runTrajectories` column is Monte Carlo (2000 shots per row) and will read slightly
+differently on every run — the numbers above are one sample, not exact targets. The
+`runDensityMatrix` column, like `enumerated`, is exact.
+
+```text
 phase-flip error   fidelity to |ψ⟩⊗|00⟩⊗|syndrome⟩
 none     1.0000
 q0       1.0000
@@ -202,6 +231,23 @@ qc.cx(0, 3); qc.cx(1, 3)    // syndrome
 qc.cx(1, 4); qc.cx(2, 4)
 qc.apply(bitFlipCorrection())
 qc.cx(0, 2); qc.cx(0, 1)    // decode
+```
+
+To drive the same circuit through a real noise channel instead of one hand-injected `x`,
+replace the error step with an idle tick on every data qubit and pass a `NoiseModel`:
+
+```swift
+let noisyCircuit = QuantumCircuit(qubits: 5)
+noisyCircuit.cx(0, 1); noisyCircuit.cx(0, 2)          // encode
+for q in 0..<3 { noisyCircuit.p(0, q) }               // idle tick: hangs the noise
+noisyCircuit.cx(0, 3); noisyCircuit.cx(1, 3)          // syndrome
+noisyCircuit.cx(1, 4); noisyCircuit.cx(2, 4)
+noisyCircuit.apply(bitFlipCorrection())
+noisyCircuit.cx(0, 2); noisyCircuit.cx(0, 1)          // decode
+
+let noise = NoiseModel(singleQubitGate: .bitFlip(0.1))   // multiQubitGate: nil keeps cx/apply(_:) clean
+let pL = noisyCircuit.runDensityMatrix(noise: noise).partialTrace(keeping: [0]).probabilities[1]
+// pL ≈ 0.0280, matching 3(0.1)² − 2(0.1)³ exactly
 ```
 
 ## Troubleshooting

@@ -297,6 +297,63 @@ for p in [0.05, 0.1, 0.2, 0.3, 0.5] {
 // better. Break-even is p = ½: below that the code helps, above it
 // it actively hurts (more ways to accumulate 2 wrongs than to have 0).
 
+// The enumeration above is a hand-rolled classical model of "each data
+// qubit independently bit-flips with probability p." Core's
+// `NoiseModel`/`KrausChannel.bitFlip`/`runDensityMatrix`/
+// `runTrajectories` (page `19Noise`'s machinery) can inject that same
+// noise into this page's *actual* circuit — encode, syndrome, the
+// hand-built `correction` permutation, decode — rather than assuming
+// the majority-vote model directly. `NoiseModel` only ever fires after
+// a single-qubit or a multi-qubit gate, and `apply(_:)`/`cx` all count
+// as "multi-qubit" (they're recorded as touching every qubit they
+// reach), so a `NoiseModel(singleQubitGate:)` alone leaves every `cx`
+// and the `correction` step noiseless. The three data qubits still
+// need *some* single-qubit gate to hang the noise on between encoding
+// and syndrome extraction — `p(0, q)` (phase gate by angle zero, the
+// identity) is exactly that hook, an idle tick that does nothing on
+// its own but gives the noise model a single-qubit gate on each data
+// qubit to act after. The logical input is |0⟩ (no `x`/`ry`/`rz` prep
+// gate): a real error on a prep gate would land *before* encoding,
+// which is unprotectable by this or any code — bit-flip noise is
+// symmetric, so |0⟩ gives the identical p_L to |1⟩ without raising
+// that (true, but off-topic) complication here.
+
+func noisyCodeCircuit() -> QuantumCircuit {
+    let qc = QuantumCircuit(qubits: 5)
+    qc.cx(0, 1); qc.cx(0, 2)             // encode (noiseless: multi-qubit)
+    for q in 0..<3 { qc.p(0, q) }        // idle tick: the only noisy gates
+    qc.cx(0, 3); qc.cx(1, 3)
+    qc.cx(1, 4); qc.cx(2, 4)
+    qc.apply(correction)
+    qc.cx(0, 2); qc.cx(0, 1)
+    return qc
+}
+
+print("\np       enumerated   runDensityMatrix   runTrajectories   unencoded")
+for p in [0.05, 0.1, 0.2, 0.3, 0.5] {
+    let noise = NoiseModel(singleQubitGate: .bitFlip(p))
+
+    let rhoOut = noisyCodeCircuit().runDensityMatrix(noise: noise)
+    let pLExact = rhoOut.partialTrace(keeping: [0]).probabilities[1]
+
+    let trajectories = noisyCodeCircuit().runTrajectories(noise: noise, shots: 2000)
+    let pLTraj = Double(trajectories.marginalCounts(over: [0])["1"] ?? 0) / 2000.0
+
+    let unencoded = QuantumCircuit(qubits: 1)
+    unencoded.p(0, 0)
+    let pUnencoded = unencoded.runDensityMatrix(noise: noise).probabilities[1]
+
+    print("\(String(format: "%.2f", p))    \(String(format: "%.4f", logicalErrorRate(p)))          \(String(format: "%.4f", pLExact))            \(String(format: "%.4f", pLTraj))            \(String(format: "%.4f", pUnencoded))")
+}
+// Expected: the `runDensityMatrix` column matches the enumerated
+// column (and the 3p²−2p³ formula above) to floating-point precision
+// — this is the exact same physical process, not a coincidence. The
+// `runTrajectories` column lands within shot noise of the other two
+// (σ = √(p_L(1−p_L)/2000), a few tenths of a percent — it will read
+// slightly differently on every run) and the `unencoded` column
+// reproduces p exactly, this time *measured* from a real noisy circuit
+// rather than assumed.
+
 // ============================================================
 // Section 7 — phase flips, by conjugation
 // ============================================================
@@ -344,9 +401,12 @@ for (name, errs) in [("none", []), ("q0  ", [0]), ("q1  ", [1]), ("q2  ", [2])] 
 // 2ⁿ×2ⁿ matrix (`Circuit/QuantumCircuit.swift`), and a 9-data-qubit
 // version of this page's circuit (plus ancillas) would sit at
 // dimension 2¹³ or higher — tens of operations at 100+ MB each, with
-// slow Kronecker builds along the way. Noise models belong on the
-// roadmap in `STATUSandTODO.md`, not bolted onto v0.1's dense-matrix
-// circuit representation.
+// slow Kronecker builds along the way. Noise models are no longer
+// missing, though — Section 6 above already drives this page's own
+// circuit through Core's `NoiseModel`/`runDensityMatrix`/
+// `runTrajectories` (`Quantum/NoiseModel.swift`); what's out of reach
+// for v0.1's dense-matrix representation is specifically the *bigger*
+// concatenated code, not noise modeling itself.
 
 //: ### Live view — the payload's Bloch point, correction vs. none
 //: |ψ⟩ as prepared, what q0 looks like after decoding a single X
