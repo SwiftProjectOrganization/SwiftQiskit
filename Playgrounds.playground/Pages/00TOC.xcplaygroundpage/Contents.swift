@@ -68,6 +68,14 @@
    Euler's formula, plain `[Complex]` vectors, inner products and normalization, `Matrix` as
    a transformation (and why order matters), unitarity and why exact `==` lies on `H`, and
    the tensor product `⊗`.
+ - [41BasisTransformations](41BasisTransformations) — standalone (not tied to a book
+   chapter): expressing |ψ⟩ in a different basis by building the change-of-basis matrix `T`
+   from the new basis kets as columns, constructing its conjugate transpose `T†` by hand
+   (rows = the new bras) and checking it against `Matrix.adjoint`, reading the new
+   amplitudes off as inner products `⟨bⱼ|ψ⟩`, the {|+⟩, |−⟩} case reducing exactly to `H`,
+   why the complex {|+i⟩, |−i⟩} case needs the *conjugate* transpose and not a plain one,
+   and measuring in the new basis via `h`/`sdg;h` before an ordinary `measure(shots:)`
+   (user guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`).
 
  ## User guides
 

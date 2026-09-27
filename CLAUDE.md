@@ -208,6 +208,15 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   formula, plain `[Complex]` vector helpers, inner products and normalization, `Matrix` as a
   transformation and why multiplication order matters, unitarity and why exact `==` lies on
   `H`, and the tensor product `⊗` (no live view, no companion `PlaygroundDocs/` guide).
+- `41BasisTransformations` — standalone, not tied to a book chapter (console only):
+  expressing |ψ⟩ in a different basis by building the change-of-basis matrix `T` from the
+  new basis kets as columns, constructing `T†` by hand as the stack of the new bras
+  (`Bra(_:).amplitudes`) and checking it against `Matrix.adjoint`, reading off the new
+  amplitudes as inner products `⟨bⱼ|ψ⟩`, the {|+⟩, |−⟩} case reducing exactly to `H`, why
+  the complex {|+i⟩, |−i⟩} case needs the conjugate transpose and not a plain one (a plain
+  transpose silently swaps `|+i⟩`'s probabilities and fails the unitarity check), and
+  measuring in the new basis via `h`/`sdg;h` before an ordinary `measure(shots:)`
+  (user guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`).
 
 Playground notes:
 
