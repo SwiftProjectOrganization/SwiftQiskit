@@ -323,6 +323,8 @@ private inverse, `rotateFromZ`).
 | `runAndMeasure()` | `() -> Int` | `run()` then a single `measure()` on the result — collapses that local copy, not any circuit state (the circuit itself has no persistent state to collapse). |
 | `measure(shots:)` | `(Int) -> SimulationResult` | Traps if `shots <= 0`. Runs the circuit **once** to get the final probability distribution, then draws `shots` independent samples from it — it does *not* replay the whole circuit per shot, since a full measurement of a pure state never changes the probabilities of the underlying state that produced it. |
 | `measure(shots:basis:)` | `(Int, [PauliBasis]) -> SimulationResult` | Traps if `basis.count != qubits`. Appends each qubit's `rotateToZ` rotation to a **copy** of the recorded operations and measures that copy — the receiver's own operation list is untouched, so the same circuit can be measured in different bases without rebuilding it. |
+| `measureExpectation(of:shots:)` | `(PauliString, Int) -> Double` | Shot-based estimate of one Pauli term's expectation value, built on `measure(shots:basis:)` + `SimulationResult.parityExpectation(qubits:)`. Traps if `pauli.qubits != qubits`. An all-`I` term returns `pauli.coefficient` exactly, with no sampling. |
+| `measureExpectation(of:shots:)` | `(Hamiltonian, Int) -> Double` | The sum of the Pauli-term overload over every term in `hamiltonian`, spending `shots` **per term** (terms aren't grouped by commuting basis, so this samples `hamiltonian.terms.count · shots` times total). Traps if `hamiltonian.qubits != qubits`. |
 
 ---
 
@@ -367,6 +369,83 @@ etc.). Used by `QuantumCircuit.rotateToZ`/`measure(shots:basis:)` above.
 
 ---
 
+## `PauliString`
+
+`Sources/SwiftQiskit/Quantum/PauliString.swift` — a single weighted Pauli tensor-product
+term: `coefficient · P₀ ⊗ P₁ ⊗ … ⊗ Pₙ₋₁`, one label per qubit (`nil` = `I`).
+
+```swift
+public struct PauliString: Equatable, Hashable {
+    public let labels: [PauliBasis?]      // nil = I; qubit 0 first (MSB)
+    public let coefficient: Double
+    public init(labels: [PauliBasis?], coefficient: Double = 1)
+    public init(_ label: String, coefficient: Double = 1)   // e.g. "XIZ"; I/X/Y/Z only
+    public var qubits: Int { get }
+    public var activeQubits: [Int] { get }   // indices with a non-nil label
+    public var label: String { get }         // round-trips through init(_:coefficient:)
+    public var matrix: Matrix { get }        // coefficient · (P₀ ⊗ P₁ ⊗ …)
+    public func expectation(_ state: StateVector) -> Double   // coefficient · ⟨ψ|P₀⊗P₁⊗…|ψ⟩
+}
+```
+
+`init(_:coefficient:)` traps on an empty string or a character outside `IXYZ`.
+`expectation(_:)` traps if `state.dimension != 1 << qubits`. Shares its label type with
+`QuantumCircuit.rotateToZ`/`pauliRotation(_:theta:)` — `label` is exactly the string
+`pauliRotation` accepts.
+
+---
+
+## `Hamiltonian`
+
+`Sources/SwiftQiskit/Quantum/Hamiltonian.swift` — a qubit Hamiltonian as a plain sum of
+`PauliString` terms (no merging of duplicate labels, no commuting-term grouping).
+
+```swift
+public struct Hamiltonian: Equatable {
+    public let terms: [PauliString]
+    public init(_ terms: [PauliString])   // traps if empty or the terms disagree on qubit count
+    public var qubits: Int { get }
+    public var matrix: Matrix { get }             // Σ term.matrix
+    public func expectation(_ state: StateVector) -> Double   // Σ term.expectation(state)
+}
+```
+
+Replaces the entrywise "build a matrix, then add `coefficient·term` to it index by index"
+idiom page `18VQE` (and the app's VQE/Trotter chapters) hand-roll for an H₂-style
+Hamiltonian.
+
+---
+
+## `StateTomography`
+
+`Sources/SwiftQiskit/Quantum/StateTomography.swift` — a caseless namespace turning
+`measure(shots:basis:)` results into a reconstructed single-qubit Bloch vector.
+
+```swift
+public enum StateTomography {
+    static func estimate(qubit: Int, result: SimulationResult) -> Double
+    static func estimateBlochVector(of circuit: QuantumCircuit, qubit: Int, shots: Int)
+        -> (x: Double, y: Double, z: Double)
+    static func reconstructSingleQubit(x: Double, y: Double, z: Double, tolerance: Double = 1e-9)
+        -> (vector: (x: Double, y: Double, z: Double), isPhysical: Bool)
+    static func clampToPhysical(_ v: (x: Double, y: Double, z: Double))
+        -> (x: Double, y: Double, z: Double)
+}
+```
+
+| Member | Notes |
+|---|---|
+| `estimate(qubit:result:)` | `(N₀ − N₁)/N` for `qubit`, from a `result` already measured in the desired basis — a single-qubit wrapper over `SimulationResult.parityExpectation(qubits:)`. |
+| `estimateBlochVector(of:qubit:shots:)` | Runs three settings — every qubit measured in X, then Y, then Z, via `measure(shots:basis:)` — and returns `qubit`'s estimated `(x, y, z)`. Spends `shots` per setting (`3·shots` total). Never mutates `circuit`. Traps if `qubit` is out of range. |
+| `reconstructSingleQubit(x:y:z:tolerance:)` | Packages a three-axis estimate as a vector plus `isPhysical` (`\|r\| ≤ 1 + tolerance`). A *pure* state's per-axis shot estimate lands outside the ball about half the time at any shot count — `isPhysical == false` there is expected, not a bug. |
+| `clampToPhysical(_:)` | Rescales an out-of-ball vector onto the unit sphere (`r → r/\|r\|`); leaves an already-physical vector unchanged. A named rescale, not a maximum-likelihood or linear-inversion estimator. |
+
+Returns plain `(x:, y:, z:)` tuples rather than a package-level `BlochVector` type, since
+every playground page auto-imports its own `BlochVector` from
+`Playgrounds.playground/Sources/`, which a same-named Core type would collide with.
+
+---
+
 ## Utilities
 
 `Sources/SwiftQiskit/Utils/String+Padding.swift`:
@@ -386,10 +465,11 @@ that happens to be `public`; don't build new API around it.
 ## Not Yet in Core
 
 Several capabilities that later playground pages need — noise/Kraus channels, mid-circuit
-or partial measurement, a `PauliString`/`Hamiltonian` type (needed by
-`Hamiltonian.trotterCircuit`), a real state-tomography reconstruction, and register
-builders (`increment`/`decrement`) — are implemented *inside individual playground pages*
-rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
+or partial measurement, `Hamiltonian.trotterCircuit` (grouping `PauliString` terms into
+commuting layers of `pauliRotation` calls), a real maximum-likelihood or linear-inversion
+state-tomography reconstruction (`StateTomography` above is a rescale, not this), and
+register builders (`increment`/`decrement`) — are implemented *inside individual playground
+pages* rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
 `PlaygroundDocs/`). Proposed Core extensions for these areas, with rationale, are tracked in
 `STATUSandTODO.md` under "Proposed Core extensions — ...".
 

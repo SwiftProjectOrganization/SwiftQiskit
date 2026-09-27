@@ -12,10 +12,11 @@ import Foundation
 /// Pauli-string labels `QuantumCircuit.pauliRotation(_:theta:)` already accepts
 /// (`.x.rawValue == "X"`, etc.).
 ///
-/// Design note: a future `PauliString`/`Hamiltonian` type is expected to store
-/// `[PauliBasis?]` (one optional label per qubit, `nil` meaning the identity `I`),
-/// so this stays the one Pauli-label type shared across tomography, variational, and
-/// Hamiltonian-simulation code rather than three near-identical enums.
+/// Design note: `PauliString`/`Hamiltonian` (`Quantum/PauliString.swift`,
+/// `Quantum/Hamiltonian.swift`) store exactly this — `[PauliBasis?]`, one optional label
+/// per qubit, `nil` meaning the identity `I` — so this stays the one Pauli-label type
+/// shared across tomography, variational, and Hamiltonian-simulation code rather than
+/// three near-identical enums.
 public enum PauliBasis: Character, CaseIterable {
     case x = "X"
     case y = "Y"

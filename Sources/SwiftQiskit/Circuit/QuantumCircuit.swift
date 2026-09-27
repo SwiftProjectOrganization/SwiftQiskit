@@ -261,6 +261,35 @@ public extension QuantumCircuit {
         return copy.measure(shots: shots)
     }
 
+    /// Shot-based estimate of a single `PauliString`'s expectation value: rotates every
+    /// non-identity qubit into the Z basis (identity qubits are measured in Z too, but
+    /// excluded from the parity), then returns
+    /// `pauli.coefficient · measure(shots:basis:).parityExpectation(qubits: pauli.activeQubits)`.
+    /// An all-`I` string needs no sampling — its expectation is exactly `pauli.coefficient`
+    /// on every state — so that case returns immediately. Built entirely on
+    /// `measure(shots:basis:)`, so it never mutates this circuit.
+    func measureExpectation(of pauli: PauliString, shots: Int) -> Double {
+        precondition(pauli.qubits == qubits, "Pauli string must have one label per qubit")
+
+        guard !pauli.activeQubits.isEmpty else {
+            return pauli.coefficient
+        }
+
+        let basis = pauli.labels.map { $0 ?? .z }
+        let result = measure(shots: shots, basis: basis)
+        return pauli.coefficient * result.parityExpectation(qubits: pauli.activeQubits)
+    }
+
+    /// Shot-based estimate of a `Hamiltonian`'s expectation value: the sum of
+    /// `measureExpectation(of:shots:)` over each term, with `shots` spent **per term**
+    /// (terms are not grouped by commuting basis, so this samples `terms.count · shots`
+    /// times in total — see the `Hamiltonian.trotterCircuit` TODO in `STATUSandTODO.md` for
+    /// where that grouping would eventually live).
+    func measureExpectation(of hamiltonian: Hamiltonian, shots: Int) -> Double {
+        precondition(hamiltonian.qubits == qubits, "Hamiltonian must act on this circuit's qubit count")
+        return hamiltonian.terms.reduce(0.0) { $0 + measureExpectation(of: $1, shots: shots) }
+    }
+
     /// Builds a `qubits`-length Pauli string with `pauli` at `q0` and `q1` and `I`
     /// elsewhere, for the `rzz`/`rxx`/`ryy` wrappers above.
     private func pauliString(q0: Int, q1: Int, pauli: Character) -> String {
