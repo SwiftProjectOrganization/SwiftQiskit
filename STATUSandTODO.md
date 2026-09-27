@@ -375,15 +375,17 @@ would need:
       spends `shots` per term, with no commuting-term grouping. Implemented in
       `Circuit/QuantumCircuit.swift`; tested in `MeasureExpectationTests.swift`, including the
       H₂ energy converging within shot noise and that neither overload mutates the receiver.
-- [ ] A general multi-parameter parameter-shift gradient — generalizing this chapter's
+- [x] A general multi-parameter parameter-shift gradient — generalizing this chapter's
       one-parameter `parameterShiftGradient(_ theta: Double) -> Double` to a `[Double]` of angles
-      over an arbitrary parameterized `QuantumCircuit`-building closure — plus a minimal
-      gradient-descent optimizer (no COBYLA/Nelder-Mead needed; gradient descent already
-      converges in ~10 steps on the toy problem). Needed before any ansatz bigger than one
-      parameter can replace the current single-block toy case.
-- [ ] Tests (Swift `Testing`): the multi-parameter gradient checked against finite differences
-      on a 2-parameter ansatz. (`PauliString.expectation` against the H₂ closed-form eigenvalue
-      and `measureExpectation` converging within shot noise are **done** — see above.)
+      over an arbitrary `[Double] -> Double` cost closure (plus a `Hamiltonian`/ansatz-closure
+      convenience overload) — plus a minimal gradient-descent optimizer (no COBYLA/Nelder-Mead
+      needed; gradient descent already converges in ~10 steps on the toy problem). Unblocks any
+      ansatz bigger than one parameter replacing the current single-block toy case. Implemented
+      in `Quantum/ParameterShift.swift` (`ParameterShift.gradient`, `GradientDescent.minimize`);
+      tested in `ParameterShiftTests.swift` against finite differences on a 2-parameter ansatz
+      and page 18's own one-parameter ansatz, and gradient descent converging to a known
+      closed-form single-qubit ground energy. Retrofitting page `18VQE` onto it is still open —
+      see "SwiftQiskitApp follow-ups" below.
 - Lower priority, purely presentational: promoting `CHSHChartView`
   (`Playgrounds.playground/Sources/`) into a shared module the app can import, so the app can
   draw the same E(θ)-with-optimizer-path chart the playground already has. See "SwiftQiskitApp
@@ -432,20 +434,31 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       `Matrix.expm()` for 3- and 4-qubit strings (including a mixed string with an interior `I`),
       against `rx`/`ry`/`rz` for single-qubit strings, and against the global-phase identity for
       an all-`I` string.
-- [ ] `Hamiltonian.trotterCircuit(time: Double, steps: Int, order: Int) -> QuantumCircuit` on the
-      `PauliString`/`Hamiltonian` type proposed above under "— variational" — grouping the
-      Hamiltonian's terms into commuting layers and emitting `pauliRotation` calls for first- or
-      second-order Suzuki splitting. Would let both this chapter's Ising chain and a future,
-      larger Hamiltonian-simulation chapter be expressed and run in the app directly, instead of
-      hand-assembled matrix code with no path onto a circuit builder.
+- [x] `QuantumCircuit.evolve(_ hamiltonian: Hamiltonian, time: Double, steps: Int, order: Int =
+      1)` and `Hamiltonian.trotterCircuit(time:steps:order:) -> QuantumCircuit` — appends `steps`
+      repetitions of a Trotterized product formula (one `pauliRotation` call per term); `order:
+      1` is first-order (Lie–Trotter), `order: 2` is second-order (Strang/Suzuki: every term but
+      the last at half step, the last term at full step, then every term but the last again at
+      half step in reverse). No automatic grouping into commuting layers — the caller controls
+      layering by ordering `hamiltonian.terms` — so this is a narrower scope than originally
+      proposed (which asked for commuting-layer grouping); grouping remains open below. Would let
+      both this chapter's Ising chain and a future, larger Hamiltonian-simulation chapter be
+      expressed and run in the app directly, instead of hand-assembled matrix code with no path
+      onto a circuit builder. Implemented in `Circuit/QuantumCircuit.swift`/
+      `Quantum/Hamiltonian.swift`; tested in `TrotterTests.swift` against `Matrix.expm()`,
+      including the O(1/n)/O(1/n²) error-scaling rates for first- and second-order steps on
+      page `21Trotter`'s transverse-field Ising chain, exactness for a single term and for
+      commuting terms at one step, the all-`I` global-phase case, and a 3-qubit chain. Retrofitting
+      page `21Trotter` onto it is still open — see "SwiftQiskitApp follow-ups" below.
+- [ ] Commuting-term grouping for `evolve`/`trotterCircuit` above — grouping a `Hamiltonian`'s
+      terms into commuting layers before emitting `pauliRotation` calls, so a caller doesn't have
+      to hand-order `terms` to get the cheapest split. Not needed for any current page; flagged
+      as a follow-up on the item above rather than blocking it.
 - [ ] Doc TODO: a one-line callout in `PlaygroundDocs/21TROTTERHELP.md` noting that reversing a
       Trotter step's internal layer order (X-layer before ZZ instead of after) produces an error
       curve identical to the original order to floating-point precision, at every step count —
       a mildly surprising fact about product-formula splitting the current guide doesn't mention
       either way. Pick this up the next time that file is touched.
-- [ ] Tests: `trotterCircuit` first- and second-order error scaling reproducing page
-      `21Trotter`'s O(1/n)/O(1/n²) rates. (`Matrix.expm`'s own tests landed with `expm` itself;
-      `rzz/rxx/ryy` and `pauliRotation`'s tests landed with those, both above.)
 
 ## Proposed Core extensions — permutations, Toffoli & registers (from the app's Chapter 25 findings)
 
@@ -481,13 +494,26 @@ work:
       unitarity/self-inverse on non-adjacent qubits, symmetry in its two controls). Retrofitting
       pages `12ShorExample`/`14ErrorCorrection`/`22Walk` onto it is still open — see
       "SwiftQiskitApp follow-ups" below.
-- [ ] `QuantumCircuit` register builder `increment`/`decrement(register: [Int], controlledBy:
+- [x] `QuantumCircuit` register builder `increment`/`decrement(register: [Int], controlledBy:
       Int?)` emitting the ripple-carry sequence (generalizing this chapter's 2-bit
-      `cx(control,high); cx(low,high); x(low)` with one more CNOT/Toffoli layer per additional
-      bit), once `ccx` above exists. Would let a future edition of this chapter build the actual
-      16-site shift from named building blocks instead of one 32×32 permutation matrix, and
-      generalizes directly to page `12ShorExample`'s modular-arithmetic needs (a controlled
-      increment is most of a controlled adder).
+      `cx(control,high); cx(low,high); x(low)` with one more layer per additional bit). Needed a
+      new `MultiControlledXGate`/`mcx` first (below) — a register wider than 2 bits needs more
+      controls than `ccx` alone provides. `register[0]` is the most-significant qubit, matching
+      Core's convention; `increment` applies most-significant to least-significant so every
+      flip's controls are read before they're themselves touched, and `decrement` is the same
+      gates in reverse (each `mcx` is self-inverse). Would let a future edition of this chapter
+      build the actual 16-site shift from named building blocks instead of one 32×32 permutation
+      matrix, and generalizes directly to page `12ShorExample`'s modular-arithmetic needs (a
+      controlled increment is most of a controlled adder). Implemented in
+      `Circuit/QuantumCircuit.swift`; tested in `RegisterArithmeticTests.swift` (every 3-bit
+      value mod 8, a non-contiguous register with a spectator qubit, and the controlled variant).
+- [x] `MultiControlledXGate.matrix(qubits:controls:target:)` (+ `QuantumCircuit.mcx(_:_:)`) — the
+      general multi-controlled X the `increment`/`decrement` builders above need: 0 controls is
+      an unconditional flip (`x`), 1 is `CNOTGate`, 2 is `ToffoliGate`, via the same
+      `Matrix.permutation` idiom both already use. Not part of the original Chapter 25 proposal
+      list, but a prerequisite this pass surfaced. Implemented in `Gates/MultiControlledX.swift`;
+      tested in `RegisterArithmeticTests.swift` against `PauliXGate`/`CNOTGate`/`ToffoliGate` for
+      0/1/2 controls, and for unitarity/self-inverse at 4 controls.
 - [x] `StateVector.marginalProbabilities(over qubits: [Int]) -> [String: Double]` (summing
       probability over every *other* qubit) and an analogous grouping helper on
       `SimulationResult` for shot-based marginals — replaces the three-line manual
@@ -503,10 +529,10 @@ work:
       Doesn't block anything today (existing circuits are small), but is the natural home for
       future work under the Roadmap's "Performance optimizations" entry — flagging the connection
       here since permutation-shaped operators are the easy, easy-to-verify case to start with.
-- [ ] Tests: `increment`/`decrement` against modular arithmetic on a small register (the
-      remaining item — `Matrix.permutation`/`isUnitary` landed with those helpers themselves,
-      `ToffoliGate`/`ccx` in `ToffoliTests.swift`, and `marginalProbabilities` in
-      `ReadoutTests.swift`, all above).
+- [x] Tests: `increment`/`decrement` against modular arithmetic on a small register — done in
+      `RegisterArithmeticTests.swift`, above. (`Matrix.permutation`/`isUnitary` landed with those
+      helpers themselves, `ToffoliGate`/`ccx` in `ToffoliTests.swift`, and
+      `marginalProbabilities` in `ReadoutTests.swift`, all above.)
 
 ## SwiftQiskitApp follow-ups (tracked here for sequencing)
 
@@ -563,9 +589,12 @@ picks this up next:
    `Hamiltonian` in `PauliStringTests.swift`, `measureExpectation` in
    `MeasureExpectationTests.swift`, `StateTomography` in `StateTomographyTests.swift`.
    (`pauliRotation` moved to step 2, above — done; `PauliBasis` moved to step 3, above — done.)
-5. Builders on top of 2–4: `Hamiltonian.trotterCircuit` (now fully unblocked — both
-   `pauliRotation` and `PauliString`/`Hamiltonian` are done), the multi-parameter
-   parameter-shift gradient + optimizer, `increment`/`decrement`.
+5. Builders on top of 2–4: `Hamiltonian.trotterCircuit`, the multi-parameter parameter-shift
+   gradient + optimizer, and `increment`/`decrement` are all **done** —
+   `Hamiltonian.trotterCircuit`/`QuantumCircuit.evolve` in `TrotterTests.swift`,
+   `ParameterShift`/`GradientDescent` in `ParameterShiftTests.swift`, and
+   `increment`/`decrement` (plus the `MultiControlledXGate`/`mcx` gate they needed first) in
+   `RegisterArithmeticTests.swift`.
 6. Open systems track (independent of 2–5, only needs step 1): `DensityMatrix` →
    `KrausChannel` → `NoiseModel`/`runDensityMatrix`/`runTrajectories`; the package-level
    `BlochVector`.
@@ -596,6 +625,18 @@ Now that step 4's Pauli-algebra hub has landed, its own retrofit is open too:
       `PauliString`, and its exact `ψ†Hψ` energy call with `Hamiltonian.expectation(_:)`.
 - [ ] Page `20Tomography`: replace its page-level per-axis `estimate`/basis-rotation helpers
       with `StateTomography.estimate`/`estimateBlochVector`.
+
+Now that step 5's builders have landed, their own retrofit is open too:
+
+- [ ] Page `21Trotter`: replace its page-level `trotterUnitary`/hand-rolled Ising Hamiltonian
+      with `Hamiltonian`/`PauliString` + `Hamiltonian.trotterCircuit(time:steps:order:)` (or
+      `QuantumCircuit.evolve(_:time:steps:order:)` on a prepared circuit).
+- [ ] Page `18VQE`: replace its hand-written `parameterShiftGradient`/gradient-descent loop with
+      `ParameterShift.gradient`/`GradientDescent.minimize`.
+- [ ] Page `22Walk`: where `buildShift`'s permutation is really a ripple-carry ±1 on the site
+      register, consider expressing it via `QuantumCircuit.increment`/`decrement` instead — a
+      lower-priority cleanup, since the page's own `Matrix.permutation`-based construction
+      already reads clearly for a fixed 4-site cycle.
 
 **`SwiftQiskitApp`:**
 

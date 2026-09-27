@@ -42,4 +42,12 @@ public struct Hamiltonian: Equatable {
     public func expectation(_ state: StateVector) -> Double {
         terms.reduce(0.0) { $0 + $1.expectation(state) }
     }
+
+    /// A fresh `QuantumCircuit` implementing Trotterized time evolution
+    /// `exp(-i·self·time)` via `QuantumCircuit.evolve(_:time:steps:order:)`.
+    public func trotterCircuit(time: Double, steps: Int, order: Int = 1) -> QuantumCircuit {
+        let circuit = QuantumCircuit(qubits: qubits)
+        circuit.evolve(self, time: time, steps: steps, order: order)
+        return circuit
+    }
 }

@@ -89,6 +89,13 @@ public extension QuantumCircuit {
         apply(ToffoliGate.matrix(qubits: qubits, control1: control1, control2: control2, target: target))
     }
 
+    /// Apply a multi-controlled X (flips `target` iff every qubit in `controls` is 1) to
+    /// any distinct set of qubits. `controls` may be empty (an unconditional flip,
+    /// equivalent to `x(target)`); one control is equivalent to `cx`, two to `ccx`.
+    func mcx(_ controls: [Int], _ target: Int) {
+        apply(MultiControlledXGate.matrix(qubits: qubits, controls: controls, target: target))
+    }
+
     /// Apply Hadamard gate to a specific qubit
     func h(_ qubit: Int) {
         let full = embedSingleQubitGate(
@@ -283,11 +290,92 @@ public extension QuantumCircuit {
     /// Shot-based estimate of a `Hamiltonian`'s expectation value: the sum of
     /// `measureExpectation(of:shots:)` over each term, with `shots` spent **per term**
     /// (terms are not grouped by commuting basis, so this samples `terms.count · shots`
-    /// times in total — see the `Hamiltonian.trotterCircuit` TODO in `STATUSandTODO.md` for
-    /// where that grouping would eventually live).
+    /// times in total — `evolve`/`trotterCircuit` below have the same no-grouping
+    /// characteristic, applying every term in the order `hamiltonian.terms` lists them).
     func measureExpectation(of hamiltonian: Hamiltonian, shots: Int) -> Double {
         precondition(hamiltonian.qubits == qubits, "Hamiltonian must act on this circuit's qubit count")
         return hamiltonian.terms.reduce(0.0) { $0 + measureExpectation(of: $1, shots: shots) }
+    }
+
+    /// Append a Trotterized time evolution `exp(-i·hamiltonian·time)` to this circuit, via
+    /// `steps` repetitions of a product formula built from `pauliRotation` (one call per
+    /// `hamiltonian` term). Terms are applied in the order `hamiltonian.terms` lists them —
+    /// there is no automatic grouping into commuting layers; the caller controls layering by
+    /// ordering the terms.
+    ///
+    /// - Parameter order: `1` for a first-order (Lie–Trotter) step — every term in order, each
+    ///   scaled by the full step `dt = time/steps`; `2` for a second-order (Strang/Suzuki) step
+    ///   — every term but the last at half `dt`, the last term at full `dt`, then every term but
+    ///   the last again at half `dt` in reverse order. A single-term Hamiltonian is exact at
+    ///   `steps: 1` for either order (the two orders coincide), since there is nothing to split.
+    func evolve(_ hamiltonian: Hamiltonian, time: Double, steps: Int, order: Int = 1) {
+        precondition(hamiltonian.qubits == qubits,
+                     "Hamiltonian must act on this circuit's qubit count")
+        precondition(steps > 0, "Number of steps must be positive")
+        precondition(order == 1 || order == 2,
+                     "Only first- and second-order Trotter steps are supported")
+
+        let dt = time / Double(steps)
+        let terms = hamiltonian.terms
+
+        func fullStep(_ term: PauliString, _ scale: Double) {
+            pauliRotation(term.label, theta: 2 * term.coefficient * dt * scale)
+        }
+
+        for _ in 0..<steps {
+            if order == 1 {
+                for term in terms { fullStep(term, 1) }
+            } else {
+                for term in terms.dropLast() { fullStep(term, 0.5) }
+                if let last = terms.last { fullStep(last, 1) }
+                for term in terms.dropLast().reversed() { fullStep(term, 0.5) }
+            }
+        }
+    }
+
+    /// Shared preconditions for `increment`/`decrement`: a non-empty register of distinct,
+    /// in-range qubits, and (if given) a `control` that's in range and not itself part of
+    /// the register.
+    private func validateRegisterArithmetic(_ register: [Int], _ control: Int?) {
+        precondition(!register.isEmpty, "Register must not be empty")
+        precondition(Set(register).count == register.count, "Register qubits must be distinct")
+        precondition(register.allSatisfy { $0 >= 0 && $0 < qubits }, "Register qubit out of range")
+        if let control = control {
+            precondition(control >= 0 && control < qubits, "Control qubit out of range")
+            precondition(!register.contains(control), "Control must not be one of the register qubits")
+        }
+    }
+
+    /// One ripple step of `increment`/`decrement`: flips `register[k]`, controlled by
+    /// every less-significant register bit (`register[(k+1)...]`) plus `control`, if given.
+    private func rippleStep(_ k: Int, register: [Int], control: Int?) {
+        var controls = Array(register[(k + 1)...])
+        if let control = control { controls.append(control) }
+        mcx(controls, register[k])
+    }
+
+    /// Ripple-carry increment of `register` — a binary number stored most-significant
+    /// qubit first (`register[0]`), matching Core's qubit-0-is-MSB convention — optionally
+    /// gated by `control`. Bit `k` flips iff every less-significant bit already in
+    /// `register` (and `control`, if given) is 1, applied most-significant to
+    /// least-significant so every flip's controls are read before they're themselves
+    /// touched (the standard ripple-carry order).
+    func increment(register: [Int], controlledBy control: Int? = nil) {
+        validateRegisterArithmetic(register, control)
+        for k in register.indices {
+            rippleStep(k, register: register, control: control)
+        }
+    }
+
+    /// The exact inverse of `increment(register:controlledBy:)`: the same multi-controlled
+    /// X gates, applied least-significant to most-significant — the reverse order.
+    /// Each gate is its own inverse, so reversing the sequence inverts the composite
+    /// unitary exactly.
+    func decrement(register: [Int], controlledBy control: Int? = nil) {
+        validateRegisterArithmetic(register, control)
+        for k in register.indices.reversed() {
+            rippleStep(k, register: register, control: control)
+        }
     }
 
     /// Builds a `qubits`-length Pauli string with `pauli` at `q0` and `q1` and `I`

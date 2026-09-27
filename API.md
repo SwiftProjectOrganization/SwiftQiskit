@@ -238,6 +238,7 @@ Follow this pattern when adding a new gate.
 | `RYYGate.matrix(theta:)` | parameterized, 2-qubit | `ryy(theta, q0, q1)`* | `exp(-iθ·Y⊗Y/2)` on adjacent qubits. |
 | `ToffoliGate.matrix` | fixed, 3-qubit | `ccx(control1, control2, target)`* | The plain 8×8 Toffoli (controls = qubits 0/1, target = qubit 2). |
 | `ToffoliGate.matrix(qubits:control1:control2:target:)` | general, n-qubit | `ccx(control1, control2, target)` | The full 2ⁿ×2ⁿ Toffoli for any three distinct qubits, built via `Matrix.permutation`: flips `target` iff both controls are 1. Symmetric in its two controls. Traps if `qubits < 3`, if any index is out of range, or if the three indices aren't distinct. |
+| `MultiControlledXGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcx(controls, target)` | Flips `target` iff every qubit in `controls` is 1, built via `Matrix.permutation`. `controls` may be empty (an unconditional flip, equivalent to `x`); one control is equivalent to `cx`, two to `ccx`. Traps if `target` is out of range, any control is out of range or duplicated, or `controls` contains `target`. |
 
 \* `QuantumCircuit.cx`/`ccx` always call the general `CNOTGate.matrix(qubits:control:target:)`/
 `ToffoliGate.matrix(qubits:control1:control2:target:)` forms, not the fixed-size ones — the
@@ -287,11 +288,15 @@ func ry(_ theta: Double, _ qubit: Int)
 func rz(_ theta: Double, _ qubit: Int)
 func cx(_ control: Int, _ target: Int)
 func ccx(_ control1: Int, _ control2: Int, _ target: Int)
+func mcx(_ controls: [Int], _ target: Int)
 func rzz(_ theta: Double, _ q0: Int, _ q1: Int)
 func rxx(_ theta: Double, _ q0: Int, _ q1: Int)
 func ryy(_ theta: Double, _ q0: Int, _ q1: Int)
 func pauliRotation(_ pauli: String, theta: Double)
 func rotateToZ(_ basis: PauliBasis, _ qubit: Int)
+func evolve(_ hamiltonian: Hamiltonian, time: Double, steps: Int, order: Int = 1)
+func increment(register: [Int], controlledBy control: Int? = nil)
+func decrement(register: [Int], controlledBy control: Int? = nil)
 ```
 
 Single-qubit gates are embedded across the full register via `Matrix.tensor(_:)`
@@ -314,6 +319,26 @@ ones (traps if `q0 == q1` or either is out of range).
 Z-basis measurement of `qubit` into a measurement in `basis`: `h` for `.x`, `sdg;h` for `.y`,
 nothing for `.z`. `pauliRotation`'s own basis-change step is built on this (and its
 private inverse, `rotateFromZ`).
+
+`evolve(_ hamiltonian:time:steps:order:)` appends `steps` repetitions of a Trotterized
+product formula for `exp(-i·hamiltonian·time)`, one `pauliRotation` call per term. `order:
+1` (default) applies every term in the order `hamiltonian.terms` lists them, each scaled by
+the full step `dt = time/steps`; `order: 2` is a second-order (Strang/Suzuki) step — every
+term but the last at half `dt`, the last term at full `dt`, then every term but the last
+again at half `dt` in reverse. There is no automatic grouping into commuting layers — the
+caller controls layering by ordering `hamiltonian.terms`. Traps if `hamiltonian.qubits !=
+qubits`, `steps <= 0`, or `order` isn't `1` or `2`. `Hamiltonian.trotterCircuit(time:steps:
+order:)` (below) is a `QuantumCircuit(qubits:)` + `evolve(...)` convenience.
+
+`increment(register:controlledBy:)`/`decrement(register:controlledBy:)` implement
+ripple-carry `±1` on `register` — a binary number stored most-significant qubit first
+(`register[0]`), matching Core's qubit-0-is-MSB convention — via `mcx`: bit `k` flips iff
+every less-significant bit already in `register` (and `control`, if given) is 1.
+`increment` applies most-significant to least-significant so every flip's controls are read
+before they're themselves touched; `decrement` is the exact inverse (each `mcx` is
+self-inverse, so the reverse-order sequence inverts the composite unitary). `register` need
+not be contiguous or in index order. Traps if `register` is empty, has a duplicate or
+out-of-range qubit, or `control` is out of range or one of the `register` qubits.
 
 ### Execution
 
@@ -407,12 +432,67 @@ public struct Hamiltonian: Equatable {
     public var qubits: Int { get }
     public var matrix: Matrix { get }             // Σ term.matrix
     public func expectation(_ state: StateVector) -> Double   // Σ term.expectation(state)
+    public func trotterCircuit(time: Double, steps: Int, order: Int = 1) -> QuantumCircuit
 }
 ```
 
 Replaces the entrywise "build a matrix, then add `coefficient·term` to it index by index"
 idiom page `18VQE` (and the app's VQE/Trotter chapters) hand-roll for an H₂-style
-Hamiltonian.
+Hamiltonian. `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
+`QuantumCircuit.evolve(_:time:steps:order:)` (see above) — a fresh circuit implementing
+Trotterized time evolution `exp(-i·self·time)`.
+
+---
+
+## `ParameterShift` and `GradientDescent`
+
+`Sources/SwiftQiskit/Quantum/ParameterShift.swift` — the parameter-shift gradient rule,
+generalized to any number of parameters and any real-valued cost closure, plus a minimal
+gradient-descent optimizer built on it.
+
+```swift
+public enum ParameterShift {
+    static func gradient(at parameters: [Double], shift: Double = .pi / 2,
+                          _ cost: ([Double]) -> Double) -> [Double]
+    static func gradient(of hamiltonian: Hamiltonian, at parameters: [Double],
+                          shift: Double = .pi / 2,
+                          ansatz: ([Double]) -> QuantumCircuit) -> [Double]
+}
+
+public enum GradientDescent {
+    public struct Result {
+        public let parameters: [Double]
+        public let value: Double        // cost(parameters), the last entry of history
+        public let history: [Double]    // cost at every visited parameter vector
+        public let iterations: Int
+        public let converged: Bool      // true iff the gradient norm dropped below tolerance
+    }
+
+    static func minimize(initial: [Double], learningRate: Double = 0.1,
+                          maxIterations: Int = 200, tolerance: Double = 1e-10,
+                          cost: @escaping ([Double]) -> Double,
+                          gradient: (([Double]) -> [Double])? = nil) -> Result
+}
+```
+
+`ParameterShift.gradient` computes, for each parameter `k`, `[cost(θ + shift·eₖ) −
+cost(θ − shift·eₖ)] / (2·sin(shift))`. This is **exact**, not a finite-difference
+approximation, whenever every parameter enters `cost` as the angle of a single
+`exp(-iθP/2)` rotation — the shape of every parameterized `QuantumCircuit` gate
+(`rx`/`ry`/`rz`/`rzz`/`rxx`/`ryy`/`pauliRotation`). The default `shift = π/2` makes the
+divisor `1`, matching the textbook rule `[cost(θ+π/2) − cost(θ−π/2)] / 2` (page `18VQE`'s
+own one-parameter derivation). `cost` may be exact (`Hamiltonian.expectation`) or shot-based
+(`QuantumCircuit.measureExpectation`) — the rule doesn't care which. Traps if `parameters`
+is empty or `shift` is a multiple of `π` (zero divisor). The `of hamiltonian:`/`ansatz:`
+overload is a convenience for the common VQE shape, using
+`hamiltonian.expectation(ansatz(θ).run())` as the cost.
+
+`GradientDescent.minimize` takes fixed-size steps of `learningRate · gradient` until the
+gradient's Euclidean norm drops below `tolerance` or `maxIterations` is reached.
+`gradient` defaults to `ParameterShift.gradient(at:_:)` applied to `cost` itself. No line
+search, momentum, or COBYLA/Nelder-Mead — sufficient for the small, smooth landscapes a
+VQE-style ansatz produces. Traps if `initial` is empty, `learningRate <= 0`, or
+`maxIterations <= 0`.
 
 ---
 
@@ -464,14 +544,16 @@ that happens to be `public`; don't build new API around it.
 
 ## Not Yet in Core
 
-Several capabilities that later playground pages need — noise/Kraus channels, mid-circuit
-or partial measurement, `Hamiltonian.trotterCircuit` (grouping `PauliString` terms into
-commuting layers of `pauliRotation` calls), a real maximum-likelihood or linear-inversion
-state-tomography reconstruction (`StateTomography` above is a rescale, not this), and
-register builders (`increment`/`decrement`) — are implemented *inside individual playground
-pages* rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
-`PlaygroundDocs/`). Proposed Core extensions for these areas, with rationale, are tracked in
-`STATUSandTODO.md` under "Proposed Core extensions — ...".
+Several capabilities that later playground pages need — noise/Kraus channels and mid-circuit
+or partial measurement (`DensityMatrix`/`KrausChannel`), and a real maximum-likelihood or
+linear-inversion state-tomography reconstruction (`StateTomography` above is a rescale, not
+this) — are implemented *inside individual playground pages* rather than in
+`Sources/SwiftQiskit`, deliberately (see each page's plan doc under `PlaygroundDocs/`).
+Proposed Core extensions for these areas, with rationale, are tracked in
+`STATUSandTODO.md` under "Proposed Core extensions — ...". (`Hamiltonian.trotterCircuit`
+and the `increment`/`decrement` register builders, previously listed here, are now
+implemented — see `QuantumCircuit.evolve`/`Hamiltonian.trotterCircuit` and
+`QuantumCircuit.increment`/`decrement` above.)
 
 For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
 used by playground live views, see `PLAYGROUNDSUPPORT.md`.

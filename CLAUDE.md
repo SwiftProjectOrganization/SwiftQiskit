@@ -58,13 +58,17 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   `CNOTGate` additionally offers `matrix(qubits:control:target:)` — the full 2ⁿ×2ⁿ CNOT for
   any distinct control/target pair, built as a basis-state permutation; `ToffoliGate` mirrors
   this with `matrix(qubits:control1:control2:target:)` (`Toffoli.swift`), symmetric in its
-  two controls, both built via `Matrix.permutation`.
+  two controls, both built via `Matrix.permutation`. `MultiControlledXGate`
+  (`MultiControlledX.swift`) generalizes both to an arbitrary number of controls via the
+  same `Matrix.permutation` idiom (0 controls = `x`, 1 = `CNOTGate`, 2 = `ToffoliGate`) —
+  the piece `increment`/`decrement` below need for a register wider than 2 bits.
   `RZZGate`/`RXXGate`/`RYYGate` (`TwoQubitRotation.swift`) are the fixed-2-qubit
   `exp(-iθ·P⊗P/2)` family, each checked against `Matrix.expm()` and, for `RZZGate`, against
   the `cx;rz;cx` identity.
 - `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices. Single-qubit
   gates are embedded across the register via `Matrix.tensor(_:)` (file-private
-  `embedSingleQubitGate`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, parameterized
+  `embedSingleQubitGate`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, the general
+  `mcx(_ controls: [Int], _ target:)` (via `MultiControlledXGate`), parameterized
   `p/rx/ry/rz(_ theta:, _ qubit:)` (θ first, as in Qiskit), `apply(_:)`, `run()`,
   `runAndMeasure()`, `measure(shots:)`; `rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)` on any distinct
   qubit pair (not just adjacent), and the general `pauliRotation(_ pauli: String, theta:)`
@@ -76,7 +80,16 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   leaving the receiver's own operation list untouched. `measureExpectation(of:shots:)`
   (overloaded for `PauliString`/`Hamiltonian`) is a shot-based expectation value built on
   `measure(shots:basis:)` + `SimulationResult.parityExpectation(qubits:)`; the `Hamiltonian`
-  overload spends `shots` per term, with no commuting-term grouping.
+  overload spends `shots` per term, with no commuting-term grouping. `evolve(_ hamiltonian:
+  time: steps: order:)` appends `steps` repetitions of a Trotterized product formula (one
+  `pauliRotation` call per term; `order: 1` full-step Lie–Trotter, `order: 2` half/full/half
+  Strang splitting), terms applied in the order `hamiltonian.terms` lists them — no
+  automatic commuting-layer grouping; `Hamiltonian.trotterCircuit(time:steps:order:)` below
+  wraps it on a fresh circuit. `increment`/`decrement(register: [Int], controlledBy: Int?)`
+  are a ripple-carry ±1 on `register` (most-significant qubit first) built from `mcx` —
+  `increment` applies most-significant to least-significant so every flip's controls are
+  read before they're touched; `decrement` is the same gates in reverse (each `mcx` is
+  self-inverse).
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string;
   `marginalCounts(over:)` (grouped counts, only observed keys) and `parityExpectation(qubits:)`
   (the ±1 parity-product average, e.g. for a shot-based ⟨Z⊗Z⟩) sum over a subset of qubits.
@@ -91,6 +104,16 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
 - `Quantum/Hamiltonian.swift` — `Hamiltonian`: a plain (unmerged, ungrouped) sum of
   `PauliString` terms, with `matrix` (Σ term matrices) and `expectation(_ state:)` (Σ term
   expectations). Replaces the entrywise Pauli-term accumulation page `18VQE` hand-rolls.
+  `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
+  `QuantumCircuit.evolve(_:time:steps:order:)` above.
+- `Quantum/ParameterShift.swift` — `ParameterShift.gradient(at:shift:_:)`: the
+  parameter-shift rule generalized to any number of parameters and any `[Double] ->
+  Double` cost closure (exact whenever every parameter is a single `exp(-iθP/2)` rotation's
+  angle; default `shift: .pi/2` matches page `18VQE`'s one-parameter derivation), plus a
+  `Hamiltonian`/`ansatz`-closure convenience overload. `GradientDescent.minimize(initial:
+  learningRate:maxIterations:tolerance:cost:gradient:)` is a minimal fixed-step optimizer
+  (no line search/momentum) defaulting its `gradient` to `ParameterShift.gradient`,
+  returning a `Result` (`parameters`, `value`, `history`, `iterations`, `converged`).
 - `Quantum/StateTomography.swift` — `StateTomography`: a caseless namespace turning
   `measure(shots:basis:)` results into a reconstructed single-qubit Bloch vector —
   `estimate(qubit:result:)` (a single-qubit `parityExpectation` wrapper),
@@ -287,9 +310,10 @@ Playground notes:
 ## Conventions & Gotchas
 
 - **Qubit indexing:** qubit 0 is the most-significant (leftmost) bit.
-- **`cx`/`ccx` are general:** `cx(control, target)`/`ccx(control1, control2, target)` work
-  for any distinct qubits on an n-qubit circuit, via `CNOTGate.matrix(qubits:control:target:)`/
-  `ToffoliGate.matrix(qubits:control1:control2:target:)` (permutation-matrix construction).
+- **`cx`/`ccx`/`mcx` are general:** `cx(control, target)`/`ccx(control1, control2, target)`/
+  `mcx(controls, target)` work for any distinct qubits on an n-qubit circuit, via
+  `CNOTGate.matrix(qubits:control:target:)`/`ToffoliGate.matrix(qubits:control1:control2:target:)`/
+  `MultiControlledXGate.matrix(qubits:controls:target:)` (all permutation-matrix construction).
 - Invariants are guarded with `precondition(...)` throughout; keep doing this when extending.
 - Measurement result strings are zero-padded binary via `String.leftPadding` (`Utils/String+Padding.swift`).
 - Style: 4-space indent, PascalCase types, camelCase members, no force unwrapping.
@@ -301,7 +325,8 @@ Playground notes:
   `AdditionalGatesTests.swift`, `MatrixArithmeticTests.swift`, `MeasurementTests.swift`,
   `MatrixExponentialTests.swift`, `TwoQubitRotationTests.swift`, `ToffoliTests.swift`,
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
-  `MeasureExpectationTests.swift`, `StateTomographyTests.swift`).
+  `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
+  `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - **Scheme gotcha for Xcode test runs:** all schemes are autogenerated by Xcode for the
