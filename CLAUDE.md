@@ -65,9 +65,14 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   `RZZGate`/`RXXGate`/`RYYGate` (`TwoQubitRotation.swift`) are the fixed-2-qubit
   `exp(-iθ·P⊗P/2)` family, each checked against `Matrix.expm()` and, for `RZZGate`, against
   the `cx;rz;cx` identity.
-- `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices. Single-qubit
-  gates are embedded across the register via `Matrix.tensor(_:)` (file-private
-  `embedSingleQubitGate`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, the general
+- `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices, each tagged
+  with the qubits it acts on (`private struct Operation { matrix; qubits }`, recorded via
+  the private `record(_:actingOn:)` rather than the public `apply(_:)`, which — since an
+  arbitrary caller-supplied matrix could touch any qubit — records all of them). This tag
+  is what `runDensityMatrix(noise:)`/`runTrajectories(noise:shots:)` below use to place
+  per-gate noise precisely. Single-qubit gates are embedded across the register via
+  `Matrix.tensor(_:)` (internal, not `private`, `embedSingleQubitGate` — also reused by
+  `KrausChannel.apply(to:qubit:)`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, the general
   `mcx(_ controls: [Int], _ target:)` (via `MultiControlledXGate`), parameterized
   `p/rx/ry/rz(_ theta:, _ qubit:)` (θ first, as in Qiskit), `apply(_:)`, `run()`,
   `runAndMeasure()`, `measure(shots:)`; `rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)` on any distinct
@@ -89,7 +94,13 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   are a ripple-carry ±1 on `register` (most-significant qubit first) built from `mcx` —
   `increment` applies most-significant to least-significant so every flip's controls are
   read before they're touched; `decrement` is the same gates in reverse (each `mcx` is
-  self-inverse).
+  self-inverse). `runDensityMatrix(noise: NoiseModel? = nil) -> DensityMatrix` replays every
+  recorded operation on a `DensityMatrix` (starting from |0…0⟩⟨0…0|), applying `noise`'s
+  matching-arity `KrausChannel` to every qubit each gate touched right after that gate;
+  `noise: nil` is mathematically identical to `DensityMatrix(run())`.
+  `runTrajectories(noise:shots:) -> SimulationResult` is the Monte-Carlo "quantum
+  trajectories" unraveling of the same thing: `shots` independent pure-state runs, each
+  stochastically applying one Kraus operator (probability `‖Kᵢ|ψ⟩‖²`) per noisy gate.
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string;
   `marginalCounts(over:)` (grouped counts, only observed keys) and `parityExpectation(qubits:)`
   (the ±1 parity-product average, e.g. for a shot-based ⟨Z⊗Z⟩) sum over a subset of qubits.
@@ -128,6 +139,29 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   Double` (named one-liner for the same `(psi† * U * psi).real`), mixed `⊗` overloads
   (`Ket ⊗ Bra` / `Bra ⊗ Ket`, both returning the outer-product `Matrix`), basis kets
   `Ket("01")` / `.zero/.one/.plus/.minus/.plusI/.minusI`.
+- `Quantum/DensityMatrix.swift` — `DensityMatrix`: a mixed-state ρ, built from a
+  `StateVector` (`Ket * Bra` outer product), a classical mixture
+  (`[(probability:, state:)]`), or a raw validated `Matrix` (every initializer checks
+  square/2ⁿ/Hermitian/trace-1). `purity`, `probabilities`, `expectation(_:)`,
+  `fidelity(to:StateVector)`, `apply(_:) -> DensityMatrix` (UρU†),
+  `partialTrace(keeping: [Int])` (n-qubit, any subset, kept qubits in the order given —
+  same convention as `StateVector.marginalProbabilities(over:)`), `blochVector` (nil unless
+  2×2), `eigenvalues`/`vonNeumannEntropy` (a real-symmetric embedding of the Hermitian
+  matrix plus a small file-private cyclic Jacobi solver — adequate for qubit-count sizes,
+  not general-purpose).
+- `Quantum/KrausChannel.swift` — `KrausChannel`: a channel `ρ' = Σᵢ KᵢρKᵢ†` given by its
+  `operators`. `isTracePreserving(tolerance:)` checks `Σᵢ Kᵢ†Kᵢ ≈ I` (mirrors
+  `Matrix.isUnitary`'s style); `apply(to: DensityMatrix)` on the whole register;
+  `apply(to:qubit:)` embeds a 2×2 channel onto one qubit via the same
+  `embedSingleQubitGate` idiom `CNOTGate.matrix(qubits:control:target:)` uses for a 2×2
+  gate. Factories `bitFlip`/`phaseFlip`/`depolarizing`/`amplitudeDamping` (page `19Noise`'s
+  four channels, same formulas) plus `phaseDamping` (new: pure T2 dephasing, no energy
+  loss, unlike `amplitudeDamping`).
+- `Quantum/NoiseModel.swift` — `NoiseModel`: `singleQubitGate`/`multiQubitGate`, each an
+  optional single-qubit (2×2), trace-preserving `KrausChannel` applied independently to
+  every qubit a gate of that arity touched (`init` traps on a bigger or non-trace-preserving
+  channel). `.uniform(_:)` applies the same channel after both gate classes. Consumed by
+  `QuantumCircuit.runDensityMatrix`/`runTrajectories` above.
 
 ## Xcode Playgrounds
 
@@ -326,7 +360,8 @@ Playground notes:
   `MatrixExponentialTests.swift`, `TwoQubitRotationTests.swift`, `ToffoliTests.swift`,
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
-  `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`).
+  `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - **Scheme gotcha for Xcode test runs:** all schemes are autogenerated by Xcode for the

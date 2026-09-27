@@ -13,6 +13,9 @@ public final class QuantumCircuit {
     // MARK: - Types
     private struct Operation {
         let matrix: Matrix
+        /// The qubits this operation acts on, used by `runDensityMatrix(noise:)`/
+        /// `runTrajectories(noise:shots:)` to know where to apply per-gate noise.
+        let qubits: [Int]
     }
 
     // MARK: - Properties
@@ -27,14 +30,24 @@ public final class QuantumCircuit {
 
     // MARK: - Core Gate API
 
-    /// Apply a full-dimension gate (2^n x 2^n)
+    /// Apply a full-dimension gate (2^n x 2^n). Recorded as touching every qubit — an
+    /// arbitrary caller-supplied matrix could act on any of them, so there's no narrower
+    /// answer to give a noise model than "all of them".
     public func apply(_ matrix: Matrix) {
         let expectedDim = 1 << qubits
         precondition(
             matrix.rows == expectedDim && matrix.cols == expectedDim,
             "Gate matrix must match circuit dimension (2^n x 2^n)"
         )
-        operations.append(Operation(matrix: matrix))
+        record(matrix, actingOn: Array(0..<qubits))
+    }
+
+    /// Records an operation and the qubits it acts on. Used internally by every gate
+    /// method below (instead of the public `apply(_:)`) so `runDensityMatrix(noise:)`/
+    /// `runTrajectories(noise:shots:)` can place per-gate noise precisely, rather than on
+    /// every qubit for every gate.
+    private func record(_ matrix: Matrix, actingOn: [Int]) {
+        operations.append(Operation(matrix: matrix, qubits: actingOn))
     }
 
     // MARK: - Execution
@@ -75,25 +88,91 @@ public final class QuantumCircuit {
         var state = run()
         return state.measure()
     }
+
+    /// Runs this circuit's operations on a density matrix (starting from |0…0⟩⟨0…0|),
+    /// optionally applying `noise`'s single-/multi-qubit channel to every qubit a gate
+    /// touched, right after that gate. With `noise: nil` this is mathematically identical
+    /// to `DensityMatrix(run())` — the exact result, no Monte-Carlo sampling.
+    public func runDensityMatrix(noise: NoiseModel? = nil) -> DensityMatrix {
+        var rho = DensityMatrix(StateVector(qubits: qubits))
+        for op in operations {
+            rho = rho.apply(op.matrix)
+            guard let noise = noise, !op.qubits.isEmpty else { continue }
+            guard let channel = op.qubits.count == 1 ? noise.singleQubitGate : noise.multiQubitGate else { continue }
+            for qubit in op.qubits {
+                rho = channel.apply(to: rho, qubit: qubit)
+            }
+        }
+        return rho
+    }
+
+    /// The Monte-Carlo "quantum trajectories" unraveling of `runDensityMatrix(noise:)`:
+    /// runs `shots` independent pure-state simulations, each stochastically applying one
+    /// Kraus operator (chosen with probability ‖Kᵢ|ψ⟩‖²) after every noisy gate, then
+    /// measures once per shot. Converges to `runDensityMatrix(noise:)`'s probabilities as
+    /// `shots` grows.
+    public func runTrajectories(noise: NoiseModel, shots: Int) -> SimulationResult {
+        precondition(shots > 0, "Number of shots must be positive")
+
+        var counts: [String: Int] = [:]
+        for _ in 0..<shots {
+            var state = StateVector(qubits: qubits)
+            for op in operations {
+                state.apply(op.matrix)
+                guard !op.qubits.isEmpty else { continue }
+                guard let channel = op.qubits.count == 1 ? noise.singleQubitGate : noise.multiQubitGate else { continue }
+                for qubit in op.qubits {
+                    state = applyChannelTrajectory(channel, to: state, qubit: qubit)
+                }
+            }
+            let index = state.measure()
+            let binary = String(index, radix: 2).leftPadding(toLength: qubits, withPad: "0")
+            counts[binary, default: 0] += 1
+        }
+        return SimulationResult(shots: shots, counts: counts)
+    }
+}
+
+private extension QuantumCircuit {
+
+    /// Stochastically applies one operator of `channel`, embedded onto `qubit`, to
+    /// `state` — chosen with probability ‖Kᵢ|ψ⟩‖², the Monte-Carlo unraveling of the
+    /// channel. Used by `runTrajectories(noise:shots:)`.
+    func applyChannelTrajectory(_ channel: KrausChannel, to state: StateVector, qubit: Int) -> StateVector {
+        let embedded = channel.operators.map { embedSingleQubitGate($0, qubits: qubits, target: qubit) }
+        let weights = embedded.map { op in
+            op.multiply(by: state.amplitudes).reduce(0.0) { $0 + $1.magnitudeSquared }
+        }
+        let totalWeight = weights.reduce(0.0, +)
+        precondition(totalWeight > 1e-12, "Kraus channel annihilated the state (not trace-preserving?)")
+        let normalizedWeights = weights.map { $0 / totalWeight }
+
+        let choice = StateVector.sampleIndex(from: normalizedWeights)
+        var result = state
+        result.apply(embedded[choice])
+        return result
+    }
 }
 // MARK: - Gate API
 public extension QuantumCircuit {
     /// Apply CNOT gate (control -> target); any distinct pair of qubits.
     func cx(_ control: Int, _ target: Int) {
-        apply(CNOTGate.matrix(qubits: qubits, control: control, target: target))
+        record(CNOTGate.matrix(qubits: qubits, control: control, target: target), actingOn: [control, target])
     }
 
     /// Apply Toffoli gate (CCNOT): flips `target` iff both controls are 1;
     /// any three distinct qubits.
     func ccx(_ control1: Int, _ control2: Int, _ target: Int) {
-        apply(ToffoliGate.matrix(qubits: qubits, control1: control1, control2: control2, target: target))
+        record(ToffoliGate.matrix(qubits: qubits, control1: control1, control2: control2, target: target),
+               actingOn: [control1, control2, target])
     }
 
     /// Apply a multi-controlled X (flips `target` iff every qubit in `controls` is 1) to
     /// any distinct set of qubits. `controls` may be empty (an unconditional flip,
     /// equivalent to `x(target)`); one control is equivalent to `cx`, two to `ccx`.
     func mcx(_ controls: [Int], _ target: Int) {
-        apply(MultiControlledXGate.matrix(qubits: qubits, controls: controls, target: target))
+        record(MultiControlledXGate.matrix(qubits: qubits, controls: controls, target: target),
+               actingOn: controls + [target])
     }
 
     /// Apply Hadamard gate to a specific qubit
@@ -103,7 +182,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply Pauli-X gate to a specific qubit
@@ -113,7 +192,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
     /// Apply Pauli-Y gate to a specific qubit
     func y(_ qubit: Int) {
@@ -122,7 +201,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply Pauli-Z gate to a specific qubit
@@ -132,7 +211,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply S gate (phase π/2) to a specific qubit
@@ -142,7 +221,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply S† gate (phase -π/2) to a specific qubit
@@ -152,7 +231,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply T gate (phase π/4) to a specific qubit
@@ -172,7 +251,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply phase gate P(θ) to a specific qubit
@@ -182,7 +261,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply rotation RX(θ) about the X axis to a specific qubit
@@ -192,7 +271,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply rotation RY(θ) about the Y axis to a specific qubit
@@ -202,7 +281,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply rotation RZ(θ) about the Z axis to a specific qubit
@@ -212,7 +291,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit])
     }
 
     /// Apply the two-qubit rotation exp(-iθ·Z⊗Z/2) to any distinct pair of qubits.
@@ -406,7 +485,7 @@ public extension QuantumCircuit {
 
         guard !active.isEmpty else {
             let globalPhase = Complex(cos(theta / 2), -sin(theta / 2))
-            apply(Matrix.identity(size: 1 << qubits) * globalPhase)
+            record(Matrix.identity(size: 1 << qubits) * globalPhase, actingOn: [])
             return
         }
 
@@ -433,8 +512,9 @@ public extension QuantumCircuit {
 
 }
 /// Embed a single-qubit gate into an n-qubit system at a specific qubit index.
-/// Qubit indexing: 0 = most-significant (leftmost)
-private func embedSingleQubitGate(
+/// Qubit indexing: 0 = most-significant (leftmost). Internal (not `private`) so
+/// `KrausChannel.apply(to:qubit:)` can reuse the same embedding idiom for a noise channel.
+func embedSingleQubitGate(
     _ gate: Matrix,
     qubits: Int,
     target: Int

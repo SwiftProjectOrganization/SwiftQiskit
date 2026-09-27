@@ -350,6 +350,8 @@ out-of-range qubit, or `control` is out of range or one of the `register` qubits
 | `measure(shots:basis:)` | `(Int, [PauliBasis]) -> SimulationResult` | Traps if `basis.count != qubits`. Appends each qubit's `rotateToZ` rotation to a **copy** of the recorded operations and measures that copy — the receiver's own operation list is untouched, so the same circuit can be measured in different bases without rebuilding it. |
 | `measureExpectation(of:shots:)` | `(PauliString, Int) -> Double` | Shot-based estimate of one Pauli term's expectation value, built on `measure(shots:basis:)` + `SimulationResult.parityExpectation(qubits:)`. Traps if `pauli.qubits != qubits`. An all-`I` term returns `pauli.coefficient` exactly, with no sampling. |
 | `measureExpectation(of:shots:)` | `(Hamiltonian, Int) -> Double` | The sum of the Pauli-term overload over every term in `hamiltonian`, spending `shots` **per term** (terms aren't grouped by commuting basis, so this samples `hamiltonian.terms.count · shots` times total). Traps if `hamiltonian.qubits != qubits`. |
+| `runDensityMatrix(noise:)` | `(NoiseModel? = nil) -> DensityMatrix` | Replays every recorded operation on a `DensityMatrix` starting from \|0…0⟩⟨0…0\|, applying `noise`'s single-/multi-qubit `KrausChannel` (whichever matches the gate's qubit count) to every qubit that gate touched, right after it. `noise: nil` gives the exact result — mathematically identical to `DensityMatrix(run())`. |
+| `runTrajectories(noise:shots:)` | `(NoiseModel, Int) -> SimulationResult` | The Monte-Carlo "quantum trajectories" unraveling of `runDensityMatrix(noise:)`: runs `shots` independent pure-state simulations, each stochastically applying one Kraus operator (chosen with probability `‖Kᵢ\|ψ⟩‖²`) after every noisy gate, then measures once per shot. Converges to `runDensityMatrix(noise:)`'s probabilities as `shots` grows. Traps if `shots <= 0`. |
 
 ---
 
@@ -526,6 +528,96 @@ every playground page auto-imports its own `BlochVector` from
 
 ---
 
+## `DensityMatrix`
+
+`Sources/SwiftQiskit/Quantum/DensityMatrix.swift` — a mixed-state density matrix ρ, the
+open-systems generalization of a pure `StateVector`. Every public initializer validates
+that the wrapped matrix is square, `2ⁿ`-sized, (approximately) Hermitian, and has trace ≈ 1
+— the three defining properties of a physical density matrix.
+
+```swift
+public struct DensityMatrix: Equatable {
+    public let matrix: Matrix
+    public init(_ state: StateVector)                                    // ρ = |ψ⟩⟨ψ|
+    public init(mixture: [(probability: Double, state: StateVector)])    // Σᵢ pᵢ|ψᵢ⟩⟨ψᵢ|
+    public init(matrix: Matrix)                                          // validates Hermitian, trace 1
+    public var qubits: Int { get }                                        // matrix.rows == 2^qubits
+}
+```
+
+| Member | Signature | Notes |
+|---|---|---|
+| `purity` | `Double` | `Tr(ρ²)` — `1` for a pure state, `1/2ⁿ` for the maximally mixed state on `n` qubits. |
+| `probabilities` | `[Double]` | The diagonal of ρ (real parts): the probability of each basis state. |
+| `expectation(_:)` | `(Matrix) -> Double` | `Tr(ρA)`, the density-matrix analogue of `StateVector.expectation(_:)`. |
+| `fidelity(to:)` | `(StateVector) -> Double` | `⟨ψ\|ρ\|ψ⟩`. Traps on a dimension mismatch. |
+| `apply(_:)` | `(Matrix) -> DensityMatrix` | `UρU†` — the density-matrix analogue of `StateVector.apply(_:)`. Traps on a dimension mismatch. |
+| `partialTrace(keeping:)` | `([Int]) -> DensityMatrix` | Traces out every qubit *not* listed, returning the reduced density matrix on the kept qubits. As with `StateVector.marginalProbabilities(over:)`, the kept qubits appear **in the order given** in the result's basis ordering, not necessarily ascending index. Traps if `qubits` is empty, has a duplicate, or has an out-of-range index. |
+| `blochVector` | `(x: Double, y: Double, z: Double)?` | `(Tr(ρX), Tr(ρY), Tr(ρZ))`, `nil` unless this is a single-qubit density matrix. Unlike a pure state's Bloch vector, `\|r\|` need not be 1 — it shrinks toward the origin as the state becomes more mixed. |
+| `eigenvalues` | `[Double]` | The (real, non-negative) eigenvalues of ρ, ascending. Computed via a real-symmetric embedding of the Hermitian matrix plus a small internal Jacobi eigenvalue solver — adequate for qubit-count sizes, not a general-purpose or performance-tuned routine. |
+| `vonNeumannEntropy` | `Double` | `S(ρ) = −Σᵢ λᵢ log₂λᵢ`, in bits. Uses the closed form from the Bloch vector's magnitude for a single qubit; falls back to `eigenvalues` otherwise. |
+
+---
+
+## `KrausChannel`
+
+`Sources/SwiftQiskit/Quantum/KrausChannel.swift` — a quantum channel `ρ' = Σᵢ KᵢρKᵢ†`,
+given by its Kraus operators.
+
+```swift
+public struct KrausChannel {
+    public let operators: [Matrix]
+    public init(operators: [Matrix])   // traps unless all square and the same size
+    func isTracePreserving(tolerance: Double = 1e-10) -> Bool
+    func apply(to rho: DensityMatrix) -> DensityMatrix
+    func apply(to rho: DensityMatrix, qubit: Int) -> DensityMatrix
+}
+```
+
+| Member | Notes |
+|---|---|
+| `isTracePreserving(tolerance:)` | `true` iff `Σᵢ Kᵢ†Kᵢ ≈ I` entrywise within `tolerance` — mirrors `Matrix.isUnitary(tolerance:)`'s style. |
+| `apply(to:)` | `ρ' = Σᵢ KᵢρKᵢ†` on the whole register. The channel's operator size must match `rho`'s dimension exactly. |
+| `apply(to:qubit:)` | Embeds a single-qubit (2×2) channel onto one `qubit` of an n-qubit `rho`, the same idiom `CNOTGate.matrix(qubits:control:target:)` uses for a 2×2 gate. Traps unless `operators[0].rows == 2`. |
+
+### Standard channels
+
+| Factory | Notes |
+|---|---|
+| `bitFlip(_ p:)` | Applies X with probability `p`. |
+| `phaseFlip(_ p:)` | Applies Z with probability `p`. |
+| `depolarizing(_ p:)` | Applies X, Y, or Z with equal probability `p/4` each, leaving the qubit untouched with probability `1 - 3p/4`. |
+| `amplitudeDamping(_ gamma:)` | T1-style energy relaxation toward `\|0⟩`: shrinks x/y by `√(1-γ)` and pulls z toward `+1`. |
+| `phaseDamping(_ lambda:)` | T2-style pure dephasing: shrinks x/y by `√(1-λ)` with **no** energy loss (z is left exactly alone). |
+
+All five take a probability/rate in `[0, 1]` and trap outside that range.
+
+---
+
+## `NoiseModel`
+
+`Sources/SwiftQiskit/Quantum/NoiseModel.swift` — maps gate applications in a
+`QuantumCircuit` to per-qubit `KrausChannel`s, for `runDensityMatrix(noise:)`/
+`runTrajectories(noise:shots:)` above.
+
+```swift
+public struct NoiseModel {
+    public let singleQubitGate: KrausChannel?
+    public let multiQubitGate: KrausChannel?
+    public init(singleQubitGate: KrausChannel? = nil, multiQubitGate: KrausChannel? = nil)
+    public static func uniform(_ channel: KrausChannel) -> NoiseModel
+}
+```
+
+`singleQubitGate` is applied to every qubit touched by a single-qubit gate; `multiQubitGate`
+is applied to every qubit touched by a multi-qubit gate (`cx`, `ccx`, `mcx`, …) — each qubit
+independently, not as one genuinely correlated multi-qubit channel. Either may be `nil` to
+skip noise for that gate class. Both channels must be single-qubit (2×2) and
+trace-preserving — `init` traps otherwise. `uniform(_:)` applies the same channel after
+both gate classes.
+
+---
+
 ## Utilities
 
 `Sources/SwiftQiskit/Utils/String+Padding.swift`:
@@ -544,16 +636,25 @@ that happens to be `public`; don't build new API around it.
 
 ## Not Yet in Core
 
-Several capabilities that later playground pages need — noise/Kraus channels and mid-circuit
-or partial measurement (`DensityMatrix`/`KrausChannel`), and a real maximum-likelihood or
-linear-inversion state-tomography reconstruction (`StateTomography` above is a rescale, not
-this) — are implemented *inside individual playground pages* rather than in
-`Sources/SwiftQiskit`, deliberately (see each page's plan doc under `PlaygroundDocs/`).
-Proposed Core extensions for these areas, with rationale, are tracked in
-`STATUSandTODO.md` under "Proposed Core extensions — ...". (`Hamiltonian.trotterCircuit`
-and the `increment`/`decrement` register builders, previously listed here, are now
-implemented — see `QuantumCircuit.evolve`/`Hamiltonian.trotterCircuit` and
-`QuantumCircuit.increment`/`decrement` above.)
+A few capabilities that later playground pages need are still implemented *inside
+individual playground pages* rather than in `Sources/SwiftQiskit` (see each page's plan doc
+under `PlaygroundDocs/`):
+
+- Mid-circuit or partial measurement — page `13Teleportation` routes around this with
+  deferred-measurement-principle gates instead.
+- A real maximum-likelihood or linear-inversion state-tomography reconstruction
+  (`StateTomography` above is a rescale, not this).
+- A package-level `BlochVector` type (pure-state and `DensityMatrix`-driven) — every
+  playground page has its own copy in `Playgrounds.playground/Sources/BlochVector.swift`
+  instead, to avoid a name collision (see `StateTomography` above).
+
+Proposed Core extensions for these and other areas, with rationale, are tracked in
+`STATUSandTODO.md` under "Proposed Core extensions — ...". (`Hamiltonian.trotterCircuit`,
+the `increment`/`decrement` register builders, and open-systems support
+(`DensityMatrix`/`KrausChannel`/`NoiseModel`/`runDensityMatrix`/`runTrajectories`),
+previously listed here, are now implemented — see `QuantumCircuit.evolve`/
+`Hamiltonian.trotterCircuit`, `QuantumCircuit.increment`/`decrement`, and `DensityMatrix`/
+`KrausChannel`/`NoiseModel` above.)
 
 For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
 used by playground live views, see `PLAYGROUNDSUPPORT.md`.
