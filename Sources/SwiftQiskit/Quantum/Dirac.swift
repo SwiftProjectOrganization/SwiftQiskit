@@ -127,6 +127,21 @@ public extension StateVector {
     }
 }
 
+// MARK: - Expectation Values
+
+public extension StateVector {
+
+    /// Expectation value ⟨ψ|A|ψ⟩ of an observable `A`, as its real part.
+    /// For a Hermitian `A` (any genuine observable — Pauli matrices, projectors, sums of
+    /// these) the imaginary part is exactly zero, so discarding it costs nothing; passing
+    /// a non-Hermitian matrix silently drops that part instead of trapping, so only pass
+    /// real observables. Traps (via the underlying `Bra` products) if `A`'s dimensions
+    /// don't match `self`.
+    func expectation(_ observable: Matrix) -> Double {
+        (self† * observable * self).real
+    }
+}
+
 // MARK: - Basis Kets
 
 public extension StateVector {

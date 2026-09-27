@@ -96,6 +96,83 @@ struct MatrixArithmeticTests {
         #expect(approxEqual((a + b) * c, (a * c) + (b * c)))
     }
 
+    // MARK: - Unitarity
+
+    /// Test that known unitary gates (fixed and parameterized) pass `isUnitary`
+    @Test func `Known unitary matrices pass isUnitary`() {
+        #expect(HadamardGate.matrix.isUnitary())
+        #expect(PauliXGate.matrix.isUnitary())
+        #expect(CNOTGate.matrix.isUnitary())
+        #expect(RXGate.matrix(theta: .pi / 7).isUnitary())
+        #expect(Matrix.identity(size: 4).isUnitary())
+    }
+
+    /// Test that non-unitary matrices — including a non-square one — fail `isUnitary`
+    @Test func `Non-unitary matrices fail isUnitary`() {
+        let notNormPreserving = Matrix([[Complex(2), .zero], [.zero, Complex(1)]])
+        #expect(!notNormPreserving.isUnitary())
+
+        let nonSquare = Matrix(rows: 2, cols: 3)
+        #expect(!nonSquare.isUnitary())
+    }
+
+    /// Test that `isUnitary`'s tolerance parameter is honored: a matrix perturbed by less
+    /// than a loose tolerance passes, but fails against a tolerance tighter than the error
+    @Test func `isUnitary tolerance controls how close counts as unitary`() {
+        let epsilon = 1e-6
+        let perturbed = Matrix([
+            [Complex(1 + epsilon), .zero],
+            [.zero, Complex(1)]
+        ])
+        #expect(perturbed.isUnitary(tolerance: 1e-3))
+        #expect(!perturbed.isUnitary(tolerance: 1e-10))
+    }
+
+    // MARK: - Trace
+
+    /// Test trace against known gates and a hand-summed literal
+    @Test func `Trace sums the diagonal entries`() {
+        #expect(PauliXGate.matrix.trace == .zero)
+        #expect(PauliZGate.matrix.trace == .zero)
+        #expect(Matrix.identity(size: 3).trace == Complex(3))
+
+        let m = Matrix([[Complex(1, 2), Complex(9)], [Complex(-3), Complex(4, -1)]])
+        #expect(m.trace == Complex(5, 1))
+    }
+
+    /// Test that trace is invariant under a similarity-style conjugation by a unitary —
+    /// here H X H = Z, and both X and Z (like all three Paulis) are traceless
+    @Test func `Trace is preserved under Hadamard conjugation`() {
+        let h = HadamardGate.matrix
+        let x = PauliXGate.matrix
+        let conjugated = h * x * h
+        #expect(approxEqual(conjugated, PauliZGate.matrix))
+        #expect((conjugated.trace - x.trace).magnitude < tolerance)
+    }
+
+    // MARK: - Permutation Matrix
+
+    /// Test that `Matrix.permutation` reproduces the fixed two-qubit CNOT
+    /// (control = qubit 0 → bit 0b10, target = qubit 1 → bit 0b01)
+    @Test func `Permutation matches the fixed two-qubit CNOT`() {
+        let cnot = Matrix.permutation(size: 4) { col in
+            (col & 0b10) != 0 ? col ^ 0b01 : col
+        }
+        #expect(cnot == CNOTGate.matrix)
+    }
+
+    /// Test that every permutation matrix is exactly unitary (0s and 1s only, no rounding)
+    @Test func `Permutation matrices are exactly unitary`() {
+        let reverse = Matrix.permutation(size: 8) { 7 - $0 }
+        #expect(reverse.isUnitary())
+        #expect(reverse.adjoint * reverse == Matrix.identity(size: 8))
+    }
+
+    /// Test that identity is the trivial permutation
+    @Test func `Identity is the trivial permutation`() {
+        #expect(Matrix.permutation(size: 5) { $0 } == Matrix.identity(size: 5))
+    }
+
     // MARK: - Real use cases motivating this file
 
     /// Test that the basis projectors sum to the identity — Chapter 4 §4.3's

@@ -107,19 +107,16 @@ print("7^(r/2) = 7² ≡ \(answerHalf):  gcd(\(answerHalf - 1), 15) = \(gcd(answ
 // Section 3 — Modular multiplication as a permutation matrix
 // ============================================================
 // For a coprime to 15, w ↦ a·w mod 15 permutes {0, …, 14} — it is
-// reversible, hence unitary, with exactly one 1 per column. The
-// 4-qubit work register has 16 basis states; the unused |15⟩ is
-// left as a fixed point.
+// reversible, hence unitary. `Matrix.permutation` builds exactly
+// this: the bijection check it runs internally *is* the unitarity
+// argument above, not just an assertion of it. The 4-qubit work
+// register has 16 basis states; the unused |15⟩ is left as a fixed
+// point.
 
 /// U_a on the 4-qubit work register: |w⟩ ↦ |a·w mod 15⟩ for
-/// w < 15, |15⟩ fixed. A 16×16 permutation — one `.one` per column.
+/// w < 15, |15⟩ fixed.
 func modMultiplyGate(_ a: Int) -> Matrix {
-    var m = Matrix(rows: 16, cols: 16)
-    for w in 0..<15 {
-        m[(a * w) % 15, w] = .one
-    }
-    m[15, 15] = .one
-    return m
+    Matrix.permutation(size: 16) { w in w < 15 ? (a * w) % 15 : 15 }
 }
 
 /// Round an amplitude for display: 4 decimals, dropping components
@@ -243,17 +240,15 @@ print("QFT† of uniform |s⟩: \(pretty(uniformTest.run(), qubits: 3))")
 /// `controlQubit` of c is 1 (and w < 15), identity otherwise.
 /// State index = count·16 + work.
 func controlledModMultiply(controlQubit: Int, multiplier: Int) -> Matrix {
-    var m = Matrix(rows: 128, cols: 128)
-    for index in 0..<128 {
+    Matrix.permutation(size: 128) { index in
         let count = index >> 4
         let work = index & 15
         var newWork = work
         if (count >> (2 - controlQubit)) & 1 == 1 && work < 15 {
             newWork = (multiplier * work) % 15
         }
-        m[(count << 4) | newWork, index] = .one
+        return (count << 4) | newWork
     }
-    return m
 }
 
 print("\ncounting qubit k → controlled power of 7:")

@@ -182,8 +182,7 @@ import SwiftQiskit
 /// flips whichever data qubit (of q0,q1,q2) the syndrome (q3,q4)
 /// accuses, leaving everything else unchanged.
 func bitFlipCorrection() -> Matrix {
-    var m = Matrix(rows: 32, cols: 32)
-    for i in 0..<32 {
+    Matrix.permutation(size: 32) { i in
         var bits = (0..<5).map { (i >> (4 - $0)) & 1 }
         switch (bits[3], bits[4]) {
         case (1, 0): bits[0] = 1 - bits[0]
@@ -191,10 +190,8 @@ func bitFlipCorrection() -> Matrix {
         case (0, 1): bits[2] = 1 - bits[2]
         default: break
         }
-        let j = bits[0]*16 + bits[1]*8 + bits[2]*4 + bits[3]*2 + bits[4]
-        m[j, i] = Complex(1)
+        return bits[0]*16 + bits[1]*8 + bits[2]*4 + bits[3]*2 + bits[4]
     }
-    return m
 }
 
 let qc = QuantumCircuit(qubits: 5)

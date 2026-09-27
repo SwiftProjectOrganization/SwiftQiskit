@@ -64,6 +64,25 @@ struct DiracNotationTests {
         #expect((Ket.plus† * z * Ket.plus).magnitude < tolerance)
     }
 
+    /// Test that `expectation(_:)` matches the manual ⟨ψ|A|ψ⟩ idiom above
+    @Test func `expectation wraps the manual bra-ket idiom`() {
+        let z = PauliZGate.matrix
+        #expect(abs(Ket.zero.expectation(z) - 1.0) < tolerance)
+        #expect(abs(Ket.one.expectation(z) + 1.0) < tolerance)
+        #expect(abs(Ket.plus.expectation(z)) < tolerance)
+    }
+
+    /// Test `expectation(_:)` against a combined Hermitian observable (page 15CHSH's
+    /// tilted A(θ) = cos θ·Z + sin θ·X), matching the manual `(ψ† * A * ψ).real` it wraps
+    @Test func `expectation matches a combined Hermitian observable`() {
+        let theta = Double.pi / 5
+        let tilted = (cos(theta) * PauliZGate.matrix) + (sin(theta) * PauliXGate.matrix)
+        let psi = Ket.plus
+        let viaHelper = psi.expectation(tilted)
+        let viaManual = (psi† * tilted * psi).real
+        #expect(abs(viaHelper - viaManual) < tolerance)
+    }
+
     /// Test that the Hadamard matrix is self-adjoint
     @Test func `Hadamard is its own adjoint`() {
         #expect(HadamardGate.matrix† == HadamardGate.matrix)

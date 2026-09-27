@@ -104,14 +104,15 @@ for (name, errs) in [("none", []), ("q0  ", [0]), ("q1  ", [1]), ("q2  ", [2])] 
 // ============================================================
 // Section 3 — coherent correction
 // ============================================================
-// One 32×32 basis-state permutation, built by index arithmetic: for
+// One 32×32 basis-state permutation, built via `Matrix.permutation`: for
 // each basis index, decode the syndrome bits (q3, q4) and flip the
 // data qubit they accuse. This is three Toffoli-with-mixed-controls
 // folded into a single matrix — exactly page 11/12's "hand-build the
-// permutation, hand it to `apply(_:)`" idiom.
+// permutation, hand it to `apply(_:)`" idiom. `Matrix.permutation`'s own
+// bijection check is the unitarity argument below, not just an
+// assertion of it.
 
-var correction = Matrix(rows: 32, cols: 32)
-for i in 0..<32 {
+let correction = Matrix.permutation(size: 32) { i in
     let bits = lbl(i, 5).map { Int(String($0))! }
     var c = bits
     switch (bits[3], bits[4]) {
@@ -120,21 +121,10 @@ for i in 0..<32 {
     case (0, 1): c[2] = 1 - c[2]   // syndrome 01 accuses q2
     default: break                 // syndrome 00: nothing to fix
     }
-    let j = c[0] * 16 + c[1] * 8 + c[2] * 4 + c[3] * 2 + c[4]
-    correction[j, i] = Complex(1)
+    return c[0] * 16 + c[1] * 8 + c[2] * 4 + c[3] * 2 + c[4]
 }
 
-var isUnitary = true
-let adj = correction.adjoint
-outer: for i in 0..<32 {
-    for j in 0..<32 {
-        let expected = (i == j) ? Complex(1) : Complex.zero
-        var v = Complex.zero
-        for k in 0..<32 { v = v + adj[i, k] * correction[k, j] }
-        if (v - expected).magnitude > 1e-9 { isUnitary = false; break outer }
-    }
-}
-print("\ncorrection matrix is unitary: \(isUnitary)")
+print("\ncorrection matrix is unitary: \(correction.isUnitary())")
 // Expected: true — it's a permutation, so it can't help but be unitary.
 
 let psiOnly: StateVector = {

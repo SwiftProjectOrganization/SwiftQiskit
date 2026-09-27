@@ -147,6 +147,10 @@ Enjoy exploring the quantum world
 
 ---
 
+##  API Reference
+
+For a full listing of every public type and member in the core library, see [`API.md`](API.md).
+
 ##  Project Structure for this fork
 
 ```text

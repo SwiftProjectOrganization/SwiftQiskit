@@ -52,11 +52,12 @@ The project is actively evolving, and major features are planned.
       `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
       page `18VQE`'s ZZ-term measurement and page `20Tomography`'s shot-based estimators.
       Needs tests if added to Core.
-- [ ] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
+- [x] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
       `(self† * observable * self).real` — bumped up from low priority: four independent app
       chapters (21, 22, 23, 24) now hand-roll this exact three-line idiom under their own
       `expectationZ0`/`energy`-style wrapper names, so it's cheap and no longer marginal. Also
       listed under "Proposed Core extensions — open systems" and "— variational" below.
+      Implemented in `Quantum/Dirac.swift`; tested in `DiracNotationTests.swift`.
 - [ ] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
       a, a′ fixed) to a genuine multi-angle search over all four settings, if a true
       confirmation of the bound (rather than a consistency check) is wanted.
@@ -259,7 +260,8 @@ level helpers. None of these are implemented yet; they're recorded here as the w
 turning open-systems support into a first-class Core feature (see the Roadmap's "Noise models"
 entry above):
 
-- [ ] `Matrix.trace` — sum of the diagonal entries; retires `19Noise`'s last page-level helper.
+- [x] `Matrix.trace` — sum of the diagonal entries; retires `19Noise`'s last page-level helper.
+      Implemented in `Math/Matrix.swift`; tested in `MatrixArithmeticTests.swift`.
 - [ ] `DensityMatrix` type: `init(_:StateVector)`/`init(mixture:)`, `purity`, `probabilities`,
       `expectation(_:)`, `apply(_:) -> DensityMatrix`, `partialTrace(keeping:)` (generalizing
       `19Noise`'s 2-qubit `partialTraceLast` to n qubits and an arbitrary subset),
@@ -276,11 +278,12 @@ entry above):
       generalized to full circuits). Would let page `14ErrorCorrection`'s p_L = 3p² − 2p³ be
       reproduced empirically under a real bit-flip noise model instead of one hand-injected `x`
       gate — flagged there as "not doing" in `14ERRORCORRECTIONPLAN.md`'s analogue.
-- [ ] `DensityMatrix.fidelity(to:StateVector)` and `StateVector.expectation(_:Matrix)` — the
-      latter would simplify `19Noise`'s `blochOf` helper to one line and help `20Tomography`,
-      which measures exactly these three expectation values per qubit. The app's Chapter 22
-      findings hit this same gap again independently (its `exactExpectation(_:_:)` re-derives
-      the one-liner `(psi† * A * psi).real`) — see "Proposed Core extensions — tomography"
+- [ ] `DensityMatrix.fidelity(to:StateVector)` — remaining half of this pair;
+      `StateVector.expectation(_:Matrix)` (the other half — [x] above) would simplify
+      `19Noise`'s `blochOf` helper to one line and help `20Tomography`, which measures
+      exactly these three expectation values per qubit. The app's Chapter 22 findings hit
+      this same gap again independently (its `exactExpectation(_:_:)` re-derives the
+      one-liner `(psi† * A * psi).real`) — see "Proposed Core extensions — tomography"
       below.
 - [ ] A single package-level `BlochVector` (pure-state and `DensityMatrix`-driven initializers),
       replacing the three hand-vendored copies (`Playgrounds.playground/Sources/BlochVector.swift`,
@@ -426,14 +429,20 @@ made for the chapter itself; the app did gain an exact 3-gate decomposition of t
 shift (`cx(0,1); cx(2,1); x(2)`), raising that one chapter's app badge from ○ to ◐. Proposed Core
 work:
 
-- [ ] `Matrix.permutation(size: Int, image: (Int) -> Int) -> Matrix` — the hand-rolled
+- [x] `Matrix.permutation(size: Int, image: (Int) -> Int) -> Matrix` — the hand-rolled
       `for i in 0..<n { m[image(i), i] = .one }` loop that pages `12ShorExample` (modular
       multiplication), `14ErrorCorrection` (the 32×32 correction), and `22Walk` (the shift) each
       write from scratch. `precondition` that `image` is a bijection (making the constructor
       itself the unitarity check, replacing each page's separate manual `S†S = I` check).
-- [ ] `Matrix.isUnitary(tolerance: Double) -> Bool` — replaces the hand `M†M ≈ I` check repeated
+      Implemented in `Math/Matrix.swift`; tested in `MatrixArithmeticTests.swift`. All three
+      pages above (`12ShorExample`'s `modMultiplyGate`/`controlledModMultiply`,
+      `14ErrorCorrection`'s `correction`, `22Walk`'s `buildShift`) are now migrated onto it,
+      each verified to produce a matrix identical to its old hand-rolled loop; the manual
+      `S†S ≈ I` checks in `14ErrorCorrection` and `22Walk` were replaced with `isUnitary()`.
+- [x] `Matrix.isUnitary(tolerance: Double) -> Bool` — replaces the hand `M†M ≈ I` check repeated
       since page `12ShorExample`; also wanted by Chapter 24's findings (restated there as the
-      third page in a row, 21/24/25, wanting a unitarity helper alongside `expm`).
+      third page in a row, 21/24/25, wanting a unitarity helper alongside `expm`). Implemented
+      in `Math/Matrix.swift`; tested in `MatrixArithmeticTests.swift`.
 - [ ] `ToffoliGate.matrix(qubits: Int, control1:, control2:, target:) -> Matrix` (a permutation:
       flip `target` iff both controls are `1`) via `Matrix.permutation` above, plus a
       `QuantumCircuit.ccx(_:_:_:)` circuit method. This chapter's central finding is that the

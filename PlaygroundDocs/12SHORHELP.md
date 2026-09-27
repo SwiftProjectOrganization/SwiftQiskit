@@ -63,7 +63,7 @@ Nothing beyond `h`/`x` is native, but both missing pieces are single matrices fo
 
 | Operator | Construction |
 |---|---|
-| U_a (work register) | 16×16 permutation: `m[(a·w) % 15, w] = .one` for w < 15, \|15⟩ fixed |
+| U_a (work register) | 16×16 `Matrix.permutation`: `w ↦ (a·w) % 15` for w < 15, \|15⟩ fixed |
 | controlled-U_a^p | 128×128 permutation: permute the work bits only where counting bit k of the index is 1 |
 | QFT† (counting register) | 8×8 inverse DFT built entrywise: `e^(−2πi·y·c/8)/√8` via `cos`/`sin`, embedded as `qft3Dagger ⊗ Matrix.identity(size: 16)` |
 
@@ -161,13 +161,11 @@ func modPow(_ b: Int, _ e: Int, _ m: Int) -> Int {
 
 /// Controlled ×multiplier (mod 15) on qubits 3–6, keyed on counting qubit k.
 func controlledModMultiply(controlQubit: Int, multiplier: Int) -> Matrix {
-    var m = Matrix(rows: 128, cols: 128)
-    for index in 0..<128 {
+    Matrix.permutation(size: 128) { index in
         let count = index >> 4, work = index & 15
         let hit = (count >> (2 - controlQubit)) & 1 == 1 && work < 15
-        m[(count << 4) | (hit ? (multiplier * work) % 15 : work), index] = .one
+        return (count << 4) | (hit ? (multiplier * work) % 15 : work)
     }
-    return m
 }
 
 var qftDagger = Matrix(rows: 8, cols: 8)

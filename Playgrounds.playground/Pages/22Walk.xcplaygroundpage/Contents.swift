@@ -28,35 +28,21 @@ let dim = 32
 // Section 1 — the conditional shift, as a permutation matrix
 // ============================================================
 // |0,x⟩ → |0,x+1 mod 16⟩ (coin 0: step right), |1,x⟩ → |1,x−1 mod 16⟩
-// (coin 1: step left) — the page 12/14 idiom of a hand-built
-// permutation applied via `apply(_:)`.
+// (coin 1: step left) — via `Matrix.permutation`, whose own bijection
+// check is the unitarity argument below, not just an assertion of it.
 
 func buildShift() -> Matrix {
-    var m = Matrix(rows: dim, cols: dim)
-    for coin in 0...1 {
-        for pos in 0..<numSites {
-            let newPos = coin == 0 ? (pos + 1) % numSites : (pos - 1 + numSites) % numSites
-            let fromIndex = coin * numSites + pos
-            let toIndex = coin * numSites + newPos
-            m[toIndex, fromIndex] = .one
-        }
+    Matrix.permutation(size: dim) { fromIndex in
+        let coin = fromIndex / numSites
+        let pos = fromIndex % numSites
+        let newPos = coin == 0 ? (pos + 1) % numSites : (pos - 1 + numSites) % numSites
+        return coin * numSites + newPos
     }
-    return m
 }
 let S = buildShift()
 
-func maxDiffFromIdentity(_ m: Matrix) -> Double {
-    var maxAbs = 0.0
-    for i in 0..<m.rows {
-        for j in 0..<m.cols {
-            let expected: Complex = (i == j) ? .one : .zero
-            maxAbs = max(maxAbs, (m[i, j] - expected).magnitude)
-        }
-    }
-    return maxAbs
-}
-print("S†S = I max diff: \(String(format: "%.2e", maxDiffFromIdentity((S†) * S)))")
-// Expected: 0.0 — S is a genuine permutation (unitary).
+print("S is unitary: \(S.isUnitary())")
+// Expected: true — S is a genuine permutation (unitary).
 
 // ============================================================
 // Section 2 — one step: coin flip, then conditional shift

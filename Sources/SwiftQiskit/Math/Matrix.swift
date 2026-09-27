@@ -169,6 +169,73 @@ public extension Matrix {
     }
 }
 
+// MARK: - Unitarity
+
+public extension Matrix {
+
+    /// Whether this matrix is (approximately) unitary: U†U ≈ I, entrywise within `tolerance`.
+    /// Always `false` for a non-square matrix. Replaces the hand-rolled `U†U ≈ I` check
+    /// repeated across playground pages and tests — `Matrix.==` compares entries exactly,
+    /// so it lies on real unitary matrices whose entries carry floating-point rounding.
+    func isUnitary(tolerance: Double = 1e-10) -> Bool {
+        guard rows == cols else { return false }
+
+        let product = adjoint * self
+        let identity = Matrix.identity(size: rows)
+        for i in 0..<rows {
+            for j in 0..<cols {
+                if (product[i, j] - identity[i, j]).magnitude >= tolerance { return false }
+            }
+        }
+        return true
+    }
+}
+
+// MARK: - Trace
+
+public extension Matrix {
+
+    /// Sum of the diagonal entries, Σᵢ Aᵢᵢ. Traps if the matrix isn't square.
+    var trace: Complex {
+        precondition(rows == cols, "Trace is only defined for a square matrix")
+
+        var sum = Complex.zero
+        for i in 0..<rows {
+            sum = sum + self[i, i]
+        }
+        return sum
+    }
+}
+
+// MARK: - Permutation Matrix
+
+public extension Matrix {
+
+    /// Builds the `size`×`size` permutation matrix sending basis column `i` to row
+    /// `image(i)`, i.e. `|image(i)⟩ ← |i⟩`. `image` must be a bijection on `0..<size`;
+    /// this is checked (each row hit exactly once) rather than assumed, so the
+    /// constructor itself doubles as the unitarity check a hand-rolled permutation loop
+    /// would otherwise need to verify separately with `U†U == I`.
+    static func permutation(size: Int, image: (Int) -> Int) -> Matrix {
+        precondition(size > 0, "Matrix size must be positive")
+
+        var m = Matrix(rows: size, cols: size)
+        var seenRows = Array(repeating: false, count: size)
+
+        for col in 0..<size {
+            let row = image(col)
+            precondition(row >= 0 && row < size,
+                         "Permutation image out of range")
+            precondition(!seenRows[row],
+                         "Permutation image must be a bijection on 0..<size (row \(row) hit more than once)")
+            seenRows[row] = true
+            m[row, col] = .one
+        }
+
+        return m
+    }
+}
+
 // MARK: - Tensor Product
 
 /// Kronecker (tensor) product operator.

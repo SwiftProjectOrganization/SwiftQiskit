@@ -1,0 +1,340 @@
+# SwiftQiskit API Reference
+
+This is the API reference for the `SwiftQiskit` **core library** (`Sources/SwiftQiskit/`) — the
+product you get from `import SwiftQiskit`. It does not cover the playground helper module
+(`Playgrounds.playground/Sources/`); see `PLAYGROUNDSUPPORT.md` for that.
+
+SwiftQiskit is v0.1 — the API is unstable and correctness is prioritized over performance.
+Keep this document in sync with the source when the public API changes.
+
+## Conventions
+
+- **Qubit indexing:** qubit 0 is the most-significant (leftmost) bit. This applies to
+  `QuantumCircuit` gate methods, `CNOTGate.matrix(qubits:control:target:)`, `⊗` (tensor
+  product — the left-hand operand occupies the high-order bits), and binary state labels
+  like `Ket("01")`.
+- **Angles are in radians**, and — following Qiskit — appear as the *first* argument on
+  parameterized circuit methods: `p(theta, qubit)`, `rx(theta, qubit)`, etc.
+- **Invariants are enforced with `precondition`**, not thrown errors: passing a mismatched
+  matrix dimension, an out-of-range qubit index, or an empty state traps at runtime rather
+  than failing gracefully. Check preconditions before calling.
+- **Value types throughout**, except `QuantumCircuit`, which is a `final class` (reference
+  semantics — copies alias the same circuit).
+
+## Quick Start
+
+```swift
+import SwiftQiskit
+
+let circuit = QuantumCircuit(qubits: 2)
+circuit.h(0)
+circuit.cx(0, 1)
+
+let state = circuit.run()
+print(state)
+// |0⟩: 0.7071067811865475     <- unpadded label; this is |00⟩
+// |1⟩: 0.0                    <- this is |01⟩
+// |10⟩: 0.0
+// |11⟩: 0.7071067811865475
+
+let result = circuit.measure(shots: 1000)
+print(result.sortedCounts)
+// [(state: "00", count: 487), (state: "11", count: 513)]  -- counts vary run to run
+```
+
+---
+
+## `Complex`
+
+`Sources/SwiftQiskit/Math/Complex.swift` — a value-type complex number.
+
+```swift
+public struct Complex: Equatable, Hashable {
+    public var real: Double
+    public var imag: Double
+    public init(_ real: Double = 0.0, _ imag: Double = 0.0)
+}
+```
+
+| Member | Notes |
+|---|---|
+| `.zero`, `.one`, `.i` | Constants `Complex(0,0)`, `Complex(1,0)`, `Complex(0,1)`. |
+| `magnitude` | `\|z\|`. |
+| `magnitudeSquared` | `\|z\|²` — used internally to avoid a `sqrt` where only the square is needed (e.g. probabilities). |
+| `conjugate` | `z̄`. |
+| `+`, `-`, `*`, `/` | Standard complex arithmetic. `/` traps via `precondition` on division by zero. |
+| `*(Complex, Double)`, `*(Double, Complex)` | Scalar multiplication, either operand order. |
+| `description` | Formats as `"a"`, `"bi"`, or `"a + bi"` / `"a - bi"`. |
+
+**Gaps to know about:** there is no unary `-` and no `exp`/polar constructor — write
+`Complex(-1)` for negation and `Complex(cos(theta), sin(theta))` for `e^{iθ}` (see how the
+gate files do it).
+
+---
+
+## `Matrix`
+
+`Sources/SwiftQiskit/Math/Matrix.swift` (plus `adjoint`, added in `Dirac.swift`) — a
+row-major, dense complex matrix.
+
+```swift
+public struct Matrix: Equatable, Hashable {
+    public let rows: Int
+    public let cols: Int
+    public init(rows: Int, cols: Int, repeating value: Complex = .zero)
+    public init(_ data: [[Complex]])
+    public subscript(row: Int, col: Int) -> Complex { get set }
+}
+```
+
+- `init(_ data:)` traps on an empty array or ragged rows.
+- `subscript` traps on out-of-range indices.
+
+| Operation | Signature | Notes |
+|---|---|---|
+| Matrix × matrix | `static func * (Matrix, Matrix) -> Matrix` | Traps if `lhs.cols != rhs.rows`. |
+| Matrix × vector | `func multiply(by vector: [Complex]) -> [Complex]` | Traps if `cols != vector.count`. |
+| Addition / subtraction | `static func + / -` | Entrywise; traps on a dimension mismatch. |
+| Scalar multiply | `static func * (Matrix, Complex)`, `(Complex, Matrix)`, `(Matrix, Double)`, `(Double, Matrix)` | All four orders/types are supported. |
+| Identity | `static func identity(size: Int) -> Matrix` | |
+| Tensor (Kronecker) product | `func tensor(_ other: Matrix) -> Matrix`, operator `⊗` | `(rows·other.rows) × (cols·other.cols)`; any dimensions are valid, not just square. `⊗` is declared here as `infix operator ⊗ : MultiplicationPrecedence`. |
+| Adjoint (conjugate transpose) | `var adjoint: Matrix`, postfix `†` | Declared in `Dirac.swift`. |
+| Unitarity check | `func isUnitary(tolerance: Double = 1e-10) -> Bool` | `true` iff square and `U†U ≈ I` entrywise within `tolerance`; `false` for any non-square matrix. Replaces the hand `M†M ≈ I` check otherwise repeated at every call site (see the `Equatable` gotcha below). |
+| Trace | `var trace: Complex` | Σᵢ `self[i,i]`. Traps if the matrix isn't square. |
+| Permutation matrix | `static func permutation(size: Int, image: (Int) -> Int) -> Matrix` | Builds the `size`×`size` permutation sending column `i` to row `image(i)` (i.e. `\|image(i)⟩ ← \|i⟩`). Traps unless `image` is a genuine bijection on `0..<size` — every row must be hit by exactly one column — so the constructor itself is the unitarity check a hand-rolled permutation loop would otherwise verify separately. |
+| Description | `description` | One bracketed row per line. |
+
+**Gotcha:** `Equatable`/`Hashable` compare `Complex` entries exactly, so two matrices that
+are mathematically equal but differ by floating-point rounding will compare unequal with
+`==`. Use `isUnitary(tolerance:)` or an approximate comparison in tests (see
+`MatrixArithmeticTests.swift` for the pattern used in this repo).
+
+---
+
+## `StateVector` (aka `Ket`)
+
+`Sources/SwiftQiskit/Quantum/StateVector.swift`, extended in `Dirac.swift` — a normalized
+vector of complex amplitudes representing an *n*-qubit pure state (2ⁿ amplitudes).
+
+```swift
+public struct StateVector: Equatable {
+    public private(set) var amplitudes: [Complex]
+    public init(_ amplitudes: [Complex])   // auto-normalizes; traps on an empty or all-zero input
+    public init(qubits: Int)               // |0...0⟩; traps if qubits <= 0
+}
+
+public typealias Ket = StateVector
+```
+
+| Member | Notes |
+|---|---|
+| `dimension` | `2ⁿ`, i.e. `amplitudes.count`. |
+| `probabilities` | `[Double]` of `\|αᵢ\|²`, one per basis state. |
+| `subscript(index:)` | Amplitude at a basis index; traps out of range. |
+| `normalize()` | Mutating; rescales to unit norm. Skips the rescale (and the rounding error it would add) when the norm is already within `1e-12` of 1, which keeps the dagger a true involution: `(ψ†)† == ψ` exactly. Traps if the norm is zero. |
+| `apply(_ matrix: Matrix)` | Mutating: `\|ψ'⟩ = U\|ψ⟩`, then re-normalizes. **Any** matrix of the right dimension is accepted and silently rescaled to a unit vector — a non-unitary `U` will not be rejected, it will just change the probabilities in ways `U` alone wouldn't predict. |
+| `measure() -> Int` | Mutating: samples a basis index from `probabilities` and **collapses** `self` to that basis state (all other amplitudes become `.zero`). Not idempotent — calling it twice is a different measurement, not a re-read. |
+| `tensor(_ other:) -> StateVector`, operator `⊗` | Combines two registers; `self` occupies the high-order bits. |
+| `description` | One `"|label⟩: amplitude"` line per basis state. The binary label is **not** zero-padded (e.g. a 2-qubit state's index 1 prints as `|1⟩`, not `|01⟩`) — contrast with `SimulationResult`, whose keys *are* zero-padded. |
+
+### Basis kets (`Dirac.swift`)
+
+```swift
+Ket("01")          // basis ket from a binary label (qubit 0 = leftmost bit)
+StateVector.zero    // |0⟩
+StateVector.one     // |1⟩
+StateVector.plus    // |+⟩  = (|0⟩ + |1⟩)/√2
+StateVector.minus   // |−⟩  = (|0⟩ − |1⟩)/√2
+StateVector.plusI   // |i⟩  = (|0⟩ + i|1⟩)/√2
+StateVector.minusI  // |−i⟩ = (|0⟩ − i|1⟩)/√2
+```
+
+`Ket(_ label:)` traps if the label contains anything but `0`/`1` or is empty.
+
+---
+
+## `Bra` and Dirac Operators
+
+`Sources/SwiftQiskit/Quantum/Dirac.swift` — bra-ket notation built on top of `StateVector`/`Matrix`.
+
+```swift
+public struct Bra: Equatable {
+    public private(set) var amplitudes: [Complex]   // stored already conjugated
+    public init(_ ket: StateVector)                  // ⟨ψ| = (|ψ⟩)†
+    public init(_ label: String)                     // e.g. Bra("01") = ⟨01|
+    public var ket: StateVector { get }               // |ψ⟩ = (⟨ψ|)†
+    public var dimension: Int { get }
+}
+```
+
+### The dagger operator `†`
+
+```swift
+postfix operator †
+public postfix func † (ket: StateVector) -> Bra     // ⟨ψ| = (|ψ⟩)†
+public postfix func † (bra: Bra) -> StateVector      // |ψ⟩ = (⟨ψ|)†
+public postfix func † (matrix: Matrix) -> Matrix     // U† (same as .adjoint)
+```
+
+### Products
+
+| Expression | Type | Notes |
+|---|---|---|
+| `Bra * StateVector` | `Complex` | Inner product ⟨φ\|ψ⟩. Traps on a dimension mismatch. |
+| `Bra * Matrix` | `Bra` | ⟨ψ\|U — row vector times matrix. Enables expectation values: `psi† * U * psi`. |
+| `StateVector * Bra` | `Matrix` | Outer product \|ψ⟩⟨φ\|. |
+| `Bra ⊗ Bra` | `Bra` | Combines two bras; `self` is the high-order register. |
+| `StateVector ⊗ Bra`, `Bra ⊗ StateVector` | `Matrix` | Mixed tensor product — both reduce to the outer product \|a⟩⟨b\|. |
+
+**Worked example — a Pauli-Z expectation value:**
+
+```swift
+let psi = StateVector.plus
+let z = psi† * PauliZGate.matrix * psi   // ⟨ψ|Z|ψ⟩, a Complex (real part ≈ 0 for |+⟩)
+```
+
+### Expectation values
+
+```swift
+public extension StateVector {
+    func expectation(_ observable: Matrix) -> Double   // ⟨ψ|A|ψ⟩.real
+}
+```
+
+A named one-liner wrapping the worked example above: `psi.expectation(z)` instead of
+`(psi† * z * psi).real`. Assumes `observable` is Hermitian (any genuine observable — Pauli
+matrices, projectors, real linear combinations of these) — the imaginary part is discarded
+rather than checked, so a non-Hermitian matrix won't trap, it will just quietly lose
+information. Traps (via the underlying `Bra` products) on a dimension mismatch.
+
+---
+
+## Gates
+
+`Sources/SwiftQiskit/Gates/*.swift` — each fixed gate is a `public enum` exposing a static
+`matrix: Matrix`; parameterized gates expose a static `matrix(theta:) -> Matrix` instead.
+Follow this pattern when adding a new gate.
+
+| Gate | Type | Circuit method | Notes |
+|---|---|---|---|
+| `HadamardGate.matrix` | fixed | `h(qubit)` | `1/√2 · [[1, 1], [1, -1]]`. |
+| `PauliXGate.matrix` | fixed | `x(qubit)` | `[[0, 1], [1, 0]]`. |
+| `PauliYGate.matrix` | fixed | `y(qubit)` | `[[0, -i], [i, 0]]`. |
+| `PauliZGate.matrix` | fixed | `z(qubit)` | `[[1, 0], [0, -1]]`. |
+| `SGate.matrix` | fixed | `s(qubit)` | `P(π/2)`, exact entries `[[1,0],[0,i]]`. |
+| `SDaggerGate.matrix` | fixed | `sdg(qubit)` | `SGate.matrix.adjoint`. |
+| `TGate.matrix` | fixed | `t(qubit)` | `PhaseGate.matrix(theta: .pi/4)`. |
+| `TDaggerGate.matrix` | fixed | `tdg(qubit)` | `TGate.matrix.adjoint`. |
+| `PhaseGate.matrix(theta:)` | parameterized | `p(theta, qubit)` | `[[1,0],[0, e^{iθ}]]`. |
+| `RXGate.matrix(theta:)` | parameterized | `rx(theta, qubit)` | Rotation about X: `exp(-iθX/2)`. |
+| `RYGate.matrix(theta:)` | parameterized | `ry(theta, qubit)` | Rotation about Y: `exp(-iθY/2)`, all-real entries. |
+| `RZGate.matrix(theta:)` | parameterized | `rz(theta, qubit)` | Rotation about Z: `exp(-iθZ/2)`; equals `P(θ)` up to the global phase `e^{-iθ/2}`. |
+| `CNOTGate.matrix` | fixed, 2-qubit | `cx(control, target)`* | The plain 4×4 CNOT (control = qubit 0, target = qubit 1). |
+| `CNOTGate.matrix(qubits:control:target:)` | general, n-qubit | `cx(control, target)` | The full 2ⁿ×2ⁿ CNOT for any distinct control/target pair on an *n*-qubit register, built as a basis-state permutation. Traps if `qubits < 2`, if either index is out of range, or if `control == target`. |
+
+\* `QuantumCircuit.cx` always calls the general `CNOTGate.matrix(qubits:control:target:)`
+form, not the fixed 4×4 one — the fixed form is exposed separately for direct use as a
+standalone 2-qubit gate.
+
+Rotation gates satisfy `RA(2π) = -I` (a full turn is minus identity) and
+`RA(π) = -i·A` up to that same global phase, for the corresponding Pauli matrix `A`.
+
+**Note:** the library has no built-in Toffoli (CCX), CZ, or SWAP gate. Build these with
+`apply(_:)` and a hand-constructed permutation or product of existing gates (several
+playground pages — e.g. `11GroverExample`, `13Teleportation` — show the pattern).
+
+---
+
+## `QuantumCircuit`
+
+`Sources/SwiftQiskit/Circuit/QuantumCircuit.swift` — records gate operations as full 2ⁿ×2ⁿ
+matrices and replays them on demand.
+
+```swift
+public final class QuantumCircuit {
+    public let qubits: Int
+    public init(qubits: Int)                    // traps if qubits <= 0
+    public func apply(_ matrix: Matrix)          // full-dimension gate; traps on dimension mismatch
+}
+```
+
+Because it's a `final class`, assigning or passing a `QuantumCircuit` shares the same
+underlying operation list — it does not copy.
+
+### Gate methods (all `public extension QuantumCircuit`)
+
+```swift
+func h(_ qubit: Int)
+func x(_ qubit: Int)
+func y(_ qubit: Int)
+func z(_ qubit: Int)
+func s(_ qubit: Int)
+func sdg(_ qubit: Int)
+func t(_ qubit: Int)
+func tdg(_ qubit: Int)
+func p(_ theta: Double, _ qubit: Int)
+func rx(_ theta: Double, _ qubit: Int)
+func ry(_ theta: Double, _ qubit: Int)
+func rz(_ theta: Double, _ qubit: Int)
+func cx(_ control: Int, _ target: Int)
+```
+
+Single-qubit gates are embedded across the full register via `Matrix.tensor(_:)`
+(the file-private `embedSingleQubitGate`), so calling `h(1)` on a 3-qubit circuit builds and
+applies `I ⊗ H ⊗ I` under the hood.
+
+### Execution
+
+| Method | Signature | Notes |
+|---|---|---|
+| `run()` | `() -> StateVector` | Builds a fresh `StateVector(qubits: qubits)` (i.e. \|0…0⟩) and replays every recorded operation. Gates are recorded when called and only *applied* here — calling `run()` twice gives the same result each time. |
+| `runAndMeasure()` | `() -> Int` | `run()` then a single `measure()` on the result — collapses that local copy, not any circuit state (the circuit itself has no persistent state to collapse). |
+| `measure(shots:)` | `(Int) -> SimulationResult` | Traps if `shots <= 0`. Runs the circuit **once** to get the final probability distribution, then draws `shots` independent samples from it — it does *not* replay the whole circuit per shot, since a full measurement of a pure state never changes the probabilities of the underlying state that produced it. |
+
+---
+
+## `SimulationResult`
+
+`Sources/SwiftQiskit/Quantum/SimulationResult.swift` — shot counts from
+`QuantumCircuit.measure(shots:)`.
+
+```swift
+public struct SimulationResult {
+    public let shots: Int
+    public let counts: [String: Int]           // zero-padded binary state -> count
+    public var sortedCounts: [(state: String, count: Int)] { get }  // ascending by state string
+}
+```
+
+Keys in `counts` are zero-padded to `qubits` characters via `String.leftPadding` (below), and
+qubit 0 is the leftmost character, matching the rest of the library's indexing convention.
+
+---
+
+## Utilities
+
+`Sources/SwiftQiskit/Utils/String+Padding.swift`:
+
+```swift
+public extension String {
+    func leftPadding(toLength: Int, withPad character: Character) -> String
+}
+```
+
+Left-pads a string with `character` up to `toLength` (no-ops if already that long or
+longer). This is really an internal implementation detail of measurement-result formatting
+that happens to be `public`; don't build new API around it.
+
+---
+
+## Not Yet in Core
+
+Several capabilities that later playground pages need — noise/Kraus channels, mid-circuit
+or partial measurement, permutation/Toffoli helpers, Hamiltonian simulation (`expm`), and
+Pauli-basis tomography helpers — are implemented *inside individual playground pages*
+rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
+`PlaygroundDocs/`). Proposed Core extensions for these areas, with rationale, are tracked in
+`STATUSandTODO.md` under "Proposed Core extensions — ...".
+
+For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
+used by playground live views, see `PLAYGROUNDSUPPORT.md`.

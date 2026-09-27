@@ -8,6 +8,9 @@ SwiftQiskit is a lightweight, educational quantum-computing simulator written in
 offering a Qiskit-like API. It is experimental (v0.1): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
+`API.md` at the repo root is the full API reference for the core library (every public type and
+member, with signatures and gotchas). Keep it in sync whenever the public API changes.
+
 ## Build, Run & Test
 
 From Xcode, prefer the `xcode-tools` MCP tools (`BuildProject`, `RunProject`, `RunAllTests`).
@@ -36,7 +39,10 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
 - `Math/Complex.swift` — value-type complex numbers (`+ - * /`, scalar mul, `.zero/.one/.i`).
 - `Math/Matrix.swift` — row-major complex matrix; `* + -`, scalar mul (`Double`/`Complex`,
   either operand order), `multiply(by:)` (matrix × vector), `identity(size:)`, Kronecker
-  product `tensor(_:)` / `⊗` (the `⊗` operator is declared here).
+  product `tensor(_:)` / `⊗` (the `⊗` operator is declared here), `isUnitary(tolerance:)`
+  (entrywise `U†U ≈ I`, since `==` compares exactly), `trace` (traps if non-square),
+  `permutation(size:image:)` (builds a permutation matrix from a column→row map, trapping
+  unless `image` is a bijection — the bijection check doubles as the unitarity check).
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
   `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
   combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention).
@@ -56,9 +62,10 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
 - `Quantum/Dirac.swift` — Dirac notation: `Ket` (typealias of `StateVector`), `Bra`
   (conjugated row vector), postfix `†` (dagger; also `Matrix.adjoint`), `*` overloads for
   inner (`Bra * Ket`) / outer (`Ket * Bra`) products and `Bra * Matrix -> Bra` (enables
-  expectation values `psi† * U * psi`), mixed `⊗` overloads (`Ket ⊗ Bra` /
-  `Bra ⊗ Ket`, both returning the outer-product `Matrix`), basis kets `Ket("01")` /
-  `.zero/.one/.plus/.minus/.plusI/.minusI`.
+  expectation values `psi† * U * psi`), `StateVector.expectation(_ observable: Matrix) ->
+  Double` (named one-liner for the same `(psi† * U * psi).real`), mixed `⊗` overloads
+  (`Ket ⊗ Bra` / `Bra ⊗ Ket`, both returning the outer-product `Matrix`), basis kets
+  `Ket("01")` / `.zero/.one/.plus/.minus/.plusI/.minusI`.
 
 ## Xcode Playgrounds
 

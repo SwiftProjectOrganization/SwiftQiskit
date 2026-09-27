@@ -100,14 +100,12 @@ let numSites = 16
 let dim = 32   // coin (2) × position (16)
 
 func buildShift() -> Matrix {
-    var m = Matrix(rows: dim, cols: dim)
-    for coin in 0...1 {
-        for pos in 0..<numSites {
-            let newPos = coin == 0 ? (pos + 1) % numSites : (pos - 1 + numSites) % numSites
-            m[coin * numSites + newPos, coin * numSites + pos] = .one
-        }
+    Matrix.permutation(size: dim) { fromIndex in
+        let coin = fromIndex / numSites
+        let pos = fromIndex % numSites
+        let newPos = coin == 0 ? (pos + 1) % numSites : (pos - 1 + numSites) % numSites
+        return coin * numSites + newPos
     }
-    return m
 }
 
 let U = buildShift() * HadamardGate.matrix.tensor(Matrix.identity(size: numSites))
