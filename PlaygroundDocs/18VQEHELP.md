@@ -14,10 +14,10 @@ hand.
 
 ## Section by section
 
-**Section 1 — the Hamiltonian.** `Matrix` had no `+` or scalar multiply when this page was
-written, so H = g0·I⊗I + g1·Z⊗I + g2·I⊗Z + g3·Z⊗Z + g4·Y⊗Y + g5·X⊗X is assembled entrywise
-(page 12's QFT† idiom), with the Pauli tensor products built via Core's `⊗`. (Both operators
-exist now on `Matrix` — `Math/Matrix.swift` — but this page is unchanged.)
+**Section 1 — the Hamiltonian.** H = g0·I⊗I + g1·Z⊗I + g2·I⊗Z + g3·Z⊗Z + g4·Y⊗Y + g5·X⊗X is
+built with `Matrix`'s `+` and scalar `*` (`Math/Matrix.swift`) — one `reduce` over the six
+`(coefficient, matrix)` terms — with the Pauli tensor products built via Core's `⊗`. (Page 12's
+QFT† idiom predates both operators, hence its own entrywise workaround.)
 
 **Section 2 — the ansatz.** `x(0); ry(θ,1); cx(1,0)` prepares
 cos(θ/2)|10⟩ + sin(θ/2)|01⟩ — one real parameter, provably confined to the {|01⟩,|10⟩}
@@ -95,16 +95,13 @@ import SwiftQiskit
 
 let g: [Double] = [-0.4804, 0.3435, -0.4347, 0.5716, 0.0910, 0.0910]
 let I2 = Matrix.identity(size: 2)
-let terms: [(Double, Matrix)] = [
+let terms: [(coefficient: Double, matrix: Matrix)] = [
     (g[0], I2 ⊗ I2), (g[1], PauliZGate.matrix ⊗ I2), (g[2], I2 ⊗ PauliZGate.matrix),
     (g[3], PauliZGate.matrix ⊗ PauliZGate.matrix),
     (g[4], PauliYGate.matrix ⊗ PauliYGate.matrix),
     (g[5], PauliXGate.matrix ⊗ PauliXGate.matrix)
 ]
-var H = Matrix(rows: 4, cols: 4)
-for (coefficient, term) in terms {
-    for r in 0..<4 { for c in 0..<4 { H[r, c] = H[r, c] + term[r, c] * coefficient } }
-}
+let H = terms.reduce(Matrix(rows: 4, cols: 4)) { $0 + $1.coefficient * $1.matrix }
 
 func ansatz(_ theta: Double) -> StateVector {
     let qc = QuantumCircuit(qubits: 2)

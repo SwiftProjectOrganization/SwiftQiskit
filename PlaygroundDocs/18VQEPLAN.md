@@ -12,9 +12,10 @@ with **no `SwiftQiskit` changes**:
   Jordan–Wigner transform, near its equilibrium bond length — the standard example from the
   VQE literature (O'Malley et al., 2016), reused across most VQE tutorials because it is small
   enough to diagonalize by hand for grading.
-- `Matrix` had no `+` or scalar multiply at the time, so H is assembled entrywise from six
-  Pauli terms (page 12's QFT† idiom, page 15's tilted observable) — Pauli tensor products via
-  Core's `⊗`. (Both operators exist now — `Math/Matrix.swift` — but this page is unchanged.)
+- `Matrix` had no `+` or scalar multiply when this page was first written, so H was originally
+  assembled entrywise from six Pauli terms (page 12's QFT† idiom); it now uses those operators
+  directly (`terms.reduce(...) { $0 + $1.coefficient * $1.matrix }`), with the Pauli tensor
+  products built via Core's `⊗`.
 - A single-parameter ansatz (`x(0); ry(θ,1); cx(1,0)`) stays exactly inside the
   {|01⟩, |10⟩} subspace for every θ, so the exact ground energy is a closed-form 2×2
   eigenvalue — no eigensolver needed to check the optimizer's answer.
@@ -42,7 +43,8 @@ with **no `SwiftQiskit` changes**:
 
 ### New page `Playgrounds.playground/Pages/18VQE.xcplaygroundpage/Contents.swift`
 
-Console + one live view. Seven sections: the Hamiltonian assembled entrywise; the ansatz and
+Console + one live view. Seven sections: the Hamiltonian assembled with `Matrix`'s `+`/scalar
+`*`; the ansatz and
 its subspace check; the energy via the Dirac expectation value; the exact closed-form answer;
 parameter-shift gradients pinned against finite differences; gradient descent to convergence;
 a live chart of the E(θ) landscape with the optimizer's own visited points overlaid.

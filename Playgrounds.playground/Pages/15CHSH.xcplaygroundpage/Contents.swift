@@ -129,7 +129,8 @@ for angle in [0.0, Double.pi / 6, Double.pi / 4, Double.pi / 2] {
 // ============================================================
 // On a Bell pair, E(a,b) = ⟨ψ|A(a)⊗A(b)|ψ⟩ computed exactly with the
 // Dirac/Core `⊗` and `†`, and independently as a shot-sampled average
-// of ±1 = "same"/"different" outcomes after `ry(-a,0); ry(-b,1)`.
+// of ±1 = "same"/"different" outcomes after `ry(-a,0); ry(-b,1)`, via
+// `SimulationResult.parityExpectation(qubits:)`.
 
 let bell = QuantumCircuit(qubits: 2)
 bell.h(0)
@@ -146,13 +147,7 @@ func sampledCorrelator(_ x: Double, _ y: Double, shots: Int) -> Double {
     qc.cx(0, 1)
     qc.ry(-x, 0)
     qc.ry(-y, 1)
-    let counts = qc.measure(shots: shots)
-    var total = 0.0
-    for (outcome, count) in counts.counts {
-        let bits = Array(outcome)
-        total += (bits[0] == bits[1] ? 1.0 : -1.0) * Double(count)
-    }
-    return total / Double(shots)
+    return qc.measure(shots: shots).parityExpectation(qubits: [0, 1])
 }
 
 print("\nsetting pair      exact E    sampled E   cos(a−b)")

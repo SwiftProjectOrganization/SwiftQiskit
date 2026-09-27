@@ -90,11 +90,11 @@ compositions and applied with `circuit.apply(_:)` (or, on pages 19–22, which d
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
 | QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
 | Controlled phase CP(θ) | `p(θ/2, c); cx(c,t); p(-θ/2, t); cx(c,t); p(θ/2, t)` | page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π) |
-| H₂ Hamiltonian (Jordan–Wigner, 2 qubits) | six Pauli terms (I⊗I, Z⊗I, I⊗Z, Z⊗Z, Y⊗Y, X⊗X) combined entrywise | page 18 (VQE's energy operator) |
+| H₂ Hamiltonian (Jordan–Wigner, 2 qubits) | six Pauli terms (I⊗I, Z⊗I, I⊗Z, Z⊗Z, Y⊗Y, X⊗X) combined with `Matrix`'s `+`/scalar `*` | page 18 (VQE's energy operator) |
 | Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping) | pairs/quadruples of scaled `Matrix` values satisfying ΣKᵢ†Kᵢ = I | page 19 (noise channels, applied as ρ' = ΣKᵢρKᵢ†) |
 | `expm` (matrix exponential) | scaling-and-squaring Taylor series on `Matrix *` | page 21 (ground truth for Trotterized Hamiltonian simulation, self-checked against `RXGate`) |
 | ZZ-rotation exp(−iθ·Z⊗Z/2) | `cx(0,1); rz(θ,1); cx(0,1)` | page 21 (the exact building block of every Trotter step) |
-| Ising chain H = −J·Z⊗Z − h·(X⊗I + I⊗X) | two Pauli terms combined entrywise | page 21 (Hamiltonian simulation target) |
+| Ising chain H = −J·Z⊗Z − h·(X⊗I + I⊗X) | two Pauli terms combined with `Matrix`'s `+`/scalar `*` | page 21 (Hamiltonian simulation target) |
 | Coined-walk shift S | 32×32 permutation on (coin ⊗ 16-site position) — one `.one` per column | page 22 (the conditional shift \|0,x⟩→\|0,x+1⟩, \|1,x⟩→\|1,x−1⟩) |
 
 ---
@@ -608,8 +608,8 @@ Design notes in `PlaygroundDocs/17DEUTSCHJOZSAPLAN.md`; user guide in `Playgroun
 The variational quantum eigensolver — the one page where the circuit isn't fixed in advance,
 with a live chart of the optimization:
 
-- **The Hamiltonian** — the qubit Hamiltonian for H₂ (Jordan–Wigner, minimal basis), assembled
-  entrywise from six Pauli terms.
+- **The Hamiltonian** — the qubit Hamiltonian for H₂ (Jordan–Wigner, minimal basis), six
+  Pauli terms combined with `Matrix`'s `+`/scalar `*`.
 - **A one-parameter ansatz** — `x(0); ry(θ,1); cx(1,0)`, provably confined to the
   {\|01⟩,\|10⟩} subspace.
 - **The energy** — `psi† * H * psi`, page 08's Dirac expectation-value idiom.

@@ -54,8 +54,9 @@ The project is actively evolving, and major features are planned.
       `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
       page `18VQE`'s ZZ-term measurement and page `20Tomography`'s shot-based estimators.
       Implemented in `Quantum/SimulationResult.swift` alongside `marginalCounts(over:)`;
-      tested in `ReadoutTests.swift`. The page retrofits themselves are still open — see
-      "SwiftQiskitApp follow-ups" below.
+      tested in `ReadoutTests.swift`. Pages `15CHSH` and `20Tomography` have since been
+      retrofitted onto it directly (see the retrofit checklist further below); `18VQE`'s own
+      ZZ-term measurement is still open.
 - [x] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
       `(self† * observable * self).real` — bumped up from low priority: four independent app
       chapters (21, 22, 23, 24) now hand-roll this exact three-line idiom under their own
@@ -128,15 +129,17 @@ The project is actively evolving, and major features are planned.
 - [x] Matrix arithmetic in Core (`Math/Matrix.swift`): `+`, `-`, and scalar multiply
       (`Matrix * Double`/`Complex`, either operand order) — closing a gap several pages had
       previously routed around with page-level helpers (`19Noise`'s `addM`/`scaleM`, `21Trotter`'s
-      `addM`/`scaleM`, `18VQE`'s and `15CHSH`'s entrywise term accumulation). `19Noise` now uses
-      the operators directly (its `trace` helper is the only one left); `21Trotter`, `18VQE`,
-      and `15CHSH` are unchanged and still work with their own helpers. Tested in
-      `MatrixArithmeticTests.swift`.
-- [ ] Retrofit pages `21Trotter` (`addM`/`scaleM`) and `18VQE` (its entrywise Hamiltonian loop) to
+      `addM`/`scaleM`, `18VQE`'s and `15CHSH`'s entrywise term accumulation). Tested in
+      `MatrixArithmeticTests.swift`. `19Noise`, `21Trotter`, `18VQE`, and `15CHSH` have all
+      since been retrofitted onto the operators directly (see the item just below for
+      `21Trotter`/`18VQE`).
+- [x] Retrofit pages `21Trotter` (`addM`/`scaleM`) and `18VQE` (its entrywise Hamiltonian loop) to
       use the `Matrix` `+`/scalar-`*` operators directly, the same modernization the
       `SwiftQiskitApp` book's Chapters 23 and 24 already made for their own copies of this code
       (`~/Documents/SwiftQiskit-Chapter23-VQE-Extensions.md`,
-      `-Chapter24-Trotter-Extensions.md`). Low cost, purely a page-level cleanup.
+      `-Chapter24-Trotter-Extensions.md`). Done — `21Trotter`'s `addM`/`scaleM` are retired
+      (`maxDiff` remains; no `Matrix` equivalent exists for it), and `18VQE`'s entrywise loop is
+      now one `terms.reduce(...) { $0 + $1.coefficient * $1.matrix }`.
 
 ## Gate-tour and entanglement playground pages (this fork)
 
@@ -209,8 +212,9 @@ page 13 adds a Bloch-sphere live view:
 ## Variational (NISQ-era) playground page (this fork)
 
 - [x] VQE — page `18VQE`: the first page where the circuit isn't fixed in advance. An H₂
-      qubit Hamiltonian (Jordan–Wigner, minimal basis) built entrywise from six Pauli terms,
-      a one-parameter ansatz confined to the `{|01⟩,|10⟩}` subspace, the energy via page 08's
+      qubit Hamiltonian (Jordan–Wigner, minimal basis) built from six Pauli terms combined
+      with `Matrix`'s `+`/scalar `*`, a one-parameter ansatz confined to the `{|01⟩,|10⟩}`
+      subspace, the energy via page 08's
       `psi† * H * psi`, a closed-form 2×2 eigenvalue for grading, exact parameter-shift
       gradients pinned against a finite difference, gradient descent converging to error
       0.00e+00, and a live chart (the shared `CHSHChartView`) of the energy landscape with
@@ -232,7 +236,7 @@ page 19 adds one small additive initializer to the playground's shared `BlochVec
       against a product state's 0 — with a live Bloch gallery shrinking from pure to fully
       depolarized (`PlaygroundDocs/19NOISEPLAN.md`, `PlaygroundDocs/19NOISEHELP.md`).
 - [x] Tomography — page `20Tomography`: reconstructing a state from `measure(shots:)` alone.
-      Basis rotations — a page-level `PauliBasis` enum rather than bare strings, pinned against
+      Basis rotations — Core's `PauliBasis`/`rotateToZ` rather than bare strings, pinned against
       a known Y-eigenstate, plus a note that `rx(π/2)` is a one-gate alternative to `sdg; h` —
       the estimator checked against exact expectation values, RMS error falling at the 1/√N
       rate, and the sharper-than-expected result that a *pure* state's per-axis reconstruction
@@ -340,8 +344,8 @@ real MLE/linear-inversion reconstruction are implemented now:
       Implemented in `Quantum/PauliBasis.swift` and `Circuit/QuantumCircuit.swift`
       (`rotateToZ`/private `rotateFromZ`); `pauliRotation`'s own basis-change loops were
       refactored onto `rotateToZ`/`rotateFromZ` rather than duplicating the switch. Tested in
-      `PauliBasisTests.swift` against the six single-qubit eigenstates. Retrofitting page
-      `20Tomography` onto it is still open — see "SwiftQiskitApp follow-ups" below.
+      `PauliBasisTests.swift` against the six single-qubit eigenstates. Page `20Tomography`
+      has since been retrofitted onto it directly.
 - [x] `QuantumCircuit.measure(shots: Int, basis: [PauliBasis]) -> SimulationResult` — appends
       each qubit's basis rotation (applied to a copy, leaving the circuit's own operation list
       untouched), then measures. Folds the hand-appended rotate-then-measure pattern every
@@ -385,9 +389,9 @@ would need:
       scratch at the page level. Shares its Pauli-label type with the tomography `PauliBasis`
       proposal and Chapter 24's `pauliRotation` below — see the note on that item above.
       Implemented in `Quantum/PauliString.swift`/`Quantum/Hamiltonian.swift`; tested against
-      the H₂ Hamiltonian's closed-form eigenvalue (and the entrywise matrix page `18VQE` builds
-      by hand) in `PauliStringTests.swift`. Retrofitting page `18VQE` onto it is still open —
-      see "SwiftQiskitApp follow-ups" below.
+      the H₂ Hamiltonian's closed-form eigenvalue (and the hand-built matrix page `18VQE`
+      assembles from `Matrix`'s `+`/scalar `*`) in `PauliStringTests.swift`. Retrofitting page
+      `18VQE` onto it is still open — see "SwiftQiskitApp follow-ups" below.
 - [x] `measureExpectation(of: PauliString, shots: Int) -> Double` (and an overload for
       `Hamiltonian`) on `QuantumCircuit`, built on `measure(shots:basis:)` +
       `SimulationResult.parityExpectation(qubits:)` (both already proposed above) — would let a
@@ -632,18 +636,20 @@ picks this up next:
 
 Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` onto
 `Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`
-onto `Matrix.expm` is **done**; `19Noise` was never a retrofit target — it has no page-level
-`expm` of its own.
+onto `Matrix.expm` and both pages onto the `Matrix` `+`/scalar-`*` operators are **done**;
+`19Noise` was never a retrofit target — it has no page-level `expm` of its own.
 
 Now that step 2's `ToffoliGate`/`ccx` and step 3's readout helpers have landed, the same kind of
 retrofit is open against them (not done as part of landing the helpers themselves, to keep that
 change additive-only):
 
-- [ ] Page `15CHSH`: replace its hand-rolled `sampledCorrelator` with
-      `SimulationResult.parityExpectation(qubits:)`.
-- [ ] Page `20Tomography`: replace its page-level `PauliBasis`/`basisRotation` and the
+- [x] Page `15CHSH`: replace its hand-rolled `sampledCorrelator` with
+      `SimulationResult.parityExpectation(qubits:)`. Done.
+- [x] Page `20Tomography`: replace its page-level `PauliBasis`/`basisRotation` and the
       hand-appended rotate-then-measure pattern with `QuantumCircuit.rotateToZ`/
-      `measure(shots:basis:)`.
+      `measure(shots:basis:)`. Done — the mixed-ensemble section (each shot needs a fresh
+      random preparation, so `measure(shots:)` can't sample it directly) now builds its two
+      branch circuits once per basis via `rotateToZ` and calls `runAndMeasure()` per shot.
 - [ ] Pages `11GroverExample`, `22Walk`: replace their hand-rolled marginal
       loop-and-sum with `StateVector.marginalProbabilities`/`SimulationResult.marginalCounts`.
 - [ ] Pages `12ShorExample`, `14ErrorCorrection`: where a hand-built permutation matrix is

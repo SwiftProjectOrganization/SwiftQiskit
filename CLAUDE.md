@@ -266,7 +266,8 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   cost growing exponentially (DJ) or linearly (BV) while the quantum cost stays at 1 (plan in
   `PlaygroundDocs/17DEUTSCHJOZSAPLAN.md`, user guide in `PlaygroundDocs/17DEUTSCHJOZSAHELP.md`).
 - `18VQE` — the variational quantum eigensolver: an H₂ qubit Hamiltonian (Jordan–Wigner,
-  minimal basis) built entrywise from six Pauli terms, a one-parameter ansatz
+  minimal basis) built from six Pauli terms combined with `Matrix`'s `+`/scalar `*`, a
+  one-parameter ansatz
   `x(0); ry(θ,1); cx(1,0)` provably confined to the `{|01⟩,|10⟩}` subspace, the energy via
   `psi† * H * psi`, a closed-form 2×2 eigenvalue for grading, *exact* parameter-shift
   gradients pinned against a finite difference, gradient descent converging to error

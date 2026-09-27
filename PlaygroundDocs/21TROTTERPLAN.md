@@ -6,13 +6,13 @@ No page in the set simulates physics — the original motivation for quantum com
 (Feynman's 1982 proposal). Page 18's VQE gets closest, but it minimizes an energy rather than
 evolving a state in time. This page closes that gap with **no `SwiftQiskit` changes**:
 
-- The target Hamiltonian, a transverse-field Ising chain, is assembled entrywise from Pauli
-  tensor products via `⊗` — page 18's idiom for H₂, reused for a different physical system.
-- `Matrix` had no `+`/scalar-multiply/`expm` at the time, so page-level `addM`/`scaleM`/`expm`
-  helpers are required (`expm` by scaling-and-squaring Taylor series, built only on `Matrix *`)
-  — the ground truth against which the gate-based Trotter circuit is graded. (`+` and scalar
-  multiply exist on `Matrix` now; `expm` is still page-level only — this page is unchanged
-  either way.)
+- The target Hamiltonian, a transverse-field Ising chain, is built from Pauli tensor products
+  via `⊗` combined with `Matrix`'s `+` and scalar `*` — page 18's idiom for H₂, reused for a
+  different physical system. `Matrix` had no `+`/scalar-multiply/`expm` when this page was
+  first written, so page-level `addM`/`scaleM`/`expm` helpers were originally required; `+`
+  and scalar multiply are now Core operators used directly (`addM`/`scaleM` retired), and
+  `expm` (by scaling-and-squaring Taylor series, built only on `Matrix *`) is Core's own
+  `Matrix.expm()` — the ground truth against which the gate-based Trotter circuit is graded.
 - The key gate identity, exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, uses only existing
   circuit methods (`cx`, `rz`) and Core's exact `RZGate` (which *is* exp(−iθZ/2) with no
   approximation, `Sources/SwiftQiskit/Gates/Rotation.swift:48-63`).
@@ -54,7 +54,8 @@ the page's exact math in a driver executable.
 
 ### New page `Playgrounds.playground/Pages/21Trotter.xcplaygroundpage/Contents.swift`
 
-Console plus one live chart, six sections: the Ising Hamiltonian assembled entrywise; `expm`
+Console plus one live chart, six sections: the Ising Hamiltonian assembled with `Matrix`'s
+`+`/scalar `*`; `expm`
 self-checked against `RXGate`; the ZZ-rotation identity derived and checked; first- and
 second-order Trotter error vs. n; the observable-level ⟨Z₀⟩(t) comparison; the commutator as
 the source of the error, with the commuting-Hamiltonian exact case as the contrast.
@@ -77,9 +78,11 @@ Trotterized points as two scatter series) — no new shared view, no new exposur
 
 ## Explicitly not doing
 
-- **No `expm` in Core.** It stays a page-level helper, exactly like page 12's QFT† and page
-  18's Hamiltonian — self-checked against an existing exact gate (`RXGate`) rather than
-  trusted blindly.
+- **`expm`, `addM`/`scaleM` retrofits.** `expm` was a page-level helper when this page was
+  first written, self-checked against an existing exact gate (`RXGate`) rather than trusted
+  blindly; it and the `+`/scalar-multiply helpers (`addM`/`scaleM`) have since been retired in
+  favor of `Matrix.expm()` and `Matrix`'s own `+`/scalar `*` operators, landing in Core for
+  other pages' benefit too.
 - **No randomized product formulas (qDRIFT)** or orders beyond second (Suzuki) — one order
   comparison makes the 1/n vs. 1/n² point; more orders would repeat it.
 - **No fermionic Jordan–Wigner derivation of the Ising Hamiltonian** — it is already a native

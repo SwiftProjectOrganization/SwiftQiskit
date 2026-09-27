@@ -9,7 +9,11 @@ real device gives you," and it depends on page 19's mixed states for its most im
 result. **No `SwiftQiskit` changes:**
 
 - Basis rotations reuse existing circuit gates: `h(0)` for the X basis, `sdg(0); h(0)` for the
-  Y basis (verified below against page 19's `plusI`/`minusI` basis kets, not asserted).
+  Y basis (verified below against page 19's `plusI`/`minusI` basis kets, not asserted). The
+  page originally rolled its own `PauliBasis` enum and `basisRotation` switch, since Core had
+  neither; it has since been retrofitted onto Core's own `PauliBasis` and
+  `QuantumCircuit.rotateToZ(_:_:)`/`measure(shots:basis:)`, with the per-shot estimator built
+  on `SimulationResult.parityExpectation(qubits:)`.
 - The estimator ⟨A⟩ ≈ (N₀ − N₁)/N and the reconstructed Bloch vector reuse
   `Ket`/`StateVector.measure()` exactly as they exist.
 - The Bell-marginal reconstruction reuses page 19's mixed-state result (ρ_A = I/2) as the

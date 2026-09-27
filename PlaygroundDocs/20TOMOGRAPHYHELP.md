@@ -13,12 +13,13 @@ for its most important result.
 ## Section by section
 
 **Section 1 — basis rotations, pinned before use.** `measure(shots:)` only reads the Z basis.
-Getting ⟨X⟩ needs `h`; ⟨Y⟩ needs `sdg` then `h` — checked here by rotating `|+i⟩` (a known
-Y-eigenstate) and confirming it collapses deterministically, rather than assumed. The three
-choices are a page-level `PauliBasis` enum (`.x`/`.y`/`.z`), not bare strings, so a typo is a
-compile error instead of a silent fallthrough to Z. A one-gate alternative, `rx(π/2)`,
-collapses `|+i⟩` the same way as `sdg; h` — the page keeps `sdg; h` throughout as the textbook
-decomposition, but the shortcut is worth knowing.
+Getting ⟨X⟩ needs `h`; ⟨Y⟩ needs `sdg` then `h` — exactly what Core's
+`QuantumCircuit.rotateToZ(_:_:)` does for the three `PauliBasis` choices (`.x`/`.y`/`.z`, not
+bare strings, so a typo is a compile error instead of a silent fallthrough to Z), checked here
+by rotating `|+i⟩` (a known Y-eigenstate) and confirming it collapses deterministically, rather
+than assumed. A one-gate alternative, `rx(π/2)`, collapses `|+i⟩` the same way as `sdg; h` —
+the page keeps `sdg; h` (via `rotateToZ`) throughout as the textbook decomposition, but the
+shortcut is worth knowing.
 
 **Section 2 — the estimator.** ⟨A⟩ ≈ (N₀−N₁)/N, checked against the exact
 `psi† * A * psi` on a generic tilted state before trusting it statistically.
@@ -56,7 +57,7 @@ Section 5, both as `BlochSphereView`s via this page's (page-19-added) `BlochVect
 ## Expected output
 
 ```text
-|+i⟩ rotated by (Sdg; H): |0⟩: 0.9999999999999998
+|+i⟩ rotated by rotateToZ(.y, 0): |0⟩: 0.9999999999999998
 |1⟩: 0.0
 
 |+i⟩ rotated by rx(π/2): |0⟩: 0.9999999999999999
@@ -105,27 +106,11 @@ shot-reconstructed marginal, which lands very close to — but not exactly at �
 ```swift
 import SwiftQiskit
 
-let H = HadamardGate.matrix
-let Sdg = SDaggerGate.matrix
-
-enum PauliBasis { case x, y, z }
-
-func basisRotation(_ basis: PauliBasis, _ s: inout StateVector) {
-    switch basis {
-    case .x: s.apply(H)
-    case .y: s.apply(Sdg); s.apply(H)
-    case .z: break
-    }
-}
-
-func estimate(_ basis: PauliBasis, psi: StateVector, shots: Int) -> Double {
-    var plus = 0
-    for _ in 0..<shots {
-        var s = psi
-        basisRotation(basis, &s)
-        if s.measure() == 0 { plus += 1 }
-    }
-    return 2 * Double(plus) / Double(shots) - 1   // ⟨A⟩ ≈ (N0 - N1) / N
+func estimate(_ basis: PauliBasis, circuit: QuantumCircuit, shots: Int) -> Double {
+    // `PauliBasis` and `rotateToZ`/`measure(shots:basis:)` are Core's own
+    // (`Quantum/PauliBasis.swift`, `Circuit/QuantumCircuit.swift`); the shot-based
+    // estimator is `SimulationResult.parityExpectation(qubits:)`.
+    circuit.measure(shots: shots, basis: [basis]).parityExpectation(qubits: [0])
 }
 ```
 

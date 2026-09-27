@@ -23,6 +23,9 @@ pages 13–14. It fits v0.1 with **no changes to `SwiftQiskit`**:
 - Every correlator is computed **two ways** — exactly via `psi† * (A(a) ⊗ A(b)) * psi`
   (Core's `⊗` and the Dirac `Bra * Matrix`), and via `measure(shots:)` after rotating each
   qubit into its measurement basis — so the shot-sampled numbers are never taken on faith.
+  `sampledCorrelator`'s hand-rolled "same/different" counting loop was originally required (no
+  shot-based parity helper existed); it has since been retrofitted onto
+  `SimulationResult.parityExpectation(qubits:)`.
 
 ## The math, and what surprised the plan
 

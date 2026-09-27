@@ -16,8 +16,6 @@ import SwiftQiskit
 
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
-let H = HadamardGate.matrix
-let Sdg = SDaggerGate.matrix
 let X = PauliXGate.matrix
 let Y = PauliYGate.matrix
 let Z = PauliZGate.matrix
@@ -26,25 +24,18 @@ let Z = PauliZGate.matrix
 // Section 1 — basis rotations, pinned before they're trusted
 // ============================================================
 // `measure(shots:)` only ever reads the Z basis. Getting ⟨X⟩ means
-// rotating X into Z first (`h`); ⟨Y⟩ needs `sdg` then `h`. The order
-// matters — checked here against a state with a *known* Y value
-// rather than assumed. `PauliBasis` makes the three choices
-// exhaustive (no silent typo falling through to Z, the way a bare
-// `"x "` or `"Z"`-vs-`"z"` string could).
+// rotating X into Z first (`h`); ⟨Y⟩ needs `sdg` then `h` — exactly
+// what Core's `QuantumCircuit.rotateToZ(_:_:)` does for the
+// exhaustive `PauliBasis` (`.x`/`.y`/`.z`, no silent typo falling
+// through to Z the way a bare `"x "` or `"Z"`-vs-`"z"` string could).
+// The order matters — checked here against a state with a *known* Y
+// value rather than assumed.
 
-enum PauliBasis { case x, y, z }
-
-func basisRotation(_ basis: PauliBasis, _ s: inout StateVector) {
-    switch basis {
-    case .x: s.apply(H)
-    case .y: s.apply(Sdg); s.apply(H)
-    case .z: break
-    }
-}
-
-var plusI = StateVector.plusI   // a +1 eigenstate of Y
-basisRotation(.y, &plusI)
-print("|+i⟩ rotated by (Sdg; H): \(plusI)")
+let plusICircuit = QuantumCircuit(qubits: 1)
+plusICircuit.h(0)
+plusICircuit.s(0)              // |+i⟩, a +1 eigenstate of Y
+plusICircuit.rotateToZ(.y, 0)
+print("|+i⟩ rotated by rotateToZ(.y, 0): \(plusICircuit.run())")
 // Expected: collapses to |0⟩ (amplitude ≈1, 0) — confirms Sdg-then-H
 // is the correct order for a Y-basis measurement. (The reverse order
 // does *not* diagonalize Y — worth knowing before trusting either.)
@@ -53,9 +44,9 @@ var plusIRx = StateVector.plusI
 plusIRx.apply(RXGate.matrix(theta: .pi / 2))
 print("|+i⟩ rotated by rx(π/2): \(plusIRx)")
 // Expected: also collapses to |0⟩ — a one-gate alternative to
-// `sdg; h` for the Y basis. This page keeps `sdg; h` throughout
-// since it's the textbook decomposition, but `rx(π/2)` is worth
-// knowing about for a leaner circuit.
+// `sdg; h` for the Y basis. This page keeps `sdg; h` (via
+// `rotateToZ`) throughout since it's the textbook decomposition, but
+// `rx(π/2)` is worth knowing about for a leaner circuit.
 
 // ============================================================
 // Section 2 — the estimator, sign-checked against exact values
@@ -64,27 +55,22 @@ print("|+i⟩ rotated by rx(π/2): \(plusIRx)")
 // `psi† * A * psi` on a generic tilted state (page 04/08's θ≈60°,
 // φ≈45°) before trusting it for anything statistical.
 
-func tiltedState() -> Ket {
-    var s = StateVector.zero
-    s.apply(RYGate.matrix(theta: 1.0472))
-    s.apply(RZGate.matrix(theta: 0.7854))
-    return s
+func tiltedCircuit() -> QuantumCircuit {
+    let qc = QuantumCircuit(qubits: 1)
+    qc.ry(1.0472, 0)
+    qc.rz(0.7854, 0)
+    return qc
 }
 func exactExpectation(_ psi: Ket, _ A: Matrix) -> Double { (psi† * A * psi).real }
 
-func estimate(_ basis: PauliBasis, psi: Ket, shots: Int) -> Double {
-    var plus = 0
-    for _ in 0..<shots {
-        var s = psi
-        basisRotation(basis, &s)
-        if s.measure() == 0 { plus += 1 }
-    }
-    return 2 * Double(plus) / Double(shots) - 1
+func estimate(_ basis: PauliBasis, circuit: QuantumCircuit, shots: Int) -> Double {
+    circuit.measure(shots: shots, basis: [basis]).parityExpectation(qubits: [0])
 }
 
-let psi = tiltedState()
+let tilted = tiltedCircuit()
+let psi = tilted.run()
 print("\nexact   ⟨X⟩=\(fmt(exactExpectation(psi, X)))  ⟨Y⟩=\(fmt(exactExpectation(psi, Y)))  ⟨Z⟩=\(fmt(exactExpectation(psi, Z)))")
-print("N=100000 ⟨X⟩=\(fmt(estimate(.x, psi: psi, shots: 100_000)))  ⟨Y⟩=\(fmt(estimate(.y, psi: psi, shots: 100_000)))  ⟨Z⟩=\(fmt(estimate(.z, psi: psi, shots: 100_000)))")
+print("N=100000 ⟨X⟩=\(fmt(estimate(.x, circuit: tilted, shots: 100_000)))  ⟨Y⟩=\(fmt(estimate(.y, circuit: tilted, shots: 100_000)))  ⟨Z⟩=\(fmt(estimate(.z, circuit: tilted, shots: 100_000)))")
 // Expected: exact ≈ (0.6124, 0.6124, 0.5000); shot estimates land
 // within about 0.005–0.01 of that at N=100,000 (statistical — the
 // exact gap varies run to run).
@@ -93,15 +79,15 @@ print("N=100000 ⟨X⟩=\(fmt(estimate(.x, psi: psi, shots: 100_000)))  ⟨Y⟩=
 // Section 3 — error shrinks as 1/√N
 // ============================================================
 
-func rmsError(_ basis: PauliBasis, exact: Double, psi: Ket, shots: Int, trials: Int) -> Double {
-    let errors = (0..<trials).map { _ in estimate(basis, psi: psi, shots: shots) - exact }
+func rmsError(_ basis: PauliBasis, exact: Double, circuit: QuantumCircuit, shots: Int, trials: Int) -> Double {
+    let errors = (0..<trials).map { _ in estimate(basis, circuit: circuit, shots: shots) - exact }
     return (errors.map { $0 * $0 }.reduce(0, +) / Double(trials)).squareRoot()
 }
 
 print("\nN         RMS error in ⟨X⟩ (20 trials)")
 let exactX = exactExpectation(psi, X)
 for n in [100, 1_000, 10_000, 100_000] {
-    print("\(n)     \(fmt(rmsError(.x, exact: exactX, psi: psi, shots: n, trials: 20)))")
+    print("\(n)     \(fmt(rmsError(.x, exact: exactX, circuit: tilted, shots: n, trials: 20)))")
 }
 // Expected: each column of numbers falls as N grows, at roughly the
 // 1/√N rate (each 10× increase in N should shrink the error by
@@ -119,35 +105,45 @@ for n in [100, 1_000, 10_000, 100_000] {
 // boundary point equally in both directions. Only a truly *mixed*
 // state's frequency shrinks toward zero with N.
 
-func reconstructedMagnitude(_ psi: Ket, shots: Int) -> Double {
-    let ex = estimate(.x, psi: psi, shots: shots)
-    let ey = estimate(.y, psi: psi, shots: shots)
-    let ez = estimate(.z, psi: psi, shots: shots)
+func reconstructedMagnitude(_ circuit: QuantumCircuit, shots: Int) -> Double {
+    let ex = estimate(.x, circuit: circuit, shots: shots)
+    let ey = estimate(.y, circuit: circuit, shots: shots)
+    let ez = estimate(.z, circuit: circuit, shots: shots)
     return (ex * ex + ey * ey + ez * ez).squareRoot()
 }
-func unphysicalFrequency(_ psi: Ket, shots: Int, trials: Int) -> Double {
-    let hits = (0..<trials).filter { _ in reconstructedMagnitude(psi, shots: shots) > 1.0 }.count
+func unphysicalFrequency(_ circuit: QuantumCircuit, shots: Int, trials: Int) -> Double {
+    let hits = (0..<trials).filter { _ in reconstructedMagnitude(circuit, shots: shots) > 1.0 }.count
     return Double(hits) / Double(trials)
 }
 
 print("\nPure state (tilted |ψ⟩), unphysical (|r|>1) frequency over 1000 trials:")
 for n in [10, 50, 200, 1000, 5000] {
-    print("  N=\(n): \(fmt(unphysicalFrequency(psi, shots: n, trials: 1000)))")
+    print("  N=\(n): \(fmt(unphysicalFrequency(tilted, shots: n, trials: 1000)))")
 }
 // Expected: hovers near 0.5 at every N (statistical over 1000
 // trials, so exact figures vary run to run) — it does *not* trend to
 // zero, because the true point sits exactly on the ball's boundary.
 
 // A genuinely mixed ensemble: 75% |0⟩, 25% |1⟩ → Bloch (0,0,0.5),
-// |r|=0.5, strictly inside the ball (page 19's territory).
-func sampleMixedAndMeasure(_ basis: PauliBasis) -> Int {
-    var s: Ket = Double.random(in: 0..<1) < 0.75 ? StateVector.zero : StateVector.one
-    basisRotation(basis, &s)
-    return s.measure()
+// |r|=0.5, strictly inside the ball (page 19's territory). Each shot
+// draws a fresh preparation, so `measure(shots:)` can't sample it in
+// one call — build both branches once per basis via `rotateToZ`, and
+// have each shot pick between them.
+func sampleMixedAndMeasure(zeroBranch: QuantumCircuit, oneBranch: QuantumCircuit) -> Int {
+    let branch = Double.random(in: 0..<1) < 0.75 ? zeroBranch : oneBranch
+    return branch.runAndMeasure()
 }
 func estimateMixed(_ basis: PauliBasis, shots: Int) -> Double {
+    let zeroBranch = QuantumCircuit(qubits: 1)
+    zeroBranch.rotateToZ(basis, 0)
+    let oneBranch = QuantumCircuit(qubits: 1)
+    oneBranch.x(0)
+    oneBranch.rotateToZ(basis, 0)
+
     var plus = 0
-    for _ in 0..<shots { if sampleMixedAndMeasure(basis) == 0 { plus += 1 } }
+    for _ in 0..<shots {
+        if sampleMixedAndMeasure(zeroBranch: zeroBranch, oneBranch: oneBranch) == 0 { plus += 1 }
+    }
     return 2 * Double(plus) / Double(shots) - 1
 }
 func unphysicalFrequencyMixed(shots: Int, trials: Int) -> Double {
@@ -176,29 +172,20 @@ for n in [10, 50, 200, 1000, 5000] {
 // measured rather than derived. Restates page 13's no-cloning result
 // as "one copy of an entangled qubit is never enough to see anything."
 
-let I2 = Matrix.identity(size: 2)
-var bell = StateVector(qubits: 2)
-bell.apply(H.tensor(I2))
-bell.apply(CNOTGate.matrix(qubits: 2, control: 0, target: 1))
+let bellCircuit = QuantumCircuit(qubits: 2)
+bellCircuit.h(0)
+bellCircuit.cx(0, 1)
 
-func estimateQubit0(_ basis: PauliBasis, state: Ket, shots: Int) -> Double {
-    var plus = 0
-    for _ in 0..<shots {
-        var s = state
-        switch basis {
-        case .x: s.apply(H.tensor(I2))
-        case .y: s.apply(Sdg.tensor(I2)); s.apply(H.tensor(I2))
-        case .z: break
-        }
-        let bit0 = (s.measure() >> 1) & 1   // qubit 0 is the MSB
-        if bit0 == 0 { plus += 1 }
-    }
-    return 2 * Double(plus) / Double(shots) - 1
+func estimateQubit0(_ basis: PauliBasis, shots: Int) -> Double {
+    // Qubit 1's basis is arbitrary here — qubit 0's marginal is
+    // maximally mixed, so it reads the same regardless of what basis
+    // qubit 1 is measured in.
+    bellCircuit.measure(shots: shots, basis: [basis, .z]).parityExpectation(qubits: [0])
 }
 
-let bx = estimateQubit0(.x, state: bell, shots: 50_000)
-let by = estimateQubit0(.y, state: bell, shots: 50_000)
-let bz = estimateQubit0(.z, state: bell, shots: 50_000)
+let bx = estimateQubit0(.x, shots: 50_000)
+let by = estimateQubit0(.y, shots: 50_000)
+let bz = estimateQubit0(.z, shots: 50_000)
 print("\nBell-pair qubit-0 marginal from shots: (x,y,z) = (\(fmt(bx)), \(fmt(by)), \(fmt(bz))), |r| = \(fmt((bx*bx+by*by+bz*bz).squareRoot()))")
 // Expected: all three components within ~0.02 of 0 — statistically
 // indistinguishable from the origin.

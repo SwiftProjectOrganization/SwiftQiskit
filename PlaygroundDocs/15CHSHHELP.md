@@ -39,8 +39,8 @@ value before trusting anything downstream, using the same test qubit as pages 04
 
 **Section 3 — correlators two ways.** On a Bell pair, every E(a,b) is computed both exactly
 (`state† * (A(a) ⊗ A(b)) * state`, via the one `exactCorrelator(_:_:state:)` helper) and by
-sampling 4000 shots after rotating each qubit into its measurement basis. Both agree with
-cos(a − b).
+sampling 4000 shots after rotating each qubit into its measurement basis, read out via
+`SimulationResult.parityExpectation(qubits:)`. Both agree with cos(a − b).
 
 **Section 4 — the violation.** At a = 0, a′ = π/2, b = π/4, b′ = 3π/4, all four correlators
 have magnitude 1/√2 and their signs add constructively: S = 2√2 exactly.
@@ -134,13 +134,7 @@ func correlator(_ a: Double, _ b: Double, shots: Int) -> Double {
     qc.h(0); qc.cx(0, 1)
     qc.ry(-a, 0)
     qc.ry(-b, 1)
-    let counts = qc.measure(shots: shots)
-    var total = 0.0
-    for (outcome, count) in counts.counts {
-        let bits = Array(outcome)
-        total += (bits[0] == bits[1] ? 1.0 : -1.0) * Double(count)
-    }
-    return total / Double(shots)
+    return qc.measure(shots: shots).parityExpectation(qubits: [0, 1])
 }
 
 let a = 0.0, ap = Double.pi / 2, b = Double.pi / 4, bp = 3 * Double.pi / 4

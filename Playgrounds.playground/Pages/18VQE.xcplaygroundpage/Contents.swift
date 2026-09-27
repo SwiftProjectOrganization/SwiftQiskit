@@ -25,11 +25,12 @@ import SwiftQiskit
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
 // ============================================================
-// Section 1 — the Hamiltonian, built entrywise
+// Section 1 — the Hamiltonian, built with Matrix's + and scalar *
 // ============================================================
-// `Matrix` has no `+` or scalar multiply (page 12's QFT† idiom, page
-// 15's tilted observable) — so the six Pauli terms are combined index
-// by index, with the Pauli matrices tensored via Core's `⊗`.
+// The six Pauli terms are combined with `Matrix`'s `+` and scalar
+// `*` (page 12's QFT† idiom and page 15's tilted observable predate
+// both operators, hence the entrywise workaround there), with the
+// Pauli matrices tensored via Core's `⊗`.
 
 let g: [Double] = [-0.4804, 0.3435, -0.4347, 0.5716, 0.0910, 0.0910]
 let nuclearRepulsion = 0.7055
@@ -44,14 +45,7 @@ let terms: [(coefficient: Double, matrix: Matrix)] = [
     (g[3], Z ⊗ Z), (g[4], Y ⊗ Y), (g[5], X ⊗ X)
 ]
 
-var H = Matrix(rows: 4, cols: 4)
-for (coefficient, term) in terms {
-    for r in 0..<4 {
-        for c in 0..<4 {
-            H[r, c] = H[r, c] + term[r, c] * coefficient
-        }
-    }
-}
+let H = terms.reduce(Matrix(rows: 4, cols: 4)) { $0 + $1.coefficient * $1.matrix }
 print("Hamiltonian assembled from \(terms.count) Pauli terms.")
 
 // ============================================================

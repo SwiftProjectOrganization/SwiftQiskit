@@ -15,21 +15,11 @@ import SwiftQiskit
 //
 // Target: a 2-qubit transverse-field Ising chain
 //   H = −J·Z⊗Z − h·(X⊗I + I⊗X)
-// assembled entrywise from Pauli tensor products (page 18's idiom).
+// built with `Matrix`'s `+`/`-` and scalar `*` (page 18's old entrywise
+// idiom is retired now that those operators exist).
 
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
-func addM(_ a: Matrix, _ b: Matrix) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] + b[i, j] } }
-    return r
-}
-func scaleM(_ a: Matrix, _ s: Complex) -> Matrix {
-    var r = Matrix(rows: a.rows, cols: a.cols)
-    for i in 0..<a.rows { for j in 0..<a.cols { r[i, j] = a[i, j] * s } }
-    return r
-}
-func scaleM(_ a: Matrix, _ s: Double) -> Matrix { scaleM(a, Complex(s)) }
 func maxDiff(_ a: Matrix, _ b: Matrix) -> Double {
     var m = 0.0
     for i in 0..<a.rows { for j in 0..<a.cols { m = max(m, (a[i, j] - b[i, j]).magnitude) } }
@@ -50,7 +40,7 @@ let ZZ = Z.tensor(Z)
 // for anything else.
 
 let theta = 0.7
-let expmRX = scaleM(X, Complex(0, -theta / 2)).expm()
+let expmRX = (Complex(0, -theta / 2) * X).expm()
 let rxExact = RXGate.matrix(theta: theta)
 print("expm(-iθX/2) vs. RXGate.matrix(θ=0.7): max diff = \(String(format: "%.2e", maxDiff(expmRX, rxExact)))")
 // Expected: ~1e-16 — expm is trustworthy.
@@ -68,7 +58,7 @@ func zzViaGates(_ theta: Double) -> Matrix {
     return cx * rz1 * cx
 }
 
-let expmZZ = scaleM(ZZ, Complex(0, -theta / 2)).expm()
+let expmZZ = (Complex(0, -theta / 2) * ZZ).expm()
 let gateZZ = zzViaGates(theta)
 print("expm(-iθZ⊗Z/2) vs. cx;rz;cx (θ=0.7): max diff = \(String(format: "%.2e", maxDiff(expmZZ, gateZZ)))")
 // Expected: ~1e-16 — the gate-level identity is exact, not approximate.
@@ -78,7 +68,7 @@ print("expm(-iθZ⊗Z/2) vs. cx;rz;cx (θ=0.7): max diff = \(String(format: "%.2
 // ============================================================
 
 let J = 1.0, h = 0.5
-let Hising = addM(addM(scaleM(ZZ, -J), scaleM(X.tensor(I2), -h)), scaleM(I2.tensor(X), -h))
+let Hising = -J * ZZ - h * X.tensor(I2) - h * I2.tensor(X)
 
 func trotterUnitary(_ t: Double, _ n: Int, order: Int) -> Matrix {
     let dt = t / Double(n)
@@ -98,7 +88,7 @@ func trotterUnitary(_ t: Double, _ n: Int, order: Int) -> Matrix {
 }
 
 let t = 1.0
-let exact = scaleM(Hising, Complex(0, -t)).expm()
+let exact = (Complex(0, -t) * Hising).expm()
 
 print("\n1st-order Trotter error (max diff from exact), t=1:")
 for n in [1, 2, 4, 8, 16, 32] {
@@ -140,14 +130,14 @@ for n in [2, 8] {
 // split) is exact at n=1.
 
 let X0 = X.tensor(I2)
-let commutator = addM(ZZ * X0, scaleM(X0 * ZZ, -1))
+let commutator = ZZ * X0 - X0 * ZZ
 var commNorm = 0.0
 for i in 0..<4 { for j in 0..<4 { commNorm = max(commNorm, commutator[i, j].magnitude) } }
 print("\nmax |[Z⊗Z, X⊗I]| entry: \(fmt(commNorm))")
 // Expected: 2.0 — manifestly non-zero.
 
-let Hcomm = scaleM(ZZ, -J)
-let exactComm = scaleM(Hcomm, Complex(0, -t)).expm()
+let Hcomm = -J * ZZ
+let exactComm = (Complex(0, -t) * Hcomm).expm()
 let trotterComm1 = zzViaGates(-2 * J * t)
 print("commuting-only Hamiltonian, n=1 error: \(String(format: "%.2e", maxDiff(exactComm, trotterComm1)))")
 // Expected: 0.0 — with only one term, first-order Trotter is exact.
@@ -158,7 +148,7 @@ print("commuting-only Hamiltonian, n=1 error: \(String(format: "%.2e", maxDiff(e
 
 func exactZ0(at time: Double) -> Double {
     var s = psi0
-    s.apply(scaleM(Hising, Complex(0, -time)).expm())
+    s.apply((Complex(0, -time) * Hising).expm())
     return expectationZ0(s)
 }
 func trotterZ0(at time: Double, n: Int) -> Double {
