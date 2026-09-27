@@ -202,6 +202,80 @@ public extension QuantumCircuit {
         apply(full)
     }
 
+    /// Apply the two-qubit rotation exp(-iθ·Z⊗Z/2) to any distinct pair of qubits.
+    /// Equivalent to `pauliRotation` with `Z` at `q0`/`q1` and `I` elsewhere — expands to
+    /// exactly `cx(q0, q1); rz(theta, q1); cx(q0, q1)`.
+    func rzz(_ theta: Double, _ q0: Int, _ q1: Int) {
+        pauliRotation(pauliString(q0: q0, q1: q1, pauli: "Z"), theta: theta)
+    }
+
+    /// Apply the two-qubit rotation exp(-iθ·X⊗X/2) to any distinct pair of qubits.
+    func rxx(_ theta: Double, _ q0: Int, _ q1: Int) {
+        pauliRotation(pauliString(q0: q0, q1: q1, pauli: "X"), theta: theta)
+    }
+
+    /// Apply the two-qubit rotation exp(-iθ·Y⊗Y/2) to any distinct pair of qubits.
+    func ryy(_ theta: Double, _ q0: Int, _ q1: Int) {
+        pauliRotation(pauliString(q0: q0, q1: q1, pauli: "Y"), theta: theta)
+    }
+
+    /// Builds a `qubits`-length Pauli string with `pauli` at `q0` and `q1` and `I`
+    /// elsewhere, for the `rzz`/`rxx`/`ryy` wrappers above.
+    private func pauliString(q0: Int, q1: Int, pauli: Character) -> String {
+        precondition(q0 >= 0 && q0 < qubits && q1 >= 0 && q1 < qubits,
+                     "Qubit index out of range")
+        precondition(q0 != q1, "The two qubits must differ")
+        var chars = Array(repeating: Character("I"), count: qubits)
+        chars[q0] = pauli
+        chars[q1] = pauli
+        return String(chars)
+    }
+
+    /// Apply exp(-iθ·P/2) for an arbitrary Pauli string `pauli` (e.g. `"XIZ"`, one character
+    /// per qubit, `I`/`X`/`Y`/`Z` only), via a basis change into Z on every non-identity
+    /// qubit (`h` for X, `sdg;h` for Y), a CNOT staircase computing the joint parity of every
+    /// active qubit into the last one, a single `rz` there, the staircase undone, and the
+    /// basis change undone. An all-`I` string is the global phase e^{-iθ/2}·I, applied
+    /// directly so the circuit matches `expm()` exactly rather than dropping the phase.
+    func pauliRotation(_ pauli: String, theta: Double) {
+        precondition(pauli.count == qubits, "Pauli string must have one character per qubit")
+        let chars = Array(pauli)
+        precondition(chars.allSatisfy { "IXYZ".contains($0) },
+                     "Pauli string may only contain I, X, Y, Z")
+
+        let active = chars.indices.filter { chars[$0] != "I" }
+
+        guard !active.isEmpty else {
+            let globalPhase = Complex(cos(theta / 2), -sin(theta / 2))
+            apply(Matrix.identity(size: 1 << qubits) * globalPhase)
+            return
+        }
+
+        for i in active {
+            switch chars[i] {
+            case "X": h(i)
+            case "Y": sdg(i); h(i)
+            default: break
+            }
+        }
+
+        for k in 0..<(active.count - 1) {
+            cx(active[k], active[k + 1])
+        }
+        rz(theta, active.last!)
+        for k in stride(from: active.count - 2, through: 0, by: -1) {
+            cx(active[k], active[k + 1])
+        }
+
+        for i in active {
+            switch chars[i] {
+            case "X": h(i)
+            case "Y": h(i); s(i)
+            default: break
+            }
+        }
+    }
+
 }
 /// Embed a single-qubit gate into an n-qubit system at a specific qubit index.
 /// Qubit indexing: 0 = most-significant (leftmost)

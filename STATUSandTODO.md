@@ -393,19 +393,30 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       the zero matrix, a diagonal matrix, the ZZ `cx;rz;cx` identity, and a large-norm generator
       (exercising the squaring path). `21Trotter`'s page-level `expm` was migrated onto it,
       verified to produce identical output; `PlaygroundDocs/21TROTTERHELP.md` updated to match.
-- [ ] Native two-qubit Pauli rotations `RZZGate`/`RXXGate`/`RYYGate` (matrix level, mirroring
-      `RZGate.matrix(theta:)`'s shape) plus `QuantumCircuit.rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)`
-      built internally from this chapter's own identity (`cx(0,1); rz(θ,1); cx(0,1)` for `rzz`,
-      no new Core math needed, just a name for the composition). The ZZ interaction is the single
-      most common two-qubit term in condensed-matter/quantum-chemistry Hamiltonians; every future
-      Ising- or Heisenberg-model chapter, and VQE ansätze beyond H₂, need it.
-- [ ] `QuantumCircuit.pauliRotation(_ pauli: String, theta: Double)` — `exp(−iθ·P/2)` for an
+- [x] Native two-qubit Pauli rotations `RZZGate`/`RXXGate`/`RYYGate` (matrix level, mirroring
+      `RZGate.matrix(theta:)`'s shape, in `Gates/TwoQubitRotation.swift`) plus
+      `QuantumCircuit.rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)`. The ZZ interaction is the single most
+      common two-qubit term in condensed-matter/quantum-chemistry Hamiltonians; every future
+      Ising- or Heisenberg-model chapter, and VQE ansätze beyond H₂, need it. Went one qubit-pair
+      further than originally proposed: rather than being fixed to adjacent qubits, all three are
+      thin wrappers around `pauliRotation` below, so they work on *any* distinct pair on an
+      *n*-qubit circuit. Tested in `TwoQubitRotationTests.swift` against `Matrix.expm()` and,
+      for `rzz`, against the hand-written `cx;rz;cx` identity.
+- [x] `QuantumCircuit.pauliRotation(_ pauli: String, theta: Double)` — `exp(−iθ·P/2)` for an
       arbitrary Pauli string (e.g. `"ZIZ"`), via a CNOT staircase computing the parity of every
       non-identity qubit into one qubit, a single `rz` there, then the staircase undone, with a
       basis change (`h`/`sdg;h`) where `P` calls for X or Y — reusing the same basis-rotation step
       as the tomography `PauliBasis` proposal above. Generalizes this chapter's 2-qubit Ising
       chain to an arbitrary-length spin chain without every future chapter re-deriving the
-      staircase from scratch.
+      staircase from scratch. Landed ahead of the `PauliString`/`Hamiltonian` type it was
+      originally scoped under (roadmap step 4, below) since it needed no new type — it takes a
+      plain Pauli `String` and is built entirely from existing gate methods. An all-`I` string
+      applies the global phase `e^{-iθ/2}·I` directly, so the circuit matches `Matrix.expm()` on
+      the same generator exactly rather than dropping the phase. Implemented in
+      `Circuit/QuantumCircuit.swift`; tested in `TwoQubitRotationTests.swift` against
+      `Matrix.expm()` for 3- and 4-qubit strings (including a mixed string with an interior `I`),
+      against `rx`/`ry`/`rz` for single-qubit strings, and against the global-phase identity for
+      an all-`I` string.
 - [ ] `Hamiltonian.trotterCircuit(time: Double, steps: Int, order: Int) -> QuantumCircuit` on the
       `PauliString`/`Hamiltonian` type proposed above under "— variational" — grouping the
       Hamiltonian's terms into commuting layers and emitting `pauliRotation` calls for first- or
@@ -417,10 +428,9 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       curve identical to the original order to floating-point precision, at every step count —
       a mildly surprising fact about product-formula splitting the current guide doesn't mention
       either way. Pick this up the next time that file is touched.
-- [ ] Tests: `rzz/rxx/ryy` against `expm()` and against the hand-written `cx;rz;cx` identity;
-      `pauliRotation` against a hand-built matrix exponential for a 3-qubit Pauli string;
-      `trotterCircuit` first- and second-order error scaling reproducing page `21Trotter`'s
-      O(1/n)/O(1/n²) rates. (`Matrix.expm`'s own tests landed with `expm` itself, above.)
+- [ ] Tests: `trotterCircuit` first- and second-order error scaling reproducing page
+      `21Trotter`'s O(1/n)/O(1/n²) rates. (`Matrix.expm`'s own tests landed with `expm` itself;
+      `rzz/rxx/ryy` and `pauliRotation`'s tests landed with those, both above.)
 
 ## Proposed Core extensions — permutations, Toffoli & registers (from the app's Chapter 25 findings)
 
@@ -517,13 +527,18 @@ picks this up next:
    `Matrix.trace`, `Matrix.isUnitary`, `Matrix.permutation`, `Matrix.expm`. Each retires a
    repeated page-level helper; each is tested by self-check against an existing gate. **Done**
    — all five landed (`Matrix.expm` last, in `MatrixExponentialTests.swift`).
-2. Gates built on step 1: `ToffoliGate`/`ccx` (via `Matrix.permutation`), and
-   `RZZGate`/`RXXGate`/`RYYGate`/`rzz`/`rxx`/`ryy` (tested against `Matrix.expm`).
+2. Gates built on step 1: `ToffoliGate`/`ccx` (via `Matrix.permutation`) is still open.
+   `RZZGate`/`RXXGate`/`RYYGate`/`rzz`/`rxx`/`ryy` (tested against `Matrix.expm`) and
+   `QuantumCircuit.pauliRotation` are **done** — `pauliRotation` landed here rather than in
+   step 4, since it turned out to need no `PauliString`/`Hamiltonian` type: it takes a plain
+   Pauli `String` and is built entirely from existing gate methods (`h`/`sdg;h`/`cx`/`rz`).
 3. Readout helpers: `StateVector.marginalProbabilities`, the `SimulationResult` marginal /
    `parityExpectation` helpers, `PauliBasis` + `rotateToZ` + `measure(shots:basis:)`.
 4. The Pauli-algebra hub: `PauliString` → `Hamiltonian` (`matrix`, `expectation`,
-   `measureExpectation`) → `pauliRotation` → the tomography `StateTomography` helper.
-5. Builders on top of 2–4: `Hamiltonian.trotterCircuit`, the multi-parameter parameter-shift
+   `measureExpectation`) → the tomography `StateTomography` helper. (`pauliRotation` moved to
+   step 2, above — done.)
+5. Builders on top of 2–4: `Hamiltonian.trotterCircuit` (now unblocked on `pauliRotation`;
+   still needs `PauliString`/`Hamiltonian` from step 4), the multi-parameter parameter-shift
    gradient + optimizer, `increment`/`decrement`.
 6. Open systems track (independent of 2–5, only needs step 1): `DensityMatrix` →
    `KrausChannel` → `NoiseModel`/`runDensityMatrix`/`runTrajectories`; the package-level

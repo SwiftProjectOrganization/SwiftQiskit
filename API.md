@@ -232,10 +232,14 @@ Follow this pattern when adding a new gate.
 | `RZGate.matrix(theta:)` | parameterized | `rz(theta, qubit)` | Rotation about Z: `exp(-iθZ/2)`; equals `P(θ)` up to the global phase `e^{-iθ/2}`. |
 | `CNOTGate.matrix` | fixed, 2-qubit | `cx(control, target)`* | The plain 4×4 CNOT (control = qubit 0, target = qubit 1). |
 | `CNOTGate.matrix(qubits:control:target:)` | general, n-qubit | `cx(control, target)` | The full 2ⁿ×2ⁿ CNOT for any distinct control/target pair on an *n*-qubit register, built as a basis-state permutation. Traps if `qubits < 2`, if either index is out of range, or if `control == target`. |
+| `RZZGate.matrix(theta:)` | parameterized, 2-qubit | `rzz(theta, q0, q1)`* | `exp(-iθ·Z⊗Z/2)` on adjacent qubits; equals `cx(0,1); rz(θ,1); cx(0,1)` exactly. |
+| `RXXGate.matrix(theta:)` | parameterized, 2-qubit | `rxx(theta, q0, q1)`* | `exp(-iθ·X⊗X/2)` on adjacent qubits. |
+| `RYYGate.matrix(theta:)` | parameterized, 2-qubit | `ryy(theta, q0, q1)`* | `exp(-iθ·Y⊗Y/2)` on adjacent qubits. |
 
 \* `QuantumCircuit.cx` always calls the general `CNOTGate.matrix(qubits:control:target:)`
 form, not the fixed 4×4 one — the fixed form is exposed separately for direct use as a
-standalone 2-qubit gate.
+standalone 2-qubit gate. `rzz`/`rxx`/`ryy` work on *any* distinct pair of qubits on an
+*n*-qubit circuit (not just adjacent ones) — see `pauliRotation` below.
 
 Rotation gates satisfy `RA(2π) = -I` (a full turn is minus identity) and
 `RA(π) = -i·A` up to that same global phase, for the corresponding Pauli matrix `A`.
@@ -278,11 +282,27 @@ func rx(_ theta: Double, _ qubit: Int)
 func ry(_ theta: Double, _ qubit: Int)
 func rz(_ theta: Double, _ qubit: Int)
 func cx(_ control: Int, _ target: Int)
+func rzz(_ theta: Double, _ q0: Int, _ q1: Int)
+func rxx(_ theta: Double, _ q0: Int, _ q1: Int)
+func ryy(_ theta: Double, _ q0: Int, _ q1: Int)
+func pauliRotation(_ pauli: String, theta: Double)
 ```
 
 Single-qubit gates are embedded across the full register via `Matrix.tensor(_:)`
 (the file-private `embedSingleQubitGate`), so calling `h(1)` on a 3-qubit circuit builds and
 applies `I ⊗ H ⊗ I` under the hood.
+
+`pauliRotation(_:theta:)` applies `exp(-iθ·P/2)` for an arbitrary Pauli string (one character
+per qubit, `I`/`X`/`Y`/`Z` only, indexed the same way as `Ket("01")` — character *i* acts on
+qubit *i*). Traps if `pauli.count != qubits` or the string contains any other character.
+Built entirely from existing gate methods: a basis change into Z on every non-`I` qubit
+(`h` for X, `sdg;h` for Y), a CNOT staircase computing the parity of every active qubit into
+the last one, a single `rz` there, the staircase undone, then the basis change undone. An
+all-`I` string applies only the global phase `e^{-iθ/2}·I` (via `apply(_:)`), matching
+`Matrix.expm()` on the same generator exactly rather than dropping the phase.
+`rzz`/`rxx`/`ryy(theta, q0, q1)` are thin wrappers building the two-character Pauli string
+and calling `pauliRotation` — they work on any distinct pair of qubits, not just adjacent
+ones (traps if `q0 == q1` or either is out of range).
 
 ### Execution
 
@@ -331,11 +351,11 @@ that happens to be `public`; don't build new API around it.
 ## Not Yet in Core
 
 Several capabilities that later playground pages need — noise/Kraus channels, mid-circuit
-or partial measurement, permutation/Toffoli helpers, Hamiltonian simulation (`expm`), and
-Pauli-basis tomography helpers — are implemented *inside individual playground pages*
-rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
-`PlaygroundDocs/`). Proposed Core extensions for these areas, with rationale, are tracked in
-`STATUSandTODO.md` under "Proposed Core extensions — ...".
+or partial measurement, a Toffoli/`ccx` helper, a `PauliString`/`Hamiltonian` type (needed by
+`Hamiltonian.trotterCircuit`), and Pauli-basis tomography helpers — are implemented *inside
+individual playground pages* rather than in `Sources/SwiftQiskit`, deliberately (see each
+page's plan doc under `PlaygroundDocs/`). Proposed Core extensions for these areas, with
+rationale, are tracked in `STATUSandTODO.md` under "Proposed Core extensions — ...".
 
 For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
 used by playground live views, see `PLAYGROUNDSUPPORT.md`.
