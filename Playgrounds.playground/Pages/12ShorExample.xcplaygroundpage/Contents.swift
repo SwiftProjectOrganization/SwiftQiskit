@@ -330,13 +330,11 @@ for y in 0..<8 {
 // ============================================================
 // Section 6 — 1000 shots
 // ============================================================
-// One caveat before sampling: measure(shots:) replays every
-// recorded operation for every shot. Page 11's dimension-8
-// circuit didn't care; here each replay costs ~40 ms, so 1000
-// shots would take most of a minute. Every shot re-prepares the
-// same pure state and measures all qubits, so sampling the
-// probabilities of a single run() is statistically identical —
-// and instant.
+// `measure(shots:)` itself now runs the circuit once and samples
+// its probabilities `shots` times, so it would be instant here
+// too. The local sampler below does exactly that by hand — kept
+// visible because it doubles as the marginal-over-y summary this
+// section wants, rather than the full 7-bit measurement string.
 
 /// Draw `shots` samples from a probability distribution.
 func sample(_ probabilities: [Double], shots: Int) -> [Int: Int] {

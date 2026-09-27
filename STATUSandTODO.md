@@ -60,6 +60,14 @@ The project is actively evolving, and major features are planned.
 - [ ] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
       a, a′ fixed) to a genuine multi-angle search over all four settings, if a true
       confirmation of the bound (rather than a consistency check) is wanted.
+- [x] `QuantumCircuit.measure(shots:)` runs the circuit once and samples the resulting
+      `probabilities` `shots` times, instead of calling `runAndMeasure()` (which replays every
+      recorded operation via `run()`) once per shot — only the final random draw differs shot
+      to shot for a full measurement of a pure state. The shared cumulative-probability sampler
+      moved to `StateVector.sampleIndex(from:)`, used by both this and `StateVector.measure()`.
+      Tested in `MeasurementTests.swift`, including a regression check against the old
+      replay-per-shot behavior. Pages 12 and 13's own local samplers (added to route around the
+      old cost) are kept as see-through stand-ins and updated to say so.
 - [ ] Performance optimizations
 - [ ] Stable public API (v1.0)
 
@@ -214,13 +222,14 @@ page 19 adds one small additive initializer to the playground's shared `BlochVec
       against a product state's 0 — with a live Bloch gallery shrinking from pure to fully
       depolarized (`PlaygroundDocs/19NOISEPLAN.md`, `PlaygroundDocs/19NOISEHELP.md`).
 - [x] Tomography — page `20Tomography`: reconstructing a state from `measure(shots:)` alone.
-      Basis rotations pinned against a known Y-eigenstate, the estimator checked against exact
-      expectation values, RMS error falling at the 1/√N rate, and the sharper-than-expected
-      result that a *pure* state's per-axis reconstruction lands outside the Bloch ball about
-      half the time at *any* N (only a genuinely mixed state's frequency shrinks toward zero) —
-      plus a Bell pair's marginal reconstructed from shots and the 3ⁿ cost table explaining why
-      page 18's VQE measures Pauli terms instead of the full state
-      (`PlaygroundDocs/20TOMOGRAPHYPLAN.md`, `PlaygroundDocs/20TOMOGRAPHYHELP.md`).
+      Basis rotations — a page-level `PauliBasis` enum rather than bare strings, pinned against
+      a known Y-eigenstate, plus a note that `rx(π/2)` is a one-gate alternative to `sdg; h` —
+      the estimator checked against exact expectation values, RMS error falling at the 1/√N
+      rate, and the sharper-than-expected result that a *pure* state's per-axis reconstruction
+      lands outside the Bloch ball about half the time at *any* N (only a genuinely mixed
+      state's frequency shrinks toward zero) — plus a Bell pair's marginal reconstructed from
+      shots and the 3ⁿ cost table explaining why page 18's VQE measures Pauli terms instead of
+      the full state (`PlaygroundDocs/20TOMOGRAPHYPLAN.md`, `PlaygroundDocs/20TOMOGRAPHYHELP.md`).
 - [x] Trotterization — page `21Trotter`: Hamiltonian simulation of a transverse-field Ising
       chain. A page-level `expm` (scaling-and-squaring Taylor series) self-checked against
       `RXGate`, the exact gate identity exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, first-
@@ -264,14 +273,54 @@ entry above):
       gate — flagged there as "not doing" in `14ERRORCORRECTIONPLAN.md`'s analogue.
 - [ ] `DensityMatrix.fidelity(to:StateVector)` and `StateVector.expectation(_:Matrix)` — the
       latter would simplify `19Noise`'s `blochOf` helper to one line and help `20Tomography`,
-      which measures exactly these three expectation values per qubit.
+      which measures exactly these three expectation values per qubit. The app's Chapter 22
+      findings hit this same gap again independently (its `exactExpectation(_:_:)` re-derives
+      the one-liner `(psi† * A * psi).real`) — see "Proposed Core extensions — tomography"
+      below.
 - [ ] A single package-level `BlochVector` (pure-state and `DensityMatrix`-driven initializers),
       replacing the three hand-vendored copies (`Playgrounds.playground/Sources/BlochVector.swift`,
       `SwiftQiskitApp/BlochVector.swift`, and the app's `blochOf(_:Matrix)`) — do together with
-      `DensityMatrix`.
+      `DensityMatrix`. The app's Chapter 22 findings add a fourth hand-vendored consumer (its
+      tomography live-view section, this time for a *reconstructed* rather than exact vector).
 - [ ] Tests (Swift `Testing`, shape of `AdditionalGatesTests.swift`): trace preservation for all
       five channels at a few p/γ values; `DensityMatrix.purity`/`vonNeumannEntropy` on a known
       pure state, a maximally mixed state, and a partially mixed state with a hand-computed
       eigenvalue pair; `partialTrace` qubit isolation (mirroring
       `SwiftQiskitApp/SwiftQiskitAppTests/BlochVectorTests.swift`'s reduced-vector-isolation
       test); `runTrajectories` converging to `runDensityMatrix`'s prediction within shot noise.
+
+## Proposed Core extensions — tomography (from the app's Chapter 22 findings)
+
+Writing the SwiftQiskitApp book's Tomography chapter (`Docs/Introduction/22-Tomography.md`)
+surfaced a set of Core gaps that page `20Tomography` and that chapter both route around today
+with page/app-level helpers (`~/Documents/SwiftQiskit-Chapter22-Findings.md`). None of these
+are implemented yet:
+
+- [ ] `PauliBasis` enum (`.x`/`.y`/`.z`) and `QuantumCircuit.rotateToZ(_ basis: PauliBasis, _
+      qubit: Int)` appending the rotation that turns a measurement of `qubit` in that basis
+      into an ordinary Z-basis read (`h` for X, `sdg; h` for Y, nothing for Z) — would replace
+      page `20Tomography`'s page-level `PauliBasis`/`basisRotation` and the app chapter's
+      identical string-typed version.
+- [ ] `QuantumCircuit.measure(shots: Int, basis: [PauliBasis]) -> SimulationResult` — appends
+      each qubit's basis rotation (applied to a copy, leaving the circuit's own operation list
+      untouched), then measures. Folds the hand-appended rotate-then-measure pattern every
+      estimator in page `20Tomography` (and the app chapter) repeats into the call itself.
+- [ ] `StateTomography` helper: `estimate(_:qubit:result:) -> Double` ((N₀−N₁)/N from one
+      basis's `SimulationResult` marginal), `reconstructSingleQubit(qubit:x:y:z:) ->
+      (vector:(x:Double,y:Double,z:Double), isPhysical: Bool)` (the three-axis estimate as a
+      Bloch vector, `isPhysical` = `|r| <= 1`), and `clampToPhysical(_:)` (projects an
+      out-of-ball estimate back onto the unit sphere, `r -> r/|r|` — a named, tested version of
+      page `20Tomography`'s rescaling idea, not a real MLE estimator). Nothing in Core today
+      turns per-basis shot counts into a reconstructed state, checks physicality, or
+      generalizes past one qubit.
+- [ ] A real maximum-likelihood or linear-inversion reconstruction — a bigger lift than
+      `StateTomography` above; a reasonable follow-up once that lands, not blocking it.
+- [ ] Tests (Swift `Testing`, shape of `AdditionalGatesTests.swift`): `PauliBasis`/`rotateToZ`
+      against known eigenstates (`|+i⟩` for Y, `|+⟩` for X, `|0⟩`/`|1⟩` for Z);
+      `measure(shots:basis:)` reproducing page `20Tomography`'s hand-rolled estimator within
+      shot noise; `StateTomography.reconstructSingleQubit` against a known pure state and a
+      known mixed state (reusing the Chapter 21 proposal's `DensityMatrix` fixtures above once
+      that lands).
+- See also `SimulationResult.parityExpectation(qubits:)` and `StateVector.expectation(_:)` in
+  the Roadmap above, and the `BlochVector`/`StateVector.expectation` carry-over notes under
+  "Proposed Core extensions — open systems" — Chapter 22 hit both gaps again independently.

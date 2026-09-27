@@ -183,8 +183,8 @@ print("ψ probabilities:      \(psi.probabilities.map { String(format: "%.4f", $
 print("q0 (Alice) marginal:  \(marginal(finalState, bit: 0).map { String(format: "%.4f", $0) })")
 // Expected: [0.5000, 0.5000] — |+⟩, independent of ψ
 
-// `measure(shots:)` replays every recorded operation per shot on a
-// fresh circuit, so build one afresh rather than sampling `finalState`.
+// `measure(shots:)` is a `QuantumCircuit` method, not a `StateVector` one, so it
+// needs a circuit to run — build one afresh rather than sampling `finalState` directly.
 let shotCircuit = QuantumCircuit(qubits: 3)
 shotCircuit.ry(theta, 0)
 shotCircuit.rz(phi, 0)

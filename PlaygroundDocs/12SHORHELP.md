@@ -195,8 +195,8 @@ if modPow(a, r, 15) == 1 && r % 2 == 0 {
 }
 ```
 
-For repeated sampling, prefer one `run()` and sample its `probabilities` — see the
-Troubleshooting note below.
+`measure(shots:)` does exactly this internally (one `run()`, `shots` samples of its
+`probabilities`) — see the Troubleshooting note below.
 
 ## Troubleshooting
 
@@ -210,7 +210,8 @@ Troubleshooting note below.
 - **Peaks in the wrong places** — check the qubit-k ↔ power mapping: qubit 0 is the MSB,
   so counting qubit k controls U_a^(2^(2−k)), *not* U_a^(2^k). Getting it backwards
   scrambles the phase estimate.
-- **`measure(shots:)` takes forever** — it replays every recorded operation for every
-  shot; at dimension 128 that is ~40 ms × shots. Call `run()` once and sample its
-  `probabilities` instead (statistically identical for a full measurement of a pure
-  state), as the page's Section 6 does.
+- **Wondering why Section 6 hand-rolls a sampler instead of calling `measure(shots:)`** —
+  `measure(shots:)` now runs the circuit once and samples its `probabilities` `shots`
+  times, the same thing the section's sampler does by hand; it's kept visible as a
+  see-through version of what `measure(shots:)` does, and it doubles as the
+  marginal-over-y summary that section wants.

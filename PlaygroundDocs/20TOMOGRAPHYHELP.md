@@ -14,7 +14,11 @@ for its most important result.
 
 **Section 1 — basis rotations, pinned before use.** `measure(shots:)` only reads the Z basis.
 Getting ⟨X⟩ needs `h`; ⟨Y⟩ needs `sdg` then `h` — checked here by rotating `|+i⟩` (a known
-Y-eigenstate) and confirming it collapses deterministically, rather than assumed.
+Y-eigenstate) and confirming it collapses deterministically, rather than assumed. The three
+choices are a page-level `PauliBasis` enum (`.x`/`.y`/`.z`), not bare strings, so a typo is a
+compile error instead of a silent fallthrough to Z. A one-gate alternative, `rx(π/2)`,
+collapses `|+i⟩` the same way as `sdg; h` — the page keeps `sdg; h` throughout as the textbook
+decomposition, but the shortcut is worth knowing.
 
 **Section 2 — the estimator.** ⟨A⟩ ≈ (N₀−N₁)/N, checked against the exact
 `psi† * A * psi` on a generic tilted state before trusting it statistically.
@@ -54,6 +58,9 @@ Section 5, both as `BlochSphereView`s via this page's (page-19-added) `BlochVect
 ```text
 |+i⟩ rotated by (Sdg; H): |0⟩: 0.9999999999999998
 |1⟩: 0.0
+
+|+i⟩ rotated by rx(π/2): |0⟩: 0.9999999999999999
+|1⟩: 1.1102230246251565e-16i
 
 exact   ⟨X⟩=0.612372  ⟨Y⟩=0.612374  ⟨Z⟩=0.499998
 N=100000 ⟨X⟩=0.6122   ⟨Y⟩=0.6142   ⟨Z⟩=0.4977     (statistical, within ~0.005-0.01)
@@ -101,19 +108,21 @@ import SwiftQiskit
 let H = HadamardGate.matrix
 let Sdg = SDaggerGate.matrix
 
-func basisRotation(_ axis: String, _ s: inout StateVector) {
-    switch axis {
-    case "X": s.apply(H)
-    case "Y": s.apply(Sdg); s.apply(H)
-    default: break
+enum PauliBasis { case x, y, z }
+
+func basisRotation(_ basis: PauliBasis, _ s: inout StateVector) {
+    switch basis {
+    case .x: s.apply(H)
+    case .y: s.apply(Sdg); s.apply(H)
+    case .z: break
     }
 }
 
-func estimate(_ axis: String, psi: StateVector, shots: Int) -> Double {
+func estimate(_ basis: PauliBasis, psi: StateVector, shots: Int) -> Double {
     var plus = 0
     for _ in 0..<shots {
         var s = psi
-        basisRotation(axis, &s)
+        basisRotation(basis, &s)
         if s.measure() == 0 { plus += 1 }
     }
     return 2 * Double(plus) / Double(shots) - 1   // ⟨A⟩ ≈ (N0 - N1) / N
@@ -130,4 +139,5 @@ func estimate(_ axis: String, psi: StateVector, shots: Int) -> Double {
   ball's boundary, so noise pushes the estimate out about as often as in, at any N. Only the
   mixed-state row should shrink toward zero.
 - **Y-basis results look flipped** — double-check the rotation order is `sdg` *then* `h`; the
-  reverse order does not diagonalize Y (Section 1 shows why).
+  reverse order does not diagonalize Y (Section 1 shows why). `rx(π/2)` is an equivalent
+  one-gate rotation if you'd rather use that instead.
