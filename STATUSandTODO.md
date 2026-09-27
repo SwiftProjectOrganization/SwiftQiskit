@@ -383,14 +383,16 @@ further Core gaps that page `21Trotter` and that chapter both route around today
 for the chapter itself (matching `21TROTTERPLAN.md`'s own choice); the app did gain a fully
 tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Proposed Core work:
 
-- [ ] `Matrix.expm(terms: Int = 20) -> Matrix` (scaling-and-squaring Taylor series) in
-      `Math/Matrix.swift`, with `MatrixExponentialTests.swift` checking it against
-      `RXGate`/`RYGate`/`RZGate.matrix(theta:)` the way pages `19Noise` and `21Trotter` (and this
-      chapter) already do by hand. The single most-repeated page-level helper across the
-      playground set — promoting it removes the last hand-rolled linear-algebra idiom these pages
-      keep re-deriving, and is a prerequisite for any future chapter wanting an exact ground truth
+- [x] `Matrix.expm(terms: Int = 20) -> Matrix` (scaling-and-squaring Taylor series) in
+      `Math/Matrix.swift` — the single most-repeated page-level helper across the playground
+      set; promoting it removes the last hand-rolled linear-algebra idiom `21Trotter` was
+      re-deriving, and is a prerequisite for any future chapter wanting an exact ground truth
       for a Hamiltonian bigger than 2 qubits (where a closed-form eigen-decomposition stops being
       available by hand). Also wanted independently by Chapter 25 (quantum walks) — see below.
+      Tested in `MatrixExponentialTests.swift` against `RXGate`/`RYGate`/`RZGate.matrix(theta:)`,
+      the zero matrix, a diagonal matrix, the ZZ `cx;rz;cx` identity, and a large-norm generator
+      (exercising the squaring path). `21Trotter`'s page-level `expm` was migrated onto it,
+      verified to produce identical output; `PlaygroundDocs/21TROTTERHELP.md` updated to match.
 - [ ] Native two-qubit Pauli rotations `RZZGate`/`RXXGate`/`RYYGate` (matrix level, mirroring
       `RZGate.matrix(theta:)`'s shape) plus `QuantumCircuit.rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)`
       built internally from this chapter's own identity (`cx(0,1); rz(θ,1); cx(0,1)` for `rzz`,
@@ -415,10 +417,10 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       curve identical to the original order to floating-point precision, at every step count —
       a mildly surprising fact about product-formula splitting the current guide doesn't mention
       either way. Pick this up the next time that file is touched.
-- [ ] Tests: `Matrix.expm` against `RXGate`/`RYGate`/`RZGate`; `rzz/rxx/ryy` against `expm` and
-      against the hand-written `cx;rz;cx` identity; `pauliRotation` against a hand-built matrix
-      exponential for a 3-qubit Pauli string; `trotterCircuit` first- and second-order error
-      scaling reproducing page `21Trotter`'s O(1/n)/O(1/n²) rates.
+- [ ] Tests: `rzz/rxx/ryy` against `expm()` and against the hand-written `cx;rz;cx` identity;
+      `pauliRotation` against a hand-built matrix exponential for a 3-qubit Pauli string;
+      `trotterCircuit` first- and second-order error scaling reproducing page `21Trotter`'s
+      O(1/n)/O(1/n²) rates. (`Matrix.expm`'s own tests landed with `expm` itself, above.)
 
 ## Proposed Core extensions — permutations, Toffoli & registers (from the app's Chapter 25 findings)
 
@@ -513,7 +515,8 @@ picks this up next:
 
 1. Foundation one-liners with no dependencies on each other: `StateVector.expectation`,
    `Matrix.trace`, `Matrix.isUnitary`, `Matrix.permutation`, `Matrix.expm`. Each retires a
-   repeated page-level helper; each is tested by self-check against an existing gate.
+   repeated page-level helper; each is tested by self-check against an existing gate. **Done**
+   — all five landed (`Matrix.expm` last, in `MatrixExponentialTests.swift`).
 2. Gates built on step 1: `ToffoliGate`/`ccx` (via `Matrix.permutation`), and
    `RZZGate`/`RXXGate`/`RYYGate`/`rzz`/`rxx`/`ryy` (tested against `Matrix.expm`).
 3. Readout helpers: `StateVector.marginalProbabilities`, the `SimulationResult` marginal /
@@ -528,8 +531,9 @@ picks this up next:
 7. Performance: the permutation-aware fast path in `apply`, then general optimizations.
 
 Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` onto
-`Matrix.permutation`; `19`/`21` onto `expm`) can follow immediately after the step that lands
-each helper.
+`Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`
+onto `Matrix.expm` is **done**; `19Noise` was never a retrofit target — it has no page-level
+`expm` of its own.
 
 **`SwiftQiskitApp`:**
 

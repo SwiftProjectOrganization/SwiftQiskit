@@ -102,6 +102,7 @@ public struct Matrix: Equatable, Hashable {
 | Unitarity check | `func isUnitary(tolerance: Double = 1e-10) -> Bool` | `true` iff square and `U†U ≈ I` entrywise within `tolerance`; `false` for any non-square matrix. Replaces the hand `M†M ≈ I` check otherwise repeated at every call site (see the `Equatable` gotcha below). |
 | Trace | `var trace: Complex` | Σᵢ `self[i,i]`. Traps if the matrix isn't square. |
 | Permutation matrix | `static func permutation(size: Int, image: (Int) -> Int) -> Matrix` | Builds the `size`×`size` permutation sending column `i` to row `image(i)` (i.e. `\|image(i)⟩ ← \|i⟩`). Traps unless `image` is a genuine bijection on `0..<size` — every row must be hit by exactly one column — so the constructor itself is the unitarity check a hand-rolled permutation loop would otherwise verify separately. |
+| Matrix exponential | `func expm(terms: Int = 20) -> Matrix` | e^A via scaling-and-squaring: halves `A` until its ∞-norm (max absolute row sum) is ≤ 0.5, sums a `terms`-term Taylor series there, then squares the result back up the same number of times. Traps if the matrix isn't square. No implicit `-i` — for e^(-iθH), scale `H` by `Complex(0, -theta)` yourself first. |
 | Description | `description` | One bracketed row per line. |
 
 **Gotcha:** `Equatable`/`Hashable` compare `Complex` entries exactly, so two matrices that

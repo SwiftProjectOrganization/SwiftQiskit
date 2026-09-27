@@ -12,12 +12,11 @@ that split introduces error.
 
 ## Section by section
 
-**Section 1 — `expm`, self-checked.** `Matrix` has no matrix exponential, so one is built by
-scaling-and-squaring Taylor series — and checked against Core's *exact* `RXGate` before being
-trusted as ground truth for anything else.
+**Section 1 — `Matrix.expm()`, self-checked.** Core's scaling-and-squaring Taylor series is
+checked against Core's *exact* `RXGate` before being trusted as ground truth for anything else.
 
 **Section 2 — the ZZ-rotation identity, derived not assumed.** exp(−iθ·Z⊗Z/2) =
-`cx(0,1); rz(θ,1); cx(0,1)`, checked against `expm` directly. Core's `RZGate` is exactly
+`cx(0,1); rz(θ,1); cx(0,1)`, checked against `expm()` directly. Core's `RZGate` is exactly
 exp(−iθZ/2), so this holds with no sign correction.
 
 **Section 3 — Trotter error scaling.** For H = −J·Z⊗Z − h·(X⊗I + I⊗X): first-order error
@@ -109,9 +108,8 @@ func trotterStep(J: Double, h: Double, dt: Double) -> Matrix {
 - **Page won't run / no output** — the SwiftQiskit scheme must build first.
 - **`Failed to load linked library cups`** — the Xcode 27 beta evaluator bug; re-copy the
   shim (`PLAYGROUNDSUPPORT.md`).
-- **`expm` self-check doesn't land near 1e-16** — check the scaling-and-squaring loop halves
-  the matrix until its max entry magnitude is ≤ 0.5 before the Taylor sum, and squares back up
-  the same number of times afterward.
+- **`expm` self-check doesn't land near 1e-16** — `Matrix.expm(terms:)` defaults to 20 Taylor
+  terms; passing a much smaller `terms` on a large-norm generator will undershoot.
 - **Trotter error doesn't shrink with n** — check the *same* Hamiltonian and total time `t` are
-  used for both the exact `expm` curve and every Trotterized `n`; increasing `n` while
+  used for both the exact `expm()` curve and every Trotterized `n`; increasing `n` while
   changing `t` won't show the O(1/n) trend.

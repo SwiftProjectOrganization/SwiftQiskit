@@ -236,6 +236,50 @@ public extension Matrix {
     }
 }
 
+// MARK: - Matrix Exponential
+
+public extension Matrix {
+
+    /// The matrix exponential e^A via scaling-and-squaring: a Taylor series
+    /// (Σ_{k=0}^{terms} Aᵏ/k!) is accurate only while `A`'s norm is small, so `A` is
+    /// repeatedly halved until its ∞-norm (max absolute row sum) is ≤ 0.5, the series is
+    /// summed there, and the result is squared back up the same number of times
+    /// (e^A = (e^(A/2ˢ))^(2ˢ)). Traps if the matrix isn't square.
+    ///
+    /// No implicit `-i`: for a Hamiltonian-style evolution e^(-iθH), scale `H` by
+    /// `Complex(0, -theta)` (or halve it first, per convention) before calling this.
+    func expm(terms: Int = 20) -> Matrix {
+        precondition(rows == cols, "Matrix exponential is only defined for a square matrix")
+        precondition(terms > 0, "expm needs at least one Taylor term")
+
+        var normEstimate = 0.0
+        for i in 0..<rows {
+            var rowSum = 0.0
+            for j in 0..<cols { rowSum += self[i, j].magnitude }
+            normEstimate = max(normEstimate, rowSum)
+        }
+
+        var scalingSteps = 0
+        var scaled = self
+        var scaledNorm = normEstimate
+        while scaledNorm > 0.5 {
+            scaled = scaled * 0.5
+            scaledNorm *= 0.5
+            scalingSteps += 1
+        }
+
+        var result = Matrix.identity(size: rows)
+        var term = Matrix.identity(size: rows)
+        for k in 1...terms {
+            term = (term * scaled) * (1.0 / Double(k))
+            result = result + term
+        }
+
+        for _ in 0..<scalingSteps { result = result * result }
+        return result
+    }
+}
+
 // MARK: - Tensor Product
 
 /// Kronecker (tensor) product operator.

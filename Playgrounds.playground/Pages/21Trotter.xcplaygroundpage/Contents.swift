@@ -44,31 +44,13 @@ let ZZ = Z.tensor(Z)
 // ============================================================
 // Section 1 — expm, self-checked before it's trusted as ground truth
 // ============================================================
-// `Matrix` has no `expm`, so it's built here by scaling-and-squaring
-// Taylor series — and checked against an *exact* gate, `RXGate`,
-// before it's used to grade anything else.
-
-func expm(_ A: Matrix, terms: Int = 20) -> Matrix {
-    let n = A.rows
-    var normEst = 0.0
-    for i in 0..<n { for j in 0..<n { normEst = max(normEst, A[i, j].magnitude) } }
-    var s = 0
-    var scaled = A
-    var normS = normEst
-    while normS > 0.5 { scaled = scaleM(scaled, 0.5); normS *= 0.5; s += 1 }
-
-    var result = Matrix.identity(size: n)
-    var term = Matrix.identity(size: n)
-    for k in 1...terms {
-        term = scaleM(term * scaled, 1.0 / Double(k))
-        result = addM(result, term)
-    }
-    for _ in 0..<s { result = result * result }
-    return result
-}
+// `Matrix.expm()` (scaling-and-squaring Taylor series) is the ground
+// truth the rest of this page grades Trotterized circuits against —
+// checked here against an *exact* gate, `RXGate`, before it's trusted
+// for anything else.
 
 let theta = 0.7
-let expmRX = expm(scaleM(X, Complex(0, -theta / 2)))
+let expmRX = scaleM(X, Complex(0, -theta / 2)).expm()
 let rxExact = RXGate.matrix(theta: theta)
 print("expm(-iθX/2) vs. RXGate.matrix(θ=0.7): max diff = \(String(format: "%.2e", maxDiff(expmRX, rxExact)))")
 // Expected: ~1e-16 — expm is trustworthy.
@@ -86,7 +68,7 @@ func zzViaGates(_ theta: Double) -> Matrix {
     return cx * rz1 * cx
 }
 
-let expmZZ = expm(scaleM(ZZ, Complex(0, -theta / 2)))
+let expmZZ = scaleM(ZZ, Complex(0, -theta / 2)).expm()
 let gateZZ = zzViaGates(theta)
 print("expm(-iθZ⊗Z/2) vs. cx;rz;cx (θ=0.7): max diff = \(String(format: "%.2e", maxDiff(expmZZ, gateZZ)))")
 // Expected: ~1e-16 — the gate-level identity is exact, not approximate.
@@ -116,7 +98,7 @@ func trotterUnitary(_ t: Double, _ n: Int, order: Int) -> Matrix {
 }
 
 let t = 1.0
-let exact = expm(scaleM(Hising, Complex(0, -t)))
+let exact = scaleM(Hising, Complex(0, -t)).expm()
 
 print("\n1st-order Trotter error (max diff from exact), t=1:")
 for n in [1, 2, 4, 8, 16, 32] {
@@ -165,7 +147,7 @@ print("\nmax |[Z⊗Z, X⊗I]| entry: \(fmt(commNorm))")
 // Expected: 2.0 — manifestly non-zero.
 
 let Hcomm = scaleM(ZZ, -J)
-let exactComm = expm(scaleM(Hcomm, Complex(0, -t)))
+let exactComm = scaleM(Hcomm, Complex(0, -t)).expm()
 let trotterComm1 = zzViaGates(-2 * J * t)
 print("commuting-only Hamiltonian, n=1 error: \(String(format: "%.2e", maxDiff(exactComm, trotterComm1)))")
 // Expected: 0.0 — with only one term, first-order Trotter is exact.
@@ -176,7 +158,7 @@ print("commuting-only Hamiltonian, n=1 error: \(String(format: "%.2e", maxDiff(e
 
 func exactZ0(at time: Double) -> Double {
     var s = psi0
-    s.apply(expm(scaleM(Hising, Complex(0, -time))))
+    s.apply(scaleM(Hising, Complex(0, -time)).expm())
     return expectationZ0(s)
 }
 func trotterZ0(at time: Double, n: Int) -> Double {
