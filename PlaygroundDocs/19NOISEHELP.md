@@ -8,18 +8,23 @@ User-facing guide to the `19Noise` playground page. The implementation plan is i
 Every earlier page assumed a perfect, isolated, *pure* state — even page 14 modeled errors as
 a discrete, coherent `rx(θ)` rotation, not decoherence. This page introduces the density
 matrix ρ, the object that makes mixtures, noise, and reduced states of entangled systems
-expressible, and shows how to add noise to a state-vector simulator without ever adding a
-`DensityMatrix` type to Core.
+expressible, built entirely on Core's `DensityMatrix`/`KrausChannel` types
+(`Quantum/DensityMatrix.swift`, `Quantum/KrausChannel.swift`) — plus a Monte-Carlo section
+showing how the same noise can be added to a state-vector simulator without a density-matrix
+type at all.
 
 ## Section by section
 
-**Section 1 — ρ, and a mixture vs. a superposition.** ρ = |ψ⟩⟨ψ| reuses the existing outer
-product. ½|0⟩⟨0| + ½|1⟩⟨1| (a coin flip between known states) and |+⟩⟨+| (a genuine
-superposition) give identical Z-diagonals but different off-diagonals — coherence lives in the
-off-diagonal, which a mixture simply doesn't have.
+**Section 1 — ρ, and a mixture vs. a superposition.** ρ = |ψ⟩⟨ψ| via `DensityMatrix(_:)`
+(reusing the existing outer product). ½|0⟩⟨0| + ½|1⟩⟨1| (a coin flip between known states, via
+`DensityMatrix(mixture:)`) and |+⟩⟨+| (a genuine superposition) give identical Z-diagonals but
+different off-diagonals — coherence lives in the off-diagonal, which a mixture simply doesn't
+have.
 
-**Section 2 — Kraus channels.** ρ' = Σ Kᵢ ρ Kᵢ† for bit-flip, phase-flip, depolarizing, and
-amplitude damping, each checked for trace preservation (Σ Kᵢ†Kᵢ = I) before being trusted.
+**Section 2 — Kraus channels.** ρ' = Σ Kᵢ ρ Kᵢ† via `KrausChannel.apply(to:)`, for the
+`bitFlip`/`phaseFlip`/`depolarizing`/`amplitudeDamping` factories, each checked for trace
+preservation both as a boolean (`KrausChannel.isTracePreserving()`) and as the numeric
+residual Σ Kᵢ†Kᵢ − I.
 
 **Section 3 — coherence decay.** Repeated phase-flip(p) decays the off-diagonal exactly as
 (1−2p)ⁿ, checked against the closed form. A single full depolarizing round lands on the
@@ -61,10 +66,10 @@ the fully depolarized point at the sphere's center — using this page's additiv
 purity: |+⟩ = 1.000000,  mixture = 0.500000
 
 ΣKᵢ†Kᵢ − I max residual, p = 0.3:
-  bit-flip:      0.00e+00
-  phase-flip:    0.00e+00
-  depolarizing:  1.11e-16
-  amp-damping:   0.00e+00
+  bit-flip:      0.00e+00   (isTracePreserving: true)
+  phase-flip:    0.00e+00   (isTracePreserving: true)
+  depolarizing:  1.11e-16   (isTracePreserving: true)
+  amp-damping:   0.00e+00   (isTracePreserving: true)
 
 n    off-diag (measured)   (1-2p)ⁿ predicted   [p = 0.1]
 1     0.400000              0.400000
@@ -96,20 +101,12 @@ center along the same direction, and `fully depolarized` sitting exactly at the 
 ```swift
 import SwiftQiskit
 
-func rho(_ psi: Ket) -> Matrix { psi * (psi†) }
+var r = DensityMatrix(Ket.plus)
+let dephase = KrausChannel.phaseFlip(0.1)
+r = dephase.apply(to: r)          // one round of dephasing
 
-let I2 = Matrix.identity(size: 2)
-func phaseFlipKraus(_ p: Double) -> [Matrix] {
-    [I2 * (1 - p).squareRoot(), PauliZGate.matrix * p.squareRoot()]
-}
-func applyChannel(_ ks: [Matrix], _ r: Matrix) -> Matrix {
-    var out = Matrix(rows: 2, cols: 2)
-    for k in ks { out = out + k * r * (k†) }
-    return out
-}
-
-var r = rho(Ket.plus)
-r = applyChannel(phaseFlipKraus(0.1), r)   // one round of dephasing
+r.purity                          // Tr(ρ²)
+r.blochVector                     // (x:, y:, z:), nil unless 2×2
 ```
 
 ## Troubleshooting

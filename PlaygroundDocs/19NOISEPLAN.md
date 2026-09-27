@@ -18,6 +18,14 @@ appears. This page closes that gap with **no `SwiftQiskit` changes**:
 - Mixed-state Bloch coordinates reuse `Ket`/Pauli machinery already in Core; only the shared
   `BlochVector` type needs a small additive change (below) to plot a vector shorter than 1.
 
+**Update (retrofit):** Core has since grown `Quantum/DensityMatrix.swift` and
+`Quantum/KrausChannel.swift` (a dedicated ρ type with `purity`/`blochVector`/
+`partialTrace(keeping:)`/`vonNeumannEntropy`, and a `KrausChannel` type with the four
+factories, `isTracePreserving()`, and `apply(to:)`). The page has been retrofitted onto both —
+its page-level `rho`/`purity`/`*Kraus`/`applyChannel`/`blochOf`/`partialTraceLast`/`entropy`
+helpers are gone; only `fmt` and a small `traceResidual` (for the numeric residual Core's
+`isTracePreserving()` doesn't expose) remain. Output is unchanged.
+
 ## The math, and what the plan verified
 
 All figures below were computed by compiling `SwiftQiskit` standalone with `swiftc` and

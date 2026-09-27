@@ -47,8 +47,8 @@ The project is actively evolving, and major features are planned.
       `Matrix` operations), now a first-class Core feature too: `DensityMatrix`, `KrausChannel`
       (the same four channels plus a new `phaseDamping`), `NoiseModel`, and
       `QuantumCircuit.runDensityMatrix(noise:)`/`runTrajectories(noise:shots:)` — see "Proposed
-      Core extensions — open systems" below for details. Retrofitting page `19Noise` onto the
-      Core types is still open — see "Suggested implementation sequence" below.
+      Core extensions — open systems" below for details. Page `19Noise` has since been
+      retrofitted onto the Core types directly — see "Suggested implementation sequence" below.
 - [x] `SimulationResult.parityExpectation(qubits:)` — a ±1 parity-product average over
       `counts` (one qubit position per factor, 0→+1/1→−1). Would replace the
       `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
@@ -640,7 +640,7 @@ change additive-only):
 - [ ] Page `20Tomography`: replace its page-level `PauliBasis`/`basisRotation` and the
       hand-appended rotate-then-measure pattern with `QuantumCircuit.rotateToZ`/
       `measure(shots:basis:)`.
-- [ ] Pages `11GroverExample`, `19Noise`, `22Walk`: replace their hand-rolled marginal
+- [ ] Pages `11GroverExample`, `22Walk`: replace their hand-rolled marginal
       loop-and-sum with `StateVector.marginalProbabilities`/`SimulationResult.marginalCounts`.
 - [ ] Pages `12ShorExample`, `14ErrorCorrection`: where a hand-built permutation matrix is
       really a controlled-controlled flip, replace it with `ToffoliGate`/`ccx`.
@@ -666,8 +666,10 @@ Now that step 5's builders have landed, their own retrofit is open too:
 
 Now that step 6's open-systems track has landed, its own retrofit is open too:
 
-- [ ] Page `19Noise`: replace its page-level `rho`/`purity`/`*Kraus`/`applyChannel`/`blochOf`/
-      `partialTraceLast`/`entropy` helpers with `DensityMatrix`/`KrausChannel` directly.
+- [x] Page `19Noise`: replace its page-level `rho`/`purity`/`*Kraus`/`applyChannel`/`blochOf`/
+      `partialTraceLast`/`entropy` helpers with `DensityMatrix`/`KrausChannel` directly — done;
+      only `fmt` and a small `traceResidual` (for the numeric residual `isTracePreserving()`
+      doesn't expose) remain as page-level helpers.
 - [ ] Page `14ErrorCorrection`: reproduce its enumerated p_L = 3p² − 2p³ empirically under a
       real `NoiseModel`/`KrausChannel.bitFlip` (via `runDensityMatrix`/`runTrajectories`)
       instead of one hand-injected `x` gate — flagged there as "not doing" in

@@ -270,14 +270,17 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   gradients pinned against a finite difference, gradient descent converging to error
   0.00e+00, and a live chart of the E(θ) landscape with the optimizer's own path, on the
   shared `CHSHChartView` (plan in `PlaygroundDocs/18VQEPLAN.md`, user guide in `PlaygroundDocs/18VQEHELP.md`).
-- `19Noise` — open systems (no Core changes): the density matrix ρ = |ψ⟩⟨ψ| via the existing
-  `Ket * Bra` outer product; a classical mixture vs. a superposition at identical
-  Z-statistics; four Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping)
-  checked for trace preservation; coherence decaying exactly as `(1-2p)ⁿ`; amplitude damping
-  pulling the Bloch vector *inside* the sphere; a Monte-Carlo unraveling reproducing the exact
-  channel from pure-state code alone; and a Bell pair's reduced state giving entropy exactly 1
-  bit against a product state's 0; live Bloch gallery shrinking from pure to fully
-  depolarized, via the additive `BlochVector.init(x:y:z:)`
+- `19Noise` — open systems, built on Core's `DensityMatrix`/`KrausChannel` (originally
+  hand-rolled entrywise; retrofitted once those Core types landed): the density matrix
+  ρ = |ψ⟩⟨ψ| via `DensityMatrix(_:)` (itself the existing `Ket * Bra` outer product); a
+  classical mixture vs. a superposition at identical Z-statistics; the four `KrausChannel`
+  channels (bit-flip, phase-flip, depolarizing, amplitude damping) checked for trace
+  preservation via `isTracePreserving()`; coherence decaying exactly as `(1-2p)ⁿ`; amplitude
+  damping pulling the Bloch vector *inside* the sphere; a Monte-Carlo unraveling reproducing
+  the exact channel from pure-state code alone; and a Bell pair's reduced state
+  (`DensityMatrix.partialTrace(keeping:)`) giving entropy exactly 1 bit
+  (`.vonNeumannEntropy`) against a product state's 0; live Bloch gallery shrinking from pure
+  to fully depolarized, via the additive `BlochVector.init(x:y:z:)`
   (plan in `PlaygroundDocs/19NOISEPLAN.md`, user guide in `PlaygroundDocs/19NOISEHELP.md`).
 - `20Tomography` — reconstructing a state from `measure(shots:)` alone: basis rotations
   (`h` for X, `sdg;h` for Y) pinned against a known Y-eigenstate rather than assumed; the

@@ -14,41 +14,33 @@ import SwiftQiskit
 // noise, and reduced states of entangled systems expressible: the
 // density matrix ρ.
 //
-// `Matrix` has `+`, `-`, and scalar multiply now (`Math/Matrix.swift`); only
-// `trace` is still missing, so it alone stays a page-level helper — the
-// same shape as page 12's QFT† and page 18's Hamiltonian, both built
-// entrywise for the same reason.
+// This page is built entirely on Core's open-systems types —
+// `Quantum/DensityMatrix.swift` (ρ, purity, Bloch vector, partial
+// trace, von Neumann entropy) and `Quantum/KrausChannel.swift` (the
+// four standard channels, trace-preservation check, and
+// ρ' = Σ Kᵢ ρ Kᵢ†). It originally hand-rolled all of this entrywise,
+// the same shape as page 12's QFT† and page 18's Hamiltonian, before
+// those Core types existed.
 
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
-
-func trace(_ a: Matrix) -> Complex {
-    var s = Complex.zero
-    for i in 0..<a.rows { s = s + a[i, i] }
-    return s
-}
-func rho(_ psi: Ket) -> Matrix { psi * (psi†) }
-func purity(_ r: Matrix) -> Double { trace(r * r).real }
-
-let I2 = Matrix.identity(size: 2)
-let X = PauliXGate.matrix
-let Y = PauliYGate.matrix
-let Z = PauliZGate.matrix
 
 // ============================================================
 // Section 1 — the density matrix, and a mixture vs. a superposition
 // ============================================================
-// ρ = |ψ⟩⟨ψ| reuses the existing outer product (Quantum/Dirac.swift).
-// ½|0⟩⟨0| + ½|1⟩⟨1| (a coin flip between two *known* states) and
+// ρ = |ψ⟩⟨ψ| reuses the existing outer product (Quantum/Dirac.swift),
+// via `DensityMatrix.init(_ state:)`. ½|0⟩⟨0| + ½|1⟩⟨1| (a coin flip
+// between two *known* states, via `DensityMatrix.init(mixture:)`) and
 // |+⟩⟨+| (a genuine superposition) give identical Z-statistics but
 // different X-statistics — coherence lives in the off-diagonal terms
 // a mixture doesn't have.
 
-let rhoPlus = rho(Ket.plus)
-let rhoMix = (rho(Ket.zero) + rho(Ket.one)) * 0.5
+let rhoPlus = DensityMatrix(Ket.plus)
+let rhoMix = DensityMatrix(mixture: [(probability: 0.5, state: Ket.zero),
+                                      (probability: 0.5, state: Ket.one)])
 
-print("ρ(|+⟩):        diag \(fmt(rhoPlus[0,0].real)), \(fmt(rhoPlus[1,1].real))   off-diag \(rhoPlus[0,1])")
-print("ρ(mixture):    diag \(fmt(rhoMix[0,0].real)), \(fmt(rhoMix[1,1].real))   off-diag \(rhoMix[0,1])")
-print("purity: |+⟩ = \(fmt(purity(rhoPlus))),  mixture = \(fmt(purity(rhoMix)))")
+print("ρ(|+⟩):        diag \(fmt(rhoPlus.matrix[0,0].real)), \(fmt(rhoPlus.matrix[1,1].real))   off-diag \(rhoPlus.matrix[0,1])")
+print("ρ(mixture):    diag \(fmt(rhoMix.matrix[0,0].real)), \(fmt(rhoMix.matrix[1,1].real))   off-diag \(rhoMix.matrix[0,1])")
+print("purity: |+⟩ = \(fmt(rhoPlus.purity)),  mixture = \(fmt(rhoMix.purity))")
 // Expected: both diag exactly (0.5, 0.5) — a Z measurement can't tell
 // them apart — but |+⟩'s off-diagonal is 0.5 (coherent) vs. the
 // mixture's 0.0. Purity 1.0 vs. 0.5: only one of these is a
@@ -57,43 +49,32 @@ print("purity: |+⟩ = \(fmt(purity(rhoPlus))),  mixture = \(fmt(purity(rhoMix))
 // ============================================================
 // Section 2 — Kraus channels
 // ============================================================
-// A quantum channel is ρ' = Σ Kᵢ ρ Kᵢ†. Trace preservation
-// (Σ Kᵢ†Kᵢ = I) is checked before any channel is trusted.
+// A quantum channel is ρ' = Σ Kᵢ ρ Kᵢ†, via `KrausChannel.apply(to:)`.
+// Trace preservation (Σ Kᵢ†Kᵢ = I) is checked before any channel is
+// trusted — `KrausChannel.isTracePreserving()` reports it as a
+// boolean; the numeric residual below is printed alongside it for
+// the same closer look this page has always taken.
 
-func bitFlipKraus(_ p: Double) -> [Matrix] {
-    [I2 * (1 - p).squareRoot(), X * p.squareRoot()]
-}
-func phaseFlipKraus(_ p: Double) -> [Matrix] {
-    [I2 * (1 - p).squareRoot(), Z * p.squareRoot()]
-}
-func depolarizingKraus(_ p: Double) -> [Matrix] {
-    [I2 * (1 - 0.75 * p).squareRoot(),
-     X * (p / 4).squareRoot(),
-     Y * (p / 4).squareRoot(),
-     Z * (p / 4).squareRoot()]
-}
-func ampDampingKraus(_ g: Double) -> [Matrix] {
-    var k0 = Matrix(rows: 2, cols: 2)
-    k0[0, 0] = .one; k0[1, 1] = Complex((1 - g).squareRoot())
-    var k1 = Matrix(rows: 2, cols: 2)
-    k1[0, 1] = Complex(g.squareRoot())
-    return [k0, k1]
-}
-
-func traceResidual(_ ks: [Matrix]) -> Double {
-    var sum = Matrix(rows: 2, cols: 2)
-    for k in ks { sum = sum + (k†) * k }
-    let diff = sum - I2
+func traceResidual(_ channel: KrausChannel) -> Double {
+    let n = channel.operators[0].rows
+    var sum = Matrix(rows: n, cols: n)
+    for k in channel.operators { sum = sum + (k†) * k }
+    let diff = sum - Matrix.identity(size: n)
     var maxAbs = 0.0
-    for i in 0..<2 { for j in 0..<2 { maxAbs = max(maxAbs, diff[i, j].magnitude) } }
+    for i in 0..<n { for j in 0..<n { maxAbs = max(maxAbs, diff[i, j].magnitude) } }
     return maxAbs
 }
 
+let bitFlip = KrausChannel.bitFlip(0.3)
+let phaseFlip = KrausChannel.phaseFlip(0.3)
+let depolarizing = KrausChannel.depolarizing(0.3)
+let ampDamping = KrausChannel.amplitudeDamping(0.3)
+
 print("\nΣKᵢ†Kᵢ − I max residual, p = 0.3:")
-print("  bit-flip:      \(String(format: "%.2e", traceResidual(bitFlipKraus(0.3))))")
-print("  phase-flip:    \(String(format: "%.2e", traceResidual(phaseFlipKraus(0.3))))")
-print("  depolarizing:  \(String(format: "%.2e", traceResidual(depolarizingKraus(0.3))))")
-print("  amp-damping:   \(String(format: "%.2e", traceResidual(ampDampingKraus(0.3))))")
+print("  bit-flip:      \(String(format: "%.2e", traceResidual(bitFlip)))   (isTracePreserving: \(bitFlip.isTracePreserving()))")
+print("  phase-flip:    \(String(format: "%.2e", traceResidual(phaseFlip)))   (isTracePreserving: \(phaseFlip.isTracePreserving()))")
+print("  depolarizing:  \(String(format: "%.2e", traceResidual(depolarizing)))   (isTracePreserving: \(depolarizing.isTracePreserving()))")
+print("  amp-damping:   \(String(format: "%.2e", traceResidual(ampDamping)))   (isTracePreserving: \(ampDamping.isTracePreserving()))")
 // Expected: all ~0 (≤1.2e-16) — every channel is trace-preserving.
 
 // ============================================================
@@ -103,23 +84,19 @@ print("  amp-damping:   \(String(format: "%.2e", traceResidual(ampDampingKraus(0
 // (1 − 2p)ⁿ — a closed form checked against the simulation, not
 // assumed.
 
-func applyChannel(_ ks: [Matrix], _ r: Matrix) -> Matrix {
-    var out = Matrix(rows: 2, cols: 2)
-    for k in ks { out = out + k * r * (k†) }
-    return out
-}
+let dephase = KrausChannel.phaseFlip(0.1)
 
 print("\nn    off-diag (measured)   (1-2p)ⁿ predicted   [p = 0.1]")
 for n in [1, 5, 10, 20] {
     var r = rhoPlus
-    for _ in 1...n { r = applyChannel(phaseFlipKraus(0.1), r) }
+    for _ in 1...n { r = dephase.apply(to: r) }
     let predicted = 0.5 * pow(0.8, Double(n))
-    print("\(n)     \(fmt(r[0, 1].real))              \(fmt(predicted))")
+    print("\(n)     \(fmt(r.matrix[0, 1].real))              \(fmt(predicted))")
 }
 // Expected: measured and predicted agree to every printed digit.
 
-let fullyDepolarized = applyChannel(depolarizingKraus(1.0), rho(Ket.zero))
-print("\nfully depolarized (p=1) on |0⟩: diag \(fmt(fullyDepolarized[0,0].real)), \(fmt(fullyDepolarized[1,1].real)), purity \(fmt(purity(fullyDepolarized)))")
+let fullyDepolarized = KrausChannel.depolarizing(1.0).apply(to: DensityMatrix(Ket.zero))
+print("\nfully depolarized (p=1) on |0⟩: diag \(fmt(fullyDepolarized.matrix[0,0].real)), \(fmt(fullyDepolarized.matrix[1,1].real)), purity \(fmt(fullyDepolarized.purity))")
 // Expected: diag (0.5, 0.5), purity 0.5 — the maximally mixed state,
 // indistinguishable from a fair coin in any basis.
 
@@ -131,16 +108,14 @@ print("\nfully depolarized (p=1) on |0⟩: diag \(fmt(fullyDepolarized[0,0].real
 // the picture no pure state can draw, since it leaves the sphere's
 // surface entirely.
 
-func blochOf(_ r: Matrix) -> (x: Double, y: Double, z: Double) {
-    (trace(r * X).real, trace(r * Y).real, trace(r * Z).real)
-}
-
 var damped = rhoPlus
-for _ in 1...20 { damped = applyChannel(ampDampingKraus(0.2), damped) }
-let dampedBloch = blochOf(damped)
-print("\n|+⟩ after 20 rounds of amplitude damping (γ=0.2):")
-print("  Bloch (x,y,z) = (\(fmt(dampedBloch.x)), \(fmt(dampedBloch.y)), \(fmt(dampedBloch.z)))")
-print("  purity = \(fmt(purity(damped)))")
+let damping = KrausChannel.amplitudeDamping(0.2)
+for _ in 1...20 { damped = damping.apply(to: damped) }
+if let dampedBloch = damped.blochVector {
+    print("\n|+⟩ after 20 rounds of amplitude damping (γ=0.2):")
+    print("  Bloch (x,y,z) = (\(fmt(dampedBloch.x)), \(fmt(dampedBloch.y)), \(fmt(dampedBloch.z)))")
+    print("  purity = \(fmt(damped.purity))")
+}
 // Expected: x ≈ 0.107374 (= 0.8^10, since x shrinks by √(1-γ) per
 // round), z ≈ 0.988471 (rising toward +1), purity ≈ 0.994302 —
 // *inside* the sphere, not on it.
@@ -151,10 +126,11 @@ print("  purity = \(fmt(purity(damped)))")
 // The exact channel above can be reproduced from pure-state code
 // alone: per shot, flip a biased coin and apply the error gate or
 // not, then measure. This is how you add noise to a state-vector
-// simulator without a density-matrix type.
+// simulator without a density-matrix type — the same idea Core
+// packages as `QuantumCircuit.runTrajectories(noise:shots:)`.
 
 let H = HadamardGate.matrix
-let Sdg = SDaggerGate.matrix
+let Z = PauliZGate.matrix
 
 func monteCarloPhaseFlipXBasis(_ p: Double, shots: Int) -> Double {
     var plus = 0
@@ -180,41 +156,23 @@ print("exact prediction (1+(1-2p))/2 = \(fmt((1 + (1 - 2 * 0.1)) / 2))")
 // *mixed*, even though the full 2-qubit state is pure — the
 // explanation page 13's marginals were owed.
 
+let I2 = Matrix.identity(size: 2)
+
 var bell = StateVector(qubits: 2)
 bell.apply(H.tensor(I2))
 bell.apply(CNOTGate.matrix(qubits: 2, control: 0, target: 1))
-let rhoBell = rho(bell)
+let rhoBell = DensityMatrix(bell)
 
-func partialTraceLast(_ r: Matrix) -> Matrix {
-    var out = Matrix(rows: 2, cols: 2)
-    for i in 0..<2 {
-        for j in 0..<2 {
-            var s = Complex.zero
-            for k in 0..<2 { s = s + r[i * 2 + k, j * 2 + k] }
-            out[i, j] = s
-        }
-    }
-    return out
-}
-
-func entropy(of r: Matrix) -> Double {
-    let b = blochOf(r)
-    let mag = (b.x * b.x + b.y * b.y + b.z * b.z).squareRoot()
-    let l1 = (1 + mag) / 2, l2 = (1 - mag) / 2
-    func log2safe(_ v: Double) -> Double { v <= 0 ? 0 : log2(v) }
-    return -(l1 * log2safe(l1) + l2 * log2safe(l2))
-}
-
-let rhoA = partialTraceLast(rhoBell)
-print("\nBell pair |Φ⁺⟩: full-state purity = \(fmt(purity(rhoBell)))")
-print("qubit 0's reduced state ρ_A: diag \(fmt(rhoA[0,0].real)), \(fmt(rhoA[1,1].real)), purity \(fmt(purity(rhoA))), entropy \(fmt(entropy(of: rhoA))) bits")
+let rhoA = rhoBell.partialTrace(keeping: [0])
+print("\nBell pair |Φ⁺⟩: full-state purity = \(fmt(rhoBell.purity))")
+print("qubit 0's reduced state ρ_A: diag \(fmt(rhoA.matrix[0,0].real)), \(fmt(rhoA.matrix[1,1].real)), purity \(fmt(rhoA.purity)), entropy \(fmt(rhoA.vonNeumannEntropy)) bits")
 // Expected: full-state purity 1.0 (pure), but ρ_A = diag(0.5, 0.5),
 // purity 0.5, entropy exactly 1.0 bit — maximal entanglement.
 
 var product = StateVector(qubits: 2)
 product.apply(H.tensor(I2))
-let rhoProdA = partialTraceLast(rho(product))
-print("product state |+⟩⊗|0⟩: ρ_A entropy = \(fmt(entropy(of: rhoProdA))) bits")
+let rhoProdA = DensityMatrix(product).partialTrace(keeping: [0])
+print("product state |+⟩⊗|0⟩: ρ_A entropy = \(fmt(rhoProdA.vonNeumannEntropy)) bits")
 // Expected: ≈0.0 — no entanglement, the marginal stays pure.
 
 // ============================================================
@@ -241,12 +199,12 @@ struct NoiseGalleryView: View {
     }
 }
 
-let dephasedForView = { () -> Matrix in
+let dephasedForView = { () -> DensityMatrix in
     var r = rhoPlus
-    for _ in 1...10 { r = applyChannel(phaseFlipKraus(0.1), r) }
+    for _ in 1...10 { r = dephase.apply(to: r) }
     return r
 }()
-let dephasedBlochForView = blochOf(dephasedForView)
+let dephasedBlochForView = dephasedForView.blochVector ?? (x: 0, y: 0, z: 0)
 
 let stages: [(name: String, bloch: BlochVector)] = [
     ("pure |+⟩", BlochVector(Ket.plus)),
