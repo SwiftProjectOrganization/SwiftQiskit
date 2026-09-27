@@ -83,6 +83,12 @@ public extension QuantumCircuit {
         apply(CNOTGate.matrix(qubits: qubits, control: control, target: target))
     }
 
+    /// Apply Toffoli gate (CCNOT): flips `target` iff both controls are 1;
+    /// any three distinct qubits.
+    func ccx(_ control1: Int, _ control2: Int, _ target: Int) {
+        apply(ToffoliGate.matrix(qubits: qubits, control1: control1, control2: control2, target: target))
+    }
+
     /// Apply Hadamard gate to a specific qubit
     func h(_ qubit: Int) {
         let full = embedSingleQubitGate(
@@ -219,6 +225,42 @@ public extension QuantumCircuit {
         pauliRotation(pauliString(q0: q0, q1: q1, pauli: "Y"), theta: theta)
     }
 
+    /// Rotate `qubit` so that measuring it in the computational (Z) basis afterward is
+    /// equivalent to measuring it in `basis`: `h` for X, `sdg; h` for Y, nothing for Z.
+    /// Used directly by `measure(shots:basis:)` and by `pauliRotation`'s forward basis
+    /// change below.
+    func rotateToZ(_ basis: PauliBasis, _ qubit: Int) {
+        switch basis {
+        case .x: h(qubit)
+        case .y: sdg(qubit); h(qubit)
+        case .z: break
+        }
+    }
+
+    /// Undo `rotateToZ`: `h` for X, `h; s` for Y, nothing for Z.
+    private func rotateFromZ(_ basis: PauliBasis, _ qubit: Int) {
+        switch basis {
+        case .x: h(qubit)
+        case .y: h(qubit); s(qubit)
+        case .z: break
+        }
+    }
+
+    /// Measure each qubit in its own Pauli basis and return shot counts, without mutating
+    /// this circuit. Appends each qubit's `rotateToZ` rotation to a copy of the recorded
+    /// operations, then measures that copy — the original circuit's operation list (and
+    /// anything already built from it) is untouched.
+    func measure(shots: Int, basis: [PauliBasis]) -> SimulationResult {
+        precondition(basis.count == qubits, "Must supply one basis per qubit")
+
+        let copy = QuantumCircuit(qubits: qubits)
+        copy.operations = operations
+        for (qubit, b) in basis.enumerated() {
+            copy.rotateToZ(b, qubit)
+        }
+        return copy.measure(shots: shots)
+    }
+
     /// Builds a `qubits`-length Pauli string with `pauli` at `q0` and `q1` and `I`
     /// elsewhere, for the `rzz`/`rxx`/`ryy` wrappers above.
     private func pauliString(q0: Int, q1: Int, pauli: Character) -> String {
@@ -252,10 +294,8 @@ public extension QuantumCircuit {
         }
 
         for i in active {
-            switch chars[i] {
-            case "X": h(i)
-            case "Y": sdg(i); h(i)
-            default: break
+            if let basis = PauliBasis(rawValue: chars[i]) {
+                rotateToZ(basis, i)
             }
         }
 
@@ -268,10 +308,8 @@ public extension QuantumCircuit {
         }
 
         for i in active {
-            switch chars[i] {
-            case "X": h(i)
-            case "Y": h(i); s(i)
-            default: break
+            if let basis = PauliBasis(rawValue: chars[i]) {
+                rotateFromZ(basis, i)
             }
         }
     }

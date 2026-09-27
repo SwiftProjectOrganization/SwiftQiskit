@@ -130,6 +130,45 @@ public extension StateVector {
     }
 }
 
+// MARK: - Marginals
+public extension StateVector {
+
+    /// Number of qubits in the register (dimension is always 2ⁿ).
+    private var qubitCount: Int {
+        dimension.trailingZeroBitCount
+    }
+
+    /// Marginal probability distribution over a subset of qubits, summing out every other
+    /// qubit. The returned keys are the bits of `qubits`, **in the order given** (not
+    /// necessarily ascending qubit index), zero-padded to `qubits.count` characters. Every
+    /// one of the 2^k possible keys is present, including those with zero probability, so
+    /// callers can always subscript the result.
+    func marginalProbabilities(over qubits: [Int]) -> [String: Double] {
+        let n = qubitCount
+        precondition(!qubits.isEmpty, "Must select at least one qubit")
+        precondition(Set(qubits).count == qubits.count, "Qubit indices must be distinct")
+        precondition(qubits.allSatisfy { $0 >= 0 && $0 < n }, "Qubit index out of range")
+
+        var marginal: [String: Double] = [:]
+        for key in 0..<(1 << qubits.count) {
+            let binary = String(key, radix: 2).leftPadding(toLength: qubits.count, withPad: "0")
+            marginal[binary] = 0.0
+        }
+
+        let probs = probabilities
+        for index in 0..<dimension {
+            var bits = ""
+            for qubit in qubits {
+                let bit = (index >> (n - 1 - qubit)) & 1
+                bits.append(bit == 1 ? "1" : "0")
+            }
+            marginal[bits]! += probs[index]
+        }
+
+        return marginal
+    }
+}
+
 // MARK: - CustomStringConvertible
 extension StateVector: CustomStringConvertible {
     public var description: String {

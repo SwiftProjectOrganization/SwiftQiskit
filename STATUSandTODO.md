@@ -47,11 +47,13 @@ The project is actively evolving, and major features are planned.
       operations. Core itself still has no `DensityMatrix` type or built-in noise simulation —
       see "Proposed Core extensions — open systems" below for what a first-class Core feature
       would look like.
-- [ ] `SimulationResult.parityExpectation(qubits:)` — a ±1 parity-product average over
+- [x] `SimulationResult.parityExpectation(qubits:)` — a ±1 parity-product average over
       `counts` (one qubit position per factor, 0→+1/1→−1). Would replace the
       `sampledCorrelator` boilerplate in page `15CHSH` and would likely also simplify
       page `18VQE`'s ZZ-term measurement and page `20Tomography`'s shot-based estimators.
-      Needs tests if added to Core.
+      Implemented in `Quantum/SimulationResult.swift` alongside `marginalCounts(over:)`;
+      tested in `ReadoutTests.swift`. The page retrofits themselves are still open — see
+      "SwiftQiskitApp follow-ups" below.
 - [x] `StateVector.expectation(_ observable: Matrix) -> Double` wrapping
       `(self† * observable * self).real` — bumped up from low priority: four independent app
       chapters (21, 22, 23, 24) now hand-roll this exact three-line idiom under their own
@@ -304,7 +306,7 @@ surfaced a set of Core gaps that page `20Tomography` and that chapter both route
 with page/app-level helpers (`~/Documents/SwiftQiskit-Chapter22-Findings.md`). None of these
 are implemented yet:
 
-- [ ] `PauliBasis` enum (`.x`/`.y`/`.z`) and `QuantumCircuit.rotateToZ(_ basis: PauliBasis, _
+- [x] `PauliBasis` enum (`.x`/`.y`/`.z`) and `QuantumCircuit.rotateToZ(_ basis: PauliBasis, _
       qubit: Int)` appending the rotation that turns a measurement of `qubit` in that basis
       into an ordinary Z-basis read (`h` for X, `sdg; h` for Y, nothing for Z) — would replace
       page `20Tomography`'s page-level `PauliBasis`/`basisRotation` and the app chapter's
@@ -313,10 +315,18 @@ are implemented yet:
       its CNOT staircase, and what Chapter 23's proposed `measureExpectation(of:shots:)` needs per
       term — design one Pauli-label type shared by all three (see "— variational" and "—
       Hamiltonian simulation" below) rather than three near-identical enums.
-- [ ] `QuantumCircuit.measure(shots: Int, basis: [PauliBasis]) -> SimulationResult` — appends
+      Implemented in `Quantum/PauliBasis.swift` and `Circuit/QuantumCircuit.swift`
+      (`rotateToZ`/private `rotateFromZ`); `pauliRotation`'s own basis-change loops were
+      refactored onto `rotateToZ`/`rotateFromZ` rather than duplicating the switch. Tested in
+      `PauliBasisTests.swift` against the six single-qubit eigenstates. Retrofitting page
+      `20Tomography` onto it is still open — see "SwiftQiskitApp follow-ups" below.
+- [x] `QuantumCircuit.measure(shots: Int, basis: [PauliBasis]) -> SimulationResult` — appends
       each qubit's basis rotation (applied to a copy, leaving the circuit's own operation list
       untouched), then measures. Folds the hand-appended rotate-then-measure pattern every
       estimator in page `20Tomography` (and the app chapter) repeats into the call itself.
+      Implemented in `Circuit/QuantumCircuit.swift`; tested in `PauliBasisTests.swift`,
+      including that it leaves the receiver's operation list untouched and a Bell pair's
+      ⟨XX⟩/⟨YY⟩ via `parityExpectation(qubits:)`.
 - [ ] `StateTomography` helper: `estimate(_:qubit:result:) -> Double` ((N₀−N₁)/N from one
       basis's `SimulationResult` marginal), `reconstructSingleQubit(qubit:x:y:z:) ->
       (vector:(x:Double,y:Double,z:Double), isPhysical: Bool)` (the three-axis estimate as a
@@ -327,12 +337,10 @@ are implemented yet:
       generalizes past one qubit.
 - [ ] A real maximum-likelihood or linear-inversion reconstruction — a bigger lift than
       `StateTomography` above; a reasonable follow-up once that lands, not blocking it.
-- [ ] Tests (Swift `Testing`, shape of `AdditionalGatesTests.swift`): `PauliBasis`/`rotateToZ`
-      against known eigenstates (`|+i⟩` for Y, `|+⟩` for X, `|0⟩`/`|1⟩` for Z);
-      `measure(shots:basis:)` reproducing page `20Tomography`'s hand-rolled estimator within
-      shot noise; `StateTomography.reconstructSingleQubit` against a known pure state and a
+- [ ] Tests for `StateTomography.reconstructSingleQubit` against a known pure state and a
       known mixed state (reusing the Chapter 21 proposal's `DensityMatrix` fixtures above once
-      that lands).
+      that lands). (`PauliBasis`/`rotateToZ`/`measure(shots:basis:)` themselves are **done** —
+      tested in `PauliBasisTests.swift`, see above.)
 - See also `SimulationResult.parityExpectation(qubits:)` and `StateVector.expectation(_:)` in
   the Roadmap above, and the `BlochVector`/`StateVector.expectation` carry-over notes under
   "Proposed Core extensions — open systems" — Chapter 22 hit both gaps again independently.
@@ -455,13 +463,17 @@ work:
       since page `12ShorExample`; also wanted by Chapter 24's findings (restated there as the
       third page in a row, 21/24/25, wanting a unitarity helper alongside `expm`). Implemented
       in `Math/Matrix.swift`; tested in `MatrixArithmeticTests.swift`.
-- [ ] `ToffoliGate.matrix(qubits: Int, control1:, control2:, target:) -> Matrix` (a permutation:
+- [x] `ToffoliGate.matrix(qubits: Int, control1:, control2:, target:) -> Matrix` (a permutation:
       flip `target` iff both controls are `1`) via `Matrix.permutation` above, plus a
       `QuantumCircuit.ccx(_:_:_:)` circuit method. This chapter's central finding is that the
       coin-controlled shift needs a genuine `AND` (not just XOR/CNOT) beyond a 4-site cycle — the
       same "no Toffoli" wall pages `14ErrorCorrection` and `12ShorExample` already hit and
       hand-built permutation matrices specifically to route around. The single change that would
       let the 8-site (and 16-site) walk move from ○/◐ to fully tappable in the app.
+      Implemented in `Gates/Toffoli.swift`; tested in `ToffoliTests.swift` (truth table,
+      unitarity/self-inverse on non-adjacent qubits, symmetry in its two controls). Retrofitting
+      pages `12ShorExample`/`14ErrorCorrection`/`22Walk` onto it is still open — see
+      "SwiftQiskitApp follow-ups" below.
 - [ ] `QuantumCircuit` register builder `increment`/`decrement(register: [Int], controlledBy:
       Int?)` emitting the ripple-carry sequence (generalizing this chapter's 2-bit
       `cx(control,high); cx(low,high); x(low)` with one more CNOT/Toffoli layer per additional
@@ -469,21 +481,25 @@ work:
       16-site shift from named building blocks instead of one 32×32 permutation matrix, and
       generalizes directly to page `12ShorExample`'s modular-arithmetic needs (a controlled
       increment is most of a controlled adder).
-- [ ] `StateVector.marginalProbabilities(over qubits: [Int]) -> [String: Double]` (summing
+- [x] `StateVector.marginalProbabilities(over qubits: [Int]) -> [String: Double]` (summing
       probability over every *other* qubit) and an analogous grouping helper on
       `SimulationResult` for shot-based marginals — replaces the three-line manual
       loop-and-sum repeated with small variations in pages `11GroverExample`, `19Noise`, and now
       `22Walk` every time a sub-register's marginal is needed.
+      Implemented in `Quantum/StateVector.swift` (`marginalProbabilities`, returning every
+      key including zero-probability ones) and `Quantum/SimulationResult.swift`
+      (`marginalCounts`, observed keys only); tested in `ReadoutTests.swift`. The page
+      retrofits are still open — see "SwiftQiskitApp follow-ups" below.
 - [ ] A permutation-aware fast path in `StateVector.apply(_:)` — a permutation matrix (every walk
       step, Shor's modular multiplication, the error-correction syndrome fix) needs only one
       multiply-free array reindex per amplitude rather than a full dense matrix-vector multiply.
       Doesn't block anything today (existing circuits are small), but is the natural home for
       future work under the Roadmap's "Performance optimizations" entry — flagging the connection
       here since permutation-shaped operators are the easy, easy-to-verify case to start with.
-- [ ] Tests: `Matrix.permutation` unitarity for any bijective `image` (property-style, several
-      random permutations); `isUnitary` on known unitary/non-unitary matrices; `ToffoliGate`/`ccx`
-      against a hand-built truth table; `increment`/`decrement` against modular arithmetic on a
-      small register; `marginalProbabilities` against a hand-summed Bell-pair marginal.
+- [ ] Tests: `increment`/`decrement` against modular arithmetic on a small register (the
+      remaining item — `Matrix.permutation`/`isUnitary` landed with those helpers themselves,
+      `ToffoliGate`/`ccx` in `ToffoliTests.swift`, and `marginalProbabilities` in
+      `ReadoutTests.swift`, all above).
 
 ## SwiftQiskitApp follow-ups (tracked here for sequencing)
 
@@ -495,16 +511,16 @@ gathered here so they can be sequenced against the Core work above rather than t
       0–2π only — every Trotter/VQE-style chapter since Chapter 20 has needed a `2π − x`
       workaround for a negative angle. No Core dependency; can be done independently of everything
       else in this file.
-- [ ] A Toffoli tile in `GatePaletteView`/`GateKind`, once `ccx` (above) exists — the single
-      highest cross-chapter-leverage app change on this list: Chapters 14, 17 (Shor), and 25 all
-      hit the same "no Toffoli" wall independently.
-- [ ] An `rzz` tile (and `rxx`/`ryy`), once those gates (above) exist — turns today's three-tap
-      `cx; rz; cx` sequence into one tap.
-- [ ] A position-marginal / histogram-grouping view in `ResultsView`, once
-      `marginalProbabilities`/`SimulationResult` grouping (above) exist — today `ResultsView` only
-      shows the raw per-basis-state state vector and shot histogram, with no way to display a
-      probability summed over a subset of qubits, which every multi-register chapter (11, 19, 25)
-      actually wants to look at.
+- [ ] A Toffoli tile in `GatePaletteView`/`GateKind` — `ccx` (above) is now implemented, so this
+      is unblocked. The single highest cross-chapter-leverage app change on this list: Chapters
+      14, 17 (Shor), and 25 all hit the same "no Toffoli" wall independently.
+- [ ] An `rzz` tile (and `rxx`/`ryy`) — those gates (above) are now implemented, so this is
+      unblocked. Turns today's three-tap `cx; rz; cx` sequence into one tap.
+- [ ] A position-marginal / histogram-grouping view in `ResultsView` —
+      `marginalProbabilities`/`SimulationResult` grouping (above) are now implemented, so this
+      is unblocked. Today `ResultsView` only shows the raw per-basis-state state vector and shot
+      histogram, with no way to display a probability summed over a subset of qubits, which every
+      multi-register chapter (11, 19, 25) actually wants to look at.
 - [ ] An "Energy" panel (alongside the existing State Vector / Results / Display buttons) letting a
       user attach a fixed Hamiltonian and read its expectation value live, once the `Hamiltonian`
       type and `measureExpectation` (above) exist. Not a standalone app-only change — depends
@@ -527,16 +543,18 @@ picks this up next:
    `Matrix.trace`, `Matrix.isUnitary`, `Matrix.permutation`, `Matrix.expm`. Each retires a
    repeated page-level helper; each is tested by self-check against an existing gate. **Done**
    — all five landed (`Matrix.expm` last, in `MatrixExponentialTests.swift`).
-2. Gates built on step 1: `ToffoliGate`/`ccx` (via `Matrix.permutation`) is still open.
-   `RZZGate`/`RXXGate`/`RYYGate`/`rzz`/`rxx`/`ryy` (tested against `Matrix.expm`) and
-   `QuantumCircuit.pauliRotation` are **done** — `pauliRotation` landed here rather than in
-   step 4, since it turned out to need no `PauliString`/`Hamiltonian` type: it takes a plain
+2. Gates built on step 1: `ToffoliGate`/`ccx` (via `Matrix.permutation`),
+   `RZZGate`/`RXXGate`/`RYYGate`/`rzz`/`rxx`/`ryy` (tested against `Matrix.expm`), and
+   `QuantumCircuit.pauliRotation` are all **done** — `pauliRotation` landed here rather than
+   in step 4, since it turned out to need no `PauliString`/`Hamiltonian` type: it takes a plain
    Pauli `String` and is built entirely from existing gate methods (`h`/`sdg;h`/`cx`/`rz`).
+   `ToffoliGate` tested in `ToffoliTests.swift`.
 3. Readout helpers: `StateVector.marginalProbabilities`, the `SimulationResult` marginal /
-   `parityExpectation` helpers, `PauliBasis` + `rotateToZ` + `measure(shots:basis:)`.
+   `parityExpectation` helpers, `PauliBasis` + `rotateToZ` + `measure(shots:basis:)`. **Done**
+   — tested in `ReadoutTests.swift` and `PauliBasisTests.swift`.
 4. The Pauli-algebra hub: `PauliString` → `Hamiltonian` (`matrix`, `expectation`,
-   `measureExpectation`) → the tomography `StateTomography` helper. (`pauliRotation` moved to
-   step 2, above — done.)
+   `measureExpectation`) → the tomography `StateTomography` helper. Still open.
+   (`pauliRotation` moved to step 2, above — done; `PauliBasis` moved to step 3, above — done.)
 5. Builders on top of 2–4: `Hamiltonian.trotterCircuit` (now unblocked on `pauliRotation`;
    still needs `PauliString`/`Hamiltonian` from step 4), the multi-parameter parameter-shift
    gradient + optimizer, `increment`/`decrement`.
@@ -549,6 +567,20 @@ Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` 
 `Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`
 onto `Matrix.expm` is **done**; `19Noise` was never a retrofit target — it has no page-level
 `expm` of its own.
+
+Now that step 2's `ToffoliGate`/`ccx` and step 3's readout helpers have landed, the same kind of
+retrofit is open against them (not done as part of landing the helpers themselves, to keep that
+change additive-only):
+
+- [ ] Page `15CHSH`: replace its hand-rolled `sampledCorrelator` with
+      `SimulationResult.parityExpectation(qubits:)`.
+- [ ] Page `20Tomography`: replace its page-level `PauliBasis`/`basisRotation` and the
+      hand-appended rotate-then-measure pattern with `QuantumCircuit.rotateToZ`/
+      `measure(shots:basis:)`.
+- [ ] Pages `11GroverExample`, `19Noise`, `22Walk`: replace their hand-rolled marginal
+      loop-and-sum with `StateVector.marginalProbabilities`/`SimulationResult.marginalCounts`.
+- [ ] Pages `12ShorExample`, `14ErrorCorrection`: where a hand-built permutation matrix is
+      really a controlled-controlled flip, replace it with `ToffoliGate`/`ccx`.
 
 **`SwiftQiskitApp`:**
 

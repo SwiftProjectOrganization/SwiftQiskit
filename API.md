@@ -135,6 +135,7 @@ public typealias Ket = StateVector
 | `normalize()` | Mutating; rescales to unit norm. Skips the rescale (and the rounding error it would add) when the norm is already within `1e-12` of 1, which keeps the dagger a true involution: `(ψ†)† == ψ` exactly. Traps if the norm is zero. |
 | `apply(_ matrix: Matrix)` | Mutating: `\|ψ'⟩ = U\|ψ⟩`, then re-normalizes. **Any** matrix of the right dimension is accepted and silently rescaled to a unit vector — a non-unitary `U` will not be rejected, it will just change the probabilities in ways `U` alone wouldn't predict. |
 | `measure() -> Int` | Mutating: samples a basis index from `probabilities` and **collapses** `self` to that basis state (all other amplitudes become `.zero`). Not idempotent — calling it twice is a different measurement, not a re-read. |
+| `marginalProbabilities(over qubits: [Int]) -> [String: Double]` | Sums out every qubit *not* listed. The result's keys are the bits of `qubits`, **in the order given** (not necessarily ascending index), zero-padded to `qubits.count` characters — *every* one of the 2^k possible keys is present, including zero-probability ones. Traps if `qubits` is empty, has a duplicate, or has an out-of-range index. |
 | `tensor(_ other:) -> StateVector`, operator `⊗` | Combines two registers; `self` occupies the high-order bits. |
 | `description` | One `"|label⟩: amplitude"` line per basis state. The binary label is **not** zero-padded (e.g. a 2-qubit state's index 1 prints as `|1⟩`, not `|01⟩`) — contrast with `SimulationResult`, whose keys *are* zero-padded. |
 
@@ -235,18 +236,21 @@ Follow this pattern when adding a new gate.
 | `RZZGate.matrix(theta:)` | parameterized, 2-qubit | `rzz(theta, q0, q1)`* | `exp(-iθ·Z⊗Z/2)` on adjacent qubits; equals `cx(0,1); rz(θ,1); cx(0,1)` exactly. |
 | `RXXGate.matrix(theta:)` | parameterized, 2-qubit | `rxx(theta, q0, q1)`* | `exp(-iθ·X⊗X/2)` on adjacent qubits. |
 | `RYYGate.matrix(theta:)` | parameterized, 2-qubit | `ryy(theta, q0, q1)`* | `exp(-iθ·Y⊗Y/2)` on adjacent qubits. |
+| `ToffoliGate.matrix` | fixed, 3-qubit | `ccx(control1, control2, target)`* | The plain 8×8 Toffoli (controls = qubits 0/1, target = qubit 2). |
+| `ToffoliGate.matrix(qubits:control1:control2:target:)` | general, n-qubit | `ccx(control1, control2, target)` | The full 2ⁿ×2ⁿ Toffoli for any three distinct qubits, built via `Matrix.permutation`: flips `target` iff both controls are 1. Symmetric in its two controls. Traps if `qubits < 3`, if any index is out of range, or if the three indices aren't distinct. |
 
-\* `QuantumCircuit.cx` always calls the general `CNOTGate.matrix(qubits:control:target:)`
-form, not the fixed 4×4 one — the fixed form is exposed separately for direct use as a
-standalone 2-qubit gate. `rzz`/`rxx`/`ryy` work on *any* distinct pair of qubits on an
-*n*-qubit circuit (not just adjacent ones) — see `pauliRotation` below.
+\* `QuantumCircuit.cx`/`ccx` always call the general `CNOTGate.matrix(qubits:control:target:)`/
+`ToffoliGate.matrix(qubits:control1:control2:target:)` forms, not the fixed-size ones — the
+fixed forms are exposed separately for direct use as standalone gates. `rzz`/`rxx`/`ryy` work
+on *any* distinct pair of qubits on an *n*-qubit circuit (not just adjacent ones) — see
+`pauliRotation` below.
 
 Rotation gates satisfy `RA(2π) = -I` (a full turn is minus identity) and
 `RA(π) = -i·A` up to that same global phase, for the corresponding Pauli matrix `A`.
 
-**Note:** the library has no built-in Toffoli (CCX), CZ, or SWAP gate. Build these with
-`apply(_:)` and a hand-constructed permutation or product of existing gates (several
-playground pages — e.g. `11GroverExample`, `13Teleportation` — show the pattern).
+**Note:** the library has no built-in CZ or SWAP gate. Build these with `apply(_:)` and a
+hand-constructed permutation or product of existing gates (several playground pages — e.g.
+`11GroverExample`, `13Teleportation` — show the pattern).
 
 ---
 
@@ -282,10 +286,12 @@ func rx(_ theta: Double, _ qubit: Int)
 func ry(_ theta: Double, _ qubit: Int)
 func rz(_ theta: Double, _ qubit: Int)
 func cx(_ control: Int, _ target: Int)
+func ccx(_ control1: Int, _ control2: Int, _ target: Int)
 func rzz(_ theta: Double, _ q0: Int, _ q1: Int)
 func rxx(_ theta: Double, _ q0: Int, _ q1: Int)
 func ryy(_ theta: Double, _ q0: Int, _ q1: Int)
 func pauliRotation(_ pauli: String, theta: Double)
+func rotateToZ(_ basis: PauliBasis, _ qubit: Int)
 ```
 
 Single-qubit gates are embedded across the full register via `Matrix.tensor(_:)`
@@ -304,6 +310,11 @@ all-`I` string applies only the global phase `e^{-iθ/2}·I` (via `apply(_:)`), 
 and calling `pauliRotation` — they work on any distinct pair of qubits, not just adjacent
 ones (traps if `q0 == q1` or either is out of range).
 
+`rotateToZ(_ basis: PauliBasis, _ qubit: Int)` appends the rotation that turns a subsequent
+Z-basis measurement of `qubit` into a measurement in `basis`: `h` for `.x`, `sdg;h` for `.y`,
+nothing for `.z`. `pauliRotation`'s own basis-change step is built on this (and its
+private inverse, `rotateFromZ`).
+
 ### Execution
 
 | Method | Signature | Notes |
@@ -311,6 +322,7 @@ ones (traps if `q0 == q1` or either is out of range).
 | `run()` | `() -> StateVector` | Builds a fresh `StateVector(qubits: qubits)` (i.e. \|0…0⟩) and replays every recorded operation. Gates are recorded when called and only *applied* here — calling `run()` twice gives the same result each time. |
 | `runAndMeasure()` | `() -> Int` | `run()` then a single `measure()` on the result — collapses that local copy, not any circuit state (the circuit itself has no persistent state to collapse). |
 | `measure(shots:)` | `(Int) -> SimulationResult` | Traps if `shots <= 0`. Runs the circuit **once** to get the final probability distribution, then draws `shots` independent samples from it — it does *not* replay the whole circuit per shot, since a full measurement of a pure state never changes the probabilities of the underlying state that produced it. |
+| `measure(shots:basis:)` | `(Int, [PauliBasis]) -> SimulationResult` | Traps if `basis.count != qubits`. Appends each qubit's `rotateToZ` rotation to a **copy** of the recorded operations and measures that copy — the receiver's own operation list is untouched, so the same circuit can be measured in different bases without rebuilding it. |
 
 ---
 
@@ -329,6 +341,29 @@ public struct SimulationResult {
 
 Keys in `counts` are zero-padded to `qubits` characters via `String.leftPadding` (below), and
 qubit 0 is the leftmost character, matching the rest of the library's indexing convention.
+
+| Member | Signature | Notes |
+|---|---|---|
+| `marginalCounts(over:)` | `([Int]) -> [String: Int]` | Groups `counts` by a subset of qubits, summing out the rest. Keys are the bits of `qubits`, **in the order given**; only observed keys appear (unlike `StateVector.marginalProbabilities`, which always returns every key). Traps if `qubits` is empty, has a duplicate, or has an out-of-range index; also traps if the counts keys don't all share one length. |
+| `parityExpectation(qubits:)` | `([Int]) -> Double` | The ±1 parity-product average over `counts` — `Σ count · (−1)^(number of 1 bits among qubits) / shots` — the shot-based estimator for a Pauli-Z-string expectation value such as ⟨Z⊗Z⟩ across the listed qubits. |
+
+---
+
+## `PauliBasis`
+
+`Sources/SwiftQiskit/Quantum/PauliBasis.swift`:
+
+```swift
+public enum PauliBasis: Character, CaseIterable {
+    case x = "X"
+    case y = "Y"
+    case z = "Z"
+}
+```
+
+A single-qubit Pauli measurement basis. The `Character` raw value interoperates with the
+plain Pauli-string labels `pauliRotation(_:theta:)` already accepts (`.x.rawValue == "X"`,
+etc.). Used by `QuantumCircuit.rotateToZ`/`measure(shots:basis:)` above.
 
 ---
 
@@ -351,11 +386,12 @@ that happens to be `public`; don't build new API around it.
 ## Not Yet in Core
 
 Several capabilities that later playground pages need — noise/Kraus channels, mid-circuit
-or partial measurement, a Toffoli/`ccx` helper, a `PauliString`/`Hamiltonian` type (needed by
-`Hamiltonian.trotterCircuit`), and Pauli-basis tomography helpers — are implemented *inside
-individual playground pages* rather than in `Sources/SwiftQiskit`, deliberately (see each
-page's plan doc under `PlaygroundDocs/`). Proposed Core extensions for these areas, with
-rationale, are tracked in `STATUSandTODO.md` under "Proposed Core extensions — ...".
+or partial measurement, a `PauliString`/`Hamiltonian` type (needed by
+`Hamiltonian.trotterCircuit`), a real state-tomography reconstruction, and register
+builders (`increment`/`decrement`) — are implemented *inside individual playground pages*
+rather than in `Sources/SwiftQiskit`, deliberately (see each page's plan doc under
+`PlaygroundDocs/`). Proposed Core extensions for these areas, with rationale, are tracked in
+`STATUSandTODO.md` under "Proposed Core extensions — ...".
 
 For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
 used by playground live views, see `PLAYGROUNDSUPPORT.md`.

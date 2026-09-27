@@ -47,27 +47,39 @@ no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of
   `-i` — scale by `Complex(0, -theta)` yourself for e^(-iθH)).
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
   `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
-  combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention).
+  combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention);
+  `marginalProbabilities(over:)` sums out every qubit not listed, returning every one of the
+  2^k possible keys (including zero-probability ones) in the order the qubits were given.
 - `Gates/*.swift` — each fixed gate is a `public enum` exposing `static let matrix: Matrix`
   (`HadamardGate`, `PauliXGate`, `PauliYGate`, `PauliZGate`, `SGate`/`SDaggerGate`,
-  `TGate`/`TDaggerGate`, `CNOTGate`); parameterized gates expose
+  `TGate`/`TDaggerGate`, `CNOTGate`, `ToffoliGate`); parameterized gates expose
   `static func matrix(theta:)` instead (`PhaseGate` P(θ) in `Phase.swift`,
   `RXGate`/`RYGate`/`RZGate` in `Rotation.swift`). Follow these patterns for new gates.
   `CNOTGate` additionally offers `matrix(qubits:control:target:)` — the full 2ⁿ×2ⁿ CNOT for
-  any distinct control/target pair, built as a basis-state permutation.
+  any distinct control/target pair, built as a basis-state permutation; `ToffoliGate` mirrors
+  this with `matrix(qubits:control1:control2:target:)` (`Toffoli.swift`), symmetric in its
+  two controls, both built via `Matrix.permutation`.
   `RZZGate`/`RXXGate`/`RYYGate` (`TwoQubitRotation.swift`) are the fixed-2-qubit
   `exp(-iθ·P⊗P/2)` family, each checked against `Matrix.expm()` and, for `RZZGate`, against
   the `cx;rz;cx` identity.
 - `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices. Single-qubit
   gates are embedded across the register via `Matrix.tensor(_:)` (file-private
-  `embedSingleQubitGate`). API: `h/x/y/z/s/sdg/t/tdg/cx`, parameterized
+  `embedSingleQubitGate`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, parameterized
   `p/rx/ry/rz(_ theta:, _ qubit:)` (θ first, as in Qiskit), `apply(_:)`, `run()`,
   `runAndMeasure()`, `measure(shots:)`; `rzz/rxx/ryy(_ theta:, _ q0:, _ q1:)` on any distinct
   qubit pair (not just adjacent), and the general `pauliRotation(_ pauli: String, theta:)`
-  they're built from — a basis change (`h`/`sdg;h`) plus a CNOT-staircase parity trick plus
-  one `rz`, matching `Matrix.expm()` on the same Pauli-string generator exactly (including
-  the all-`I` global-phase case).
-- `Quantum/SimulationResult.swift` — shot counts keyed by binary state string.
+  they're built from — a basis change (`rotateToZ`: `h`/`sdg;h`) plus a CNOT-staircase parity
+  trick plus one `rz`, matching `Matrix.expm()` on the same Pauli-string generator exactly
+  (including the all-`I` global-phase case). `rotateToZ(_ basis: PauliBasis, _ qubit:)`
+  appends the rotation making a Z-basis measurement of `qubit` read out `basis` instead;
+  `measure(shots:basis:)` applies it per-qubit to a **copy** of the circuit before measuring,
+  leaving the receiver's own operation list untouched.
+- `Quantum/SimulationResult.swift` — shot counts keyed by binary state string;
+  `marginalCounts(over:)` (grouped counts, only observed keys) and `parityExpectation(qubits:)`
+  (the ±1 parity-product average, e.g. for a shot-based ⟨Z⊗Z⟩) sum over a subset of qubits.
+- `Quantum/PauliBasis.swift` — `PauliBasis` (`.x`/`.y`/`.z`, `Character` raw values matching
+  the `pauliRotation` string labels): the single-qubit Pauli measurement basis used by
+  `rotateToZ`/`measure(shots:basis:)` above.
 - `Quantum/Dirac.swift` — Dirac notation: `Ket` (typealias of `StateVector`), `Bra`
   (conjugated row vector), postfix `†` (dagger; also `Matrix.adjoint`), `*` overloads for
   inner (`Bra * Ket`) / outer (`Ket * Bra`) products and `Bra * Matrix -> Bra` (enables
@@ -257,8 +269,9 @@ Playground notes:
 ## Conventions & Gotchas
 
 - **Qubit indexing:** qubit 0 is the most-significant (leftmost) bit.
-- **`cx` is general:** `cx(control, target)` works for any distinct pair of qubits on an
-  n-qubit circuit, via `CNOTGate.matrix(qubits:control:target:)` (permutation-matrix construction).
+- **`cx`/`ccx` are general:** `cx(control, target)`/`ccx(control1, control2, target)` work
+  for any distinct qubits on an n-qubit circuit, via `CNOTGate.matrix(qubits:control:target:)`/
+  `ToffoliGate.matrix(qubits:control1:control2:target:)` (permutation-matrix construction).
 - Invariants are guarded with `precondition(...)` throughout; keep doing this when extending.
 - Measurement result strings are zero-padded binary via `String.leftPadding` (`Utils/String+Padding.swift`).
 - Style: 4-space indent, PascalCase types, camelCase members, no force unwrapping.
@@ -268,7 +281,8 @@ Playground notes:
 - Tests live in `Tests/SwiftQiskitTests/` (`BellStateTests.swift`,
   `TensorProductTests.swift`, `DiracNotationTests.swift`, `CNOTTests.swift`,
   `AdditionalGatesTests.swift`, `MatrixArithmeticTests.swift`, `MeasurementTests.swift`,
-  `MatrixExponentialTests.swift`, `TwoQubitRotationTests.swift`).
+  `MatrixExponentialTests.swift`, `TwoQubitRotationTests.swift`, `ToffoliTests.swift`,
+  `ReadoutTests.swift`, `PauliBasisTests.swift`).
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - **Scheme gotcha for Xcode test runs:** all schemes are autogenerated by Xcode for the
