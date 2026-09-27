@@ -496,8 +496,9 @@ with a 3-qubit counting register and a 4-qubit work register:
 - **A hand-built QFT†** — the 8×8 inverse DFT constructed entrywise on the register's
   integer index (no bit-reversal bookkeeping), checked against Hadamard and unitarity.
 - **Phase estimation stage by stage** — superposed counts, the entangled orbit, then
-  exact peaks at y = 8·s/r; shot statistics sampled from one `run()` (with a note on
-  why `measure(shots:)` is too slow at dimension 128).
+  exact peaks at y = 8·s/r; shot statistics sampled from one `run()` (`measure(shots:)`
+  now does the same thing internally, but the page keeps its own sampler visible since
+  it also produces the marginal-over-y summary this section wants).
 - **Classical post-processing** — measured phase → lowest terms → verified order →
   gcd factors, then a sweep of every coprime base including the instructive a = 14
   failure (a^(r/2) ≡ −1).

@@ -61,7 +61,8 @@ annotations), plus a SwiftUI live view. Structure:
 - **Section 4** — the deferred-measurement corrections; the factoring check against
   `(Ket.plus ⊗ Ket.plus) ⊗ psi`.
 - **Section 5** — no cloning: q2's marginal equals \|ψ\|², q0's is [0.5, 0.5]; 1000 shots
-  from a freshly built circuit (`measure(shots:)` replays operations per shot).
+  from a freshly built circuit (`measure(shots:)` is a `QuantumCircuit` method, so it needs
+  one — `finalState` alone won't do).
 - **Section 6** — superdense coding: the four messages decoded at P = 1.0000, plus the Bell
   basis's Gram matrix printed as the identity — the orthogonality that makes decoding
   deterministic.

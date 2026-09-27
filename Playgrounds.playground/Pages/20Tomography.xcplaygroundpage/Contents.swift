@@ -28,22 +28,34 @@ let Z = PauliZGate.matrix
 // `measure(shots:)` only ever reads the Z basis. Getting ⟨X⟩ means
 // rotating X into Z first (`h`); ⟨Y⟩ needs `sdg` then `h`. The order
 // matters — checked here against a state with a *known* Y value
-// rather than assumed.
+// rather than assumed. `PauliBasis` makes the three choices
+// exhaustive (no silent typo falling through to Z, the way a bare
+// `"x "` or `"Z"`-vs-`"z"` string could).
 
-func basisRotation(_ axis: String, _ s: inout StateVector) {
-    switch axis {
-    case "X": s.apply(H)
-    case "Y": s.apply(Sdg); s.apply(H)
-    default: break
+enum PauliBasis { case x, y, z }
+
+func basisRotation(_ basis: PauliBasis, _ s: inout StateVector) {
+    switch basis {
+    case .x: s.apply(H)
+    case .y: s.apply(Sdg); s.apply(H)
+    case .z: break
     }
 }
 
 var plusI = StateVector.plusI   // a +1 eigenstate of Y
-basisRotation("Y", &plusI)
+basisRotation(.y, &plusI)
 print("|+i⟩ rotated by (Sdg; H): \(plusI)")
 // Expected: collapses to |0⟩ (amplitude ≈1, 0) — confirms Sdg-then-H
 // is the correct order for a Y-basis measurement. (The reverse order
 // does *not* diagonalize Y — worth knowing before trusting either.)
+
+var plusIRx = StateVector.plusI
+plusIRx.apply(RXGate.matrix(theta: .pi / 2))
+print("|+i⟩ rotated by rx(π/2): \(plusIRx)")
+// Expected: also collapses to |0⟩ — a one-gate alternative to
+// `sdg; h` for the Y basis. This page keeps `sdg; h` throughout
+// since it's the textbook decomposition, but `rx(π/2)` is worth
+// knowing about for a leaner circuit.
 
 // ============================================================
 // Section 2 — the estimator, sign-checked against exact values
@@ -60,11 +72,11 @@ func tiltedState() -> Ket {
 }
 func exactExpectation(_ psi: Ket, _ A: Matrix) -> Double { (psi† * A * psi).real }
 
-func estimate(_ axis: String, psi: Ket, shots: Int) -> Double {
+func estimate(_ basis: PauliBasis, psi: Ket, shots: Int) -> Double {
     var plus = 0
     for _ in 0..<shots {
         var s = psi
-        basisRotation(axis, &s)
+        basisRotation(basis, &s)
         if s.measure() == 0 { plus += 1 }
     }
     return 2 * Double(plus) / Double(shots) - 1
@@ -72,7 +84,7 @@ func estimate(_ axis: String, psi: Ket, shots: Int) -> Double {
 
 let psi = tiltedState()
 print("\nexact   ⟨X⟩=\(fmt(exactExpectation(psi, X)))  ⟨Y⟩=\(fmt(exactExpectation(psi, Y)))  ⟨Z⟩=\(fmt(exactExpectation(psi, Z)))")
-print("N=100000 ⟨X⟩=\(fmt(estimate("X", psi: psi, shots: 100_000)))  ⟨Y⟩=\(fmt(estimate("Y", psi: psi, shots: 100_000)))  ⟨Z⟩=\(fmt(estimate("Z", psi: psi, shots: 100_000)))")
+print("N=100000 ⟨X⟩=\(fmt(estimate(.x, psi: psi, shots: 100_000)))  ⟨Y⟩=\(fmt(estimate(.y, psi: psi, shots: 100_000)))  ⟨Z⟩=\(fmt(estimate(.z, psi: psi, shots: 100_000)))")
 // Expected: exact ≈ (0.6124, 0.6124, 0.5000); shot estimates land
 // within about 0.005–0.01 of that at N=100,000 (statistical — the
 // exact gap varies run to run).
@@ -81,15 +93,15 @@ print("N=100000 ⟨X⟩=\(fmt(estimate("X", psi: psi, shots: 100_000)))  ⟨Y⟩
 // Section 3 — error shrinks as 1/√N
 // ============================================================
 
-func rmsError(_ axis: String, exact: Double, psi: Ket, shots: Int, trials: Int) -> Double {
-    let errors = (0..<trials).map { _ in estimate(axis, psi: psi, shots: shots) - exact }
+func rmsError(_ basis: PauliBasis, exact: Double, psi: Ket, shots: Int, trials: Int) -> Double {
+    let errors = (0..<trials).map { _ in estimate(basis, psi: psi, shots: shots) - exact }
     return (errors.map { $0 * $0 }.reduce(0, +) / Double(trials)).squareRoot()
 }
 
 print("\nN         RMS error in ⟨X⟩ (20 trials)")
 let exactX = exactExpectation(psi, X)
 for n in [100, 1_000, 10_000, 100_000] {
-    print("\(n)     \(fmt(rmsError("X", exact: exactX, psi: psi, shots: n, trials: 20)))")
+    print("\(n)     \(fmt(rmsError(.x, exact: exactX, psi: psi, shots: n, trials: 20)))")
 }
 // Expected: each column of numbers falls as N grows, at roughly the
 // 1/√N rate (each 10× increase in N should shrink the error by
@@ -108,9 +120,9 @@ for n in [100, 1_000, 10_000, 100_000] {
 // state's frequency shrinks toward zero with N.
 
 func reconstructedMagnitude(_ psi: Ket, shots: Int) -> Double {
-    let ex = estimate("X", psi: psi, shots: shots)
-    let ey = estimate("Y", psi: psi, shots: shots)
-    let ez = estimate("Z", psi: psi, shots: shots)
+    let ex = estimate(.x, psi: psi, shots: shots)
+    let ey = estimate(.y, psi: psi, shots: shots)
+    let ez = estimate(.z, psi: psi, shots: shots)
     return (ex * ex + ey * ey + ez * ez).squareRoot()
 }
 func unphysicalFrequency(_ psi: Ket, shots: Int, trials: Int) -> Double {
@@ -128,22 +140,22 @@ for n in [10, 50, 200, 1000, 5000] {
 
 // A genuinely mixed ensemble: 75% |0⟩, 25% |1⟩ → Bloch (0,0,0.5),
 // |r|=0.5, strictly inside the ball (page 19's territory).
-func sampleMixedAndMeasure(_ axis: String) -> Int {
+func sampleMixedAndMeasure(_ basis: PauliBasis) -> Int {
     var s: Ket = Double.random(in: 0..<1) < 0.75 ? StateVector.zero : StateVector.one
-    basisRotation(axis, &s)
+    basisRotation(basis, &s)
     return s.measure()
 }
-func estimateMixed(_ axis: String, shots: Int) -> Double {
+func estimateMixed(_ basis: PauliBasis, shots: Int) -> Double {
     var plus = 0
-    for _ in 0..<shots { if sampleMixedAndMeasure(axis) == 0 { plus += 1 } }
+    for _ in 0..<shots { if sampleMixedAndMeasure(basis) == 0 { plus += 1 } }
     return 2 * Double(plus) / Double(shots) - 1
 }
 func unphysicalFrequencyMixed(shots: Int, trials: Int) -> Double {
     var count = 0
     for _ in 0..<trials {
-        let ex = estimateMixed("X", shots: shots)
-        let ey = estimateMixed("Y", shots: shots)
-        let ez = estimateMixed("Z", shots: shots)
+        let ex = estimateMixed(.x, shots: shots)
+        let ey = estimateMixed(.y, shots: shots)
+        let ez = estimateMixed(.z, shots: shots)
         if (ex * ex + ey * ey + ez * ez).squareRoot() > 1.0 { count += 1 }
     }
     return Double(count) / Double(trials)
@@ -169,14 +181,14 @@ var bell = StateVector(qubits: 2)
 bell.apply(H.tensor(I2))
 bell.apply(CNOTGate.matrix(qubits: 2, control: 0, target: 1))
 
-func estimateQubit0(_ axis: String, state: Ket, shots: Int) -> Double {
+func estimateQubit0(_ basis: PauliBasis, state: Ket, shots: Int) -> Double {
     var plus = 0
     for _ in 0..<shots {
         var s = state
-        switch axis {
-        case "X": s.apply(H.tensor(I2))
-        case "Y": s.apply(Sdg.tensor(I2)); s.apply(H.tensor(I2))
-        default: break
+        switch basis {
+        case .x: s.apply(H.tensor(I2))
+        case .y: s.apply(Sdg.tensor(I2)); s.apply(H.tensor(I2))
+        case .z: break
         }
         let bit0 = (s.measure() >> 1) & 1   // qubit 0 is the MSB
         if bit0 == 0 { plus += 1 }
@@ -184,9 +196,9 @@ func estimateQubit0(_ axis: String, state: Ket, shots: Int) -> Double {
     return 2 * Double(plus) / Double(shots) - 1
 }
 
-let bx = estimateQubit0("X", state: bell, shots: 50_000)
-let by = estimateQubit0("Y", state: bell, shots: 50_000)
-let bz = estimateQubit0("Z", state: bell, shots: 50_000)
+let bx = estimateQubit0(.x, state: bell, shots: 50_000)
+let by = estimateQubit0(.y, state: bell, shots: 50_000)
+let bz = estimateQubit0(.z, state: bell, shots: 50_000)
 print("\nBell-pair qubit-0 marginal from shots: (x,y,z) = (\(fmt(bx)), \(fmt(by)), \(fmt(bz))), |r| = \(fmt((bx*bx+by*by+bz*bz).squareRoot()))")
 // Expected: all three components within ~0.02 of 0 — statistically
 // indistinguishable from the origin.

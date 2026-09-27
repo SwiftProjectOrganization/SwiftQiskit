@@ -62,25 +62,30 @@ public struct StateVector: Equatable {
 
     // MARK: - Measurement
 
-    /// Measure the quantum state and collapse it.
-    /// - Returns: measured basis index
-    public mutating func measure() -> Int {
-        let probs = probabilities
+    /// Draw one basis-state index from a probability distribution (cumulative-sum sampling).
+    /// Shared by `measure()` and `QuantumCircuit.measure(shots:)`, which samples the same
+    /// fixed distribution repeatedly instead of collapsing a state.
+    static func sampleIndex(from probabilities: [Double]) -> Int {
         let r = Double.random(in: 0..<1)
 
         var cumulative = 0.0
-        for (index, p) in probs.enumerated() {
+        for (index, p) in probabilities.enumerated() {
             cumulative += p
             if r < cumulative {
-                collapse(to: index)
                 return index
             }
         }
 
         // Fallback (numerical safety)
-        let lastIndex = probs.count - 1
-        collapse(to: lastIndex)
-        return lastIndex
+        return probabilities.count - 1
+    }
+
+    /// Measure the quantum state and collapse it.
+    /// - Returns: measured basis index
+    public mutating func measure() -> Int {
+        let index = StateVector.sampleIndex(from: probabilities)
+        collapse(to: index)
+        return index
     }
 
     private mutating func collapse(to index: Int) {

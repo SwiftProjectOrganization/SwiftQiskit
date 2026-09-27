@@ -71,9 +71,11 @@ with `// Expected:` annotations; no SwiftUI live view). Structure:
   post-QFT† amplitudes grouped by y); the counting marginals (¼ at y = 0, 2, 4, 6),
   computed by summing probabilities — there is no partial-measurement API.
 - **Section 6** — 1000 shots via a local classical sampler over `run().probabilities`,
-  **not** `measure(shots:)`: that method replays every recorded operation per shot
-  (~40 ms × 1000 at dimension 128 ≈ most of a minute), and sampling one run's
-  distribution is statistically identical for a pure state measured in full.
+  **not** `measure(shots:)`: at the time this page was written, that method replayed every
+  recorded operation per shot (~40 ms × 1000 at dimension 128 ≈ most of a minute).
+  `measure(shots:)` now runs the circuit once and samples its probabilities the same way,
+  but the page's own sampler stays — it doubles as the marginal-over-y summary Section 6
+  wants, which `measure(shots:)`'s full 7-bit strings don't give directly.
 - **Section 7** — post-processing table y → phase → lowest terms → verified candidate r,
   including the y = 0 and y = 4 failure modes; then r = 4 → 15 = 3 × 5.
 - **Section 8** — generic `shorCircuit(a:)` / `shorOrder(a:)` / `shorFactors(a:order:)`;
@@ -100,7 +102,9 @@ with `// Expected:` annotations; no SwiftUI live view). Structure:
   code.
 - No continued-fraction engine — lowest-terms reduction suffices because every order
   divides 8 here; a general-N Shor would need it (and ~2n counting qubits).
-- No `measure(shots:)` on the 7-qubit circuit (per-shot replay cost; see Section 6 above).
+- No `measure(shots:)` on the 7-qubit circuit — it now runs in a single `run()` under the
+  hood (see Section 6 above), but its full 7-bit measurement strings don't give the
+  marginal-over-y summary Section 6 wants without extra bookkeeping.
 - No general N — the modular arithmetic is compiled for N = 15.
 - No SwiftUI live view.
 

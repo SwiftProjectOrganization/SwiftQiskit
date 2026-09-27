@@ -38,15 +38,21 @@ public final class QuantumCircuit {
     }
 
     // MARK: - Execution
-    /// Measure the circuit multiple times and return counts
+    /// Measure the circuit multiple times and return counts.
+    ///
+    /// Runs the circuit once and draws `shots` samples from the resulting probability
+    /// distribution, rather than replaying every recorded operation per shot: only the final
+    /// random draw differs shot to shot, since a full measurement of a pure state never
+    /// changes the state itself.
     public func measure(shots: Int) -> SimulationResult {
         precondition(shots > 0, "Number of shots must be positive")
 
+        let probs = run().probabilities
         var counts: [String: Int] = [:]
 
         for _ in 0..<shots {
-            let result = runAndMeasure()
-            let binary = String(result, radix: 2)
+            let index = StateVector.sampleIndex(from: probs)
+            let binary = String(index, radix: 2)
                 .leftPadding(toLength: qubits, withPad: "0")
 
             counts[binary, default: 0] += 1
