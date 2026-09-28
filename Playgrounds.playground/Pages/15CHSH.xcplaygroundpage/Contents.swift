@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 // ============================================================
 // The CHSH inequality — quantum correlations beat classical ones

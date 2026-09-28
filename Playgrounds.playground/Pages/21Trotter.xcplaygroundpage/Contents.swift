@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 // ============================================================
 // Trotterization — Hamiltonian simulation, what quantum computers

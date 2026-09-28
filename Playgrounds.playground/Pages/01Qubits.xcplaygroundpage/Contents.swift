@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 // Single qubit examples. See 02Bloch2d for more qubit examples.
 let q0: Ket = .zero

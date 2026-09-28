@@ -3,8 +3,9 @@
 User-facing guide to the `03Bloch2dProjection` playground page, which follows `02Bloch2d`
 with a single *general* single-qubit state and its plane projections. As with `02Bloch2d`
 there is no separate design/plan document — the page, its comments, and the shared
-implementation in `Playgrounds.playground/Sources/` (`BlochVector.swift`,
-`BlochSphereView.swift`, `BlochProjectionView.swift`) are the reference; see
+implementation in `Sources/SwiftQiskitViews/BlochVector.swift` and
+`Playgrounds.playground/Sources/` (`BlochSphereView.swift`,
+`BlochProjectionView.swift`) are the reference; see
 `02BLOCH2DHELP.md` for the Bloch map itself (applies unchanged here) and
 `PlaygroundDocs/90LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
 

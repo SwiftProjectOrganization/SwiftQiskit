@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 // ============================================================
 // Quantum teleportation — moving a qubit with two classical bits

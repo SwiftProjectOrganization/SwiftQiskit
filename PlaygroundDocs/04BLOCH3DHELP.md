@@ -3,8 +3,9 @@
 User-facing guide to the `04Bloch3d` playground page, which visualizes a single-qubit
 state on a rotatable 3D Bloch sphere with a SwiftUI live view and live θ/φ sliders. As
 with `02Bloch2d`/`03Bloch2dProjection` there is no separate design/plan document — the
-shared implementation in `Playgrounds.playground/Sources/` (`BlochVector.swift`,
-`Bloch3DView.swift`, `BlochExplorerView.swift`) and its doc comments are the reference;
+shared implementation in `Sources/SwiftQiskitViews/BlochVector.swift` and
+`Playgrounds.playground/Sources/` (`Bloch3DView.swift`, `BlochExplorerView.swift`) and its
+doc comments are the reference;
 see `02BLOCH2DHELP.md` for the Bloch map itself (applies unchanged here) and
 `PlaygroundDocs/90LIVEVIEWHELP.md` for the general live-view recipe and how `Sources/` sharing works.
 

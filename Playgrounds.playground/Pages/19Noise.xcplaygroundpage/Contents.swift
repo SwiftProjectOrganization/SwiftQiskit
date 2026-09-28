@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 // ============================================================
 // Noise — mixed states, quantum channels, and decoherence

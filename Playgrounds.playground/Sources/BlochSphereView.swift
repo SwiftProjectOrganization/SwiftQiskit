@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftQiskitViews
 
 /// Bloch sphere rendered as a 2D orthographic projection.
 /// Projection: y → right, z → up, x → toward the viewer,

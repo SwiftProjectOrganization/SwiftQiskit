@@ -14,6 +14,12 @@ let package = Package(
             targets: ["SwiftQiskit"]
         ),
 
+        // Shared, UI-free-Core-preserving SwiftUI views (BlochVector, CHSHChartView)
+        .library(
+            name: "SwiftQiskitViews",
+            targets: ["SwiftQiskitViews"]
+        ),
+
         // CLI example
         .executable(
             name: "SwiftQiskitExamples",
@@ -27,6 +33,15 @@ let package = Package(
         .target(
             name: "SwiftQiskit",
             path: "Sources/SwiftQiskit"
+        ),
+
+        // =========================
+        // Shared SwiftUI views (BlochVector, CHSHChartView)
+        // =========================
+        .target(
+            name: "SwiftQiskitViews",
+            dependencies: ["SwiftQiskit"],
+            path: "Sources/SwiftQiskitViews"
         ),
 
         // =========================
@@ -45,6 +60,12 @@ let package = Package(
             name: "SwiftQiskitTests",
             dependencies: ["SwiftQiskit"],
             path: "Tests/SwiftQiskitTests"
+        ),
+
+        .testTarget(
+            name: "SwiftQiskitViewsTests",
+            dependencies: ["SwiftQiskitViews"],
+            path: "Tests/SwiftQiskitViewsTests"
         )
     ]
 )

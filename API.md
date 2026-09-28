@@ -1,10 +1,12 @@
 # SwiftQiskit API Reference
 
 This is the API reference for the `SwiftQiskit` **core library** (`Sources/SwiftQiskit/`) — the
-product you get from `import SwiftQiskit`. It does not cover the playground helper module
-(`Playgrounds.playground/Sources/`); see `PLAYGROUNDSUPPORT.md` for that.
+product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
+`SwiftQiskitViews` module (`Sources/SwiftQiskitViews/`) is covered in its own section below;
+it does not cover the remaining playground helper module (`Playgrounds.playground/Sources/`),
+see `PLAYGROUNDSUPPORT.md` for that.
 
-SwiftQiskit is v0.1 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.2 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions
@@ -659,6 +661,40 @@ that happens to be `public`; don't build new API around it.
 
 ---
 
+## `SwiftQiskitViews`
+
+`Sources/SwiftQiskitViews/` — a small SwiftUI library product, `import SwiftQiskitViews`,
+depending only on `SwiftQiskit`. It holds the presentational types shared by the playground
+and by the sibling `SwiftQiskitApp` repo, so Core itself stays UI-free. Deliberately not
+folded into `SwiftQiskit`/namespaced there: a Core type named `BlochVector` would collide
+with call sites that want the bare name (see `StateTomography` above, which returns a plain
+tuple for the same reason).
+
+```swift
+public struct BlochVector: Equatable, Sendable {
+    public let x: Double
+    public let y: Double
+    public let z: Double
+
+    public init(_ state: StateVector)                 // 1-qubit pure state
+    public init(_ state: StateVector, qubit: Int)      // reduced (partial-trace) qubit
+    public init?(_ rho: DensityMatrix)                 // 1-qubit density matrix; nil otherwise
+    public init(_ rho: DensityMatrix, qubit: Int)       // reduced qubit via partialTrace(keeping:)
+    public init(x: Double, y: Double, z: Double)        // raw coordinates, e.g. |r| < 1
+
+    public var magnitude: Double   // 1 for a pure state, < 1 for mixed/entangled
+    public var theta: Double       // polar angle from +Z, radians
+    public var phi: Double         // azimuthal angle in the XY plane, radians
+}
+```
+
+`CHSHChartView` — a minimal, stateless 2D line/scatter `View` (`Canvas`-based), used by
+pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk` for correlation curves, energy landscapes, and
+distribution comparisons. See `PLAYGROUNDSUPPORT.md`/`90LIVEVIEWHELP.md` for usage snippets
+and the live-view recipe.
+
+---
+
 ## Not Yet in Core
 
 A few capabilities that later playground pages need are still implemented *inside
@@ -669,17 +705,12 @@ under `PlaygroundDocs/`):
   deferred-measurement-principle gates instead.
 - A real maximum-likelihood or linear-inversion state-tomography reconstruction
   (`StateTomography` above is a rescale, not this).
-- A package-level `BlochVector` type (pure-state and `DensityMatrix`-driven) — every
-  playground page has its own copy in `Playgrounds.playground/Sources/BlochVector.swift`
-  instead, to avoid a name collision (see `StateTomography` above).
 
 Proposed Core extensions for these and other areas, with rationale, are tracked in
 `STATUSandTODO.md` under "Proposed Core extensions — ...". (`Hamiltonian.trotterCircuit`,
-the `increment`/`decrement` register builders, and open-systems support
-(`DensityMatrix`/`KrausChannel`/`NoiseModel`/`runDensityMatrix`/`runTrajectories`),
-previously listed here, are now implemented — see `QuantumCircuit.evolve`/
-`Hamiltonian.trotterCircuit`, `QuantumCircuit.increment`/`decrement`, and `DensityMatrix`/
-`KrausChannel`/`NoiseModel` above.)
-
-For the SwiftUI-facing helper types (`BlochVector`, `Bloch3DView`, `CHSHChartView`, etc.)
-used by playground live views, see `PLAYGROUNDSUPPORT.md`.
+the `increment`/`decrement` register builders, open-systems support
+(`DensityMatrix`/`KrausChannel`/`NoiseModel`/`runDensityMatrix`/`runTrajectories`), and the
+shared `SwiftQiskitViews` module (`BlochVector`/`CHSHChartView`), previously listed here, are
+now implemented — see `QuantumCircuit.evolve`/`Hamiltonian.trotterCircuit`,
+`QuantumCircuit.increment`/`decrement`, `DensityMatrix`/`KrausChannel`/`NoiseModel` above,
+and `SwiftQiskitViews` above.)

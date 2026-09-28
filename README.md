@@ -565,7 +565,7 @@ classical instruction list — with a live chart of the violation:
   `measure(shots:)`, agreeing with cos(a−b).
 - **The violation and its limits** — a Bell pair's S = 2√2 against a product-state control
   (S = √2) and a fine angle sweep confirming the Tsirelson ceiling of 2√2, never higher.
-- **A live chart** — `CHSHChartView` (new shared `Sources/` type) plots the exact cos θ
+- **A live chart** — `CHSHChartView` (shared `SwiftQiskitViews` type) plots the exact cos θ
   curve, sampled points, and the classical line together.
 
 Design notes in `PlaygroundDocs/15CHSHPLAN.md`; user guide in `PlaygroundDocs/15CHSHHELP.md`.
@@ -694,13 +694,16 @@ answering an oracle question or amplifying a marked item, with a live chart:
 
 Design notes in `PlaygroundDocs/22WALKPLAN.md`; user guide in `PlaygroundDocs/22WALKHELP.md`.
 
-The Bloch types and views (`BlochVector`, `BlochSphereView`, `BlochProjectionView`,
-`Bloch3DView`, `BlochExplorerView`) and the shared 2D chart (`CHSHChartView`, used by pages 15,
-18, 21, and 22) are shared between these pages via the playground's `Sources/` folder (not
-part of Core) — see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user guide to each type
-and [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference. `BlochVector`
-gained an additive `init(x:y:z:)` for page 19's mixed-state (sub-unit-length) vectors, used by
-pages 19 and 20; every earlier call site is unaffected.
+The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`)
+are shared between these pages via the playground's `Sources/` folder (not part of Core).
+`BlochVector` and the shared 2D chart (`CHSHChartView`, used by pages 15, 18, 21, and 22) live
+instead in the `SwiftQiskitViews` package product — a small SwiftUI library depending only on
+`SwiftQiskit`, also used by the sibling `SwiftQiskitApp` repo, so Core itself stays UI-free —
+see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user guide to
+each type and [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference.
+`BlochVector` gained an additive `init(x:y:z:)` for page 19's mixed-state (sub-unit-length)
+vectors, used by pages 19 and 20, and `DensityMatrix`-driven initializers when it moved into
+`SwiftQiskitViews`; every earlier call site is unaffected.
 
 ---
 
@@ -712,7 +715,7 @@ This project is built **step by step** and open for exploration.
 ---
 ##  Status & Roadmap
 
-Project status, what works in v0.1, and the roadmap live in
+Project status, what works in v0.2, and the roadmap live in
 [STATUSandTODO.md](STATUSandTODO.md), together with this fork's working TODO list.
 
 ---

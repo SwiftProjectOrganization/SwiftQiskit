@@ -3,7 +3,8 @@
 User-facing guide to the `02Bloch2d` playground page, which visualizes single-qubit
 states on the Bloch sphere with a SwiftUI live view. Unlike the algorithm pages there is no
 separate design/plan document — the shared implementation in
-`Playgrounds.playground/Sources/` (`BlochVector.swift`, `BlochSphereView.swift`) and its
+`Sources/SwiftQiskitViews/BlochVector.swift` and
+`Playgrounds.playground/Sources/BlochSphereView.swift` and its
 doc comments are the reference; `PlaygroundDocs/90LIVEVIEWHELP.md` documents the shared module and
 the general live-view recipe, and `PLAYGROUNDSUPPORT.md` is the terse implementation
 reference.

@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftQiskit
+import SwiftQiskitViews
 
 /// Interactive Bloch-sphere explorer: a `Bloch3DView` driven by live
 /// sliders for the spherical angles θ ∈ [0, π] and φ ∈ [0, 2π).

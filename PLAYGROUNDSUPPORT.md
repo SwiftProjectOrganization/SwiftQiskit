@@ -12,12 +12,10 @@ playground root.
 ```text
 Playgrounds.playground/
 ├── Sources/                  ← shared code (this document)
-│   ├── BlochVector.swift
 │   ├── BlochSphereView.swift
 │   ├── BlochProjectionView.swift
 │   ├── Bloch3DView.swift
-│   ├── BlochExplorerView.swift
-│   └── CHSHChartView.swift
+│   └── BlochExplorerView.swift
 └── Pages/
     ├── 00TOC.xcplaygroundpage
     ├── 01Qubits.xcplaygroundpage
@@ -27,6 +25,13 @@ Playgrounds.playground/
     └── ...
 ```
 
+`BlochVector` and `CHSHChartView` used to live here too, but have moved into the package's
+own `SwiftQiskitViews` library target (`Sources/SwiftQiskitViews/`, outside the playground)
+so `SwiftQiskitApp` can share them too — see "`BlochVector`/`CHSHChartView` (in
+`SwiftQiskitViews`)" below and `CLAUDE.md`'s "SwiftQiskitViews" section for the full API.
+Pages and `Sources/` files that use either type now write `import SwiftQiskitViews`
+explicitly, since — unlike this auxiliary module — it isn't auto-imported.
+
 Xcode compiles `Sources/` into an auxiliary module that every page imports
 **automatically** — pages never write an `import` for it. The rules that follow from
 this:
@@ -34,8 +39,10 @@ this:
 - **Everything a page touches must be `public`**: types, initializers, properties, and
   methods. Swift's synthesized memberwise initializers are only `internal`, so each
   shared type needs an explicit `public init`.
-- Sources files may `import SwiftQiskit` (and `SwiftUI`, etc.) because the playground
-  sets `buildActiveScheme='true'` — the SwiftQiskit scheme is built before pages run.
+- Sources files may `import SwiftQiskit`/`SwiftQiskitViews` (and `SwiftUI`, etc.) because
+  the playground sets `buildActiveScheme='true'` — the active scheme's products are built
+  before pages run. Use the `SwiftQiskit-Package` scheme (not the per-product `SwiftQiskit`
+  scheme) so both `SwiftQiskit` and `SwiftQiskitViews` actually get built.
 - Shared code compiles once, so pages run faster than when the same code is inline.
 - Like all playground code, `Sources/` is **not** covered by `swift build` or the test
   suite; it only compiles inside Xcode. To type-check it from the command line:
@@ -47,25 +54,34 @@ this:
   xcrun swiftc -typecheck -I /tmp/sqkit Playgrounds.playground/Sources/*.swift
   ```
 
-## Current shared code
+## `BlochVector`/`CHSHChartView` (in `SwiftQiskitViews`)
 
-### `BlochVector.swift`
-
-Maps a single-qubit `StateVector` |ψ⟩ = α|0⟩ + β|1⟩ to Bloch-sphere coordinates
-(up to global phase):
-
-- x = 2·Re(ᾱβ), y = 2·Im(ᾱβ), z = |α|² − |β|²
-- `theta` — polar angle from the |0⟩ pole, `phi` — azimuth in the XY plane
+`BlochVector` and `CHSHChartView` are no longer part of this playground's own `Sources/`
+module — they live in the package's `SwiftQiskitViews` library target
+(`Sources/SwiftQiskitViews/`), shared with the sibling `SwiftQiskitApp` repo, and pages/
+`Sources/` files that use them write `import SwiftQiskitViews` explicitly. Full API in
+`API.md`'s "`SwiftQiskitViews`" section and `CLAUDE.md`'s "SwiftQiskitViews" section; the
+short version:
 
 ```swift
-public init(_ state: StateVector)   // preconditions dimension == 2
-public init(x: Double, y: Double, z: Double)   // raw coordinates, |r| may be < 1
+public struct BlochVector: Equatable, Sendable {
+    public init(_ state: StateVector)                  // 1-qubit pure state
+    public init(_ state: StateVector, qubit: Int)       // reduced qubit of a multi-qubit state
+    public init?(_ rho: DensityMatrix)                  // 1-qubit density matrix; nil otherwise
+    public init(_ rho: DensityMatrix, qubit: Int)        // reduced qubit via partialTrace
+    public init(x: Double, y: Double, z: Double)         // raw coordinates, |r| may be < 1
+    public var magnitude: Double
+    public var theta: Double   // polar angle from the |0⟩ pole
+    public var phi: Double     // azimuth in the XY plane
+}
 ```
 
-The second initializer is additive (page 19) — for Bloch vectors computed from a density
+The `x: y: z:` initializer is what page 19 uses for Bloch vectors computed from a density
 matrix as r = (Tr(ρX), Tr(ρY), Tr(ρZ)), which has |r| ≤ 1 rather than identically 1, so it
-can't be built from a normalized `StateVector`. Used by pages 19 and 20; every existing call
-site is unaffected.
+can't be built from a normalized `StateVector`; the `DensityMatrix`-driven initializers
+supersede that for new call sites.
+
+## Current shared code (`Playgrounds.playground/Sources/`)
 
 ### `BlochSphereView.swift`
 
@@ -127,34 +143,14 @@ macro works — see "Xcode 27 beta workarounds" below. `BlochExplorerView` and
 `Bloch3DView` are the two stateful views in this file (`@State theta/phi` and
 `@State azimuth/elevation/lastDrag` respectively); every other view here is stateless.
 
-### `CHSHChartView.swift`
-
-Stateless SwiftUI `Canvas` chart for generic 2D line/scatter data: axes, a dashed zero
-line, `Series` drawn either as a connected polyline (`isLine: true`) or a scatter of dots
-(`isLine: false`), and a small legend row. Used by page 15 to plot a quantum correlator
-against its classical comparison line and a set of shot-sampled points, by page 18 to
-plot a VQE energy landscape against the optimizer's own visited points, by page 21 to plot
-an exact ⟨Z₀⟩(t) curve against Trotterized samples at two step counts, and by page 22 to plot
-a quantum walk's position distribution against a classical random walk's.
-
-```swift
-public struct CHSHChartView: View {
-    public struct Series {
-        public init(label: String, color: Color, points: [CGPoint], isLine: Bool)
-    }
-    public init(
-        title: String,
-        xRange: ClosedRange<Double>, yRange: ClosedRange<Double>,
-        series: [Series],
-        size: CGSize = CGSize(width: 480, height: 300)
-    )
-}
-```
-
-Like the Bloch views other than `BlochExplorerView`/`Bloch3DView`, this one has no
-`@State` and could in principle be declared inline in a page — it lives in `Sources/` for
-the same reason `BlochProjectionView` does: it's general-purpose chart code, not
-page-specific commentary.
+`CHSHChartView` (in `SwiftQiskitViews`, see above) is a stateless SwiftUI `Canvas` chart for
+generic 2D line/scatter data: axes, a dashed zero line, `Series` drawn either as a connected
+polyline (`isLine: true`) or a scatter of dots (`isLine: false`), and a small legend row.
+Used by page 15 to plot a quantum correlator against its classical comparison line and a set
+of shot-sampled points, by page 18 to plot a VQE energy landscape against the optimizer's own
+visited points, by page 21 to plot an exact ⟨Z₀⟩(t) curve against Trotterized samples at two
+step counts, and by page 22 to plot a quantum walk's position distribution against a
+classical random walk's.
 
 ## Which pages use what
 
@@ -295,3 +291,7 @@ declaration and assign only in the `init`.
 - Helpers used by a single page can stay inline in that page — only promote code to
   `Sources/` once a second page needs it (or it is clearly general, like
   `BlochProjectionView`).
+- If a type also needs to be usable *outside* the playground (e.g. by `SwiftQiskitApp`),
+  it belongs in the package's `SwiftQiskitViews` library target instead of here — see
+  `BlochVector`/`CHSHChartView` above. Files there need an explicit `import SwiftQiskitViews`
+  everywhere they're used, unlike this auxiliary module.

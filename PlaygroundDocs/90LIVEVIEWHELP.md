@@ -6,11 +6,13 @@ it documents a mechanism used by several pages, not one page — so read it alon
 whichever page guide sent you here.
 
 **Scope.** The file name leads with "live views" because that's what most people arrive
-looking for, but the guide covers the whole shared module, including the one file that
-has nothing to do with live views: `BlochVector.swift` is plain math (`import Foundation`
-+ `import SwiftQiskit`, no SwiftUI) and pages 01/02/03 print its values to the console
-independently of anything they render. Everything else in
-`Playgrounds.playground/Sources/` is a SwiftUI `View`.
+looking for, but the guide also covers `BlochVector` — plain math (`import Foundation` +
+`import SwiftQiskit`, no SwiftUI), used by pages 01/02/03 to print values to the console
+independently of anything they render. `BlochVector` and `CHSHChartView` don't live in
+`Playgrounds.playground/Sources/` — they're in the package's own `SwiftQiskitViews`
+library target (`import SwiftQiskitViews`), shared with the sibling `SwiftQiskitApp` repo.
+Everything else this guide covers, all still in `Playgrounds.playground/Sources/`, is a
+SwiftUI `View`.
 
 `PLAYGROUNDSUPPORT.md` at the repo root stays the terse reference — the "Current shared
 code" / "Which pages use what" tables and the Xcode 27 beta bug log live there; this guide
@@ -25,35 +27,44 @@ playground root compiles into an auxiliary module that every page imports
 - **Everything a page touches must be `public`**: types, initializers, properties,
   methods. Swift's synthesized memberwise initializers are only `internal`, so each
   shared type needs an explicit `public init`.
-- `Sources/` files may `import SwiftQiskit` (and `SwiftUI`, etc.) because the
-  playground sets `buildActiveScheme='true'` — the `SwiftQiskit` scheme builds first.
+- `Sources/` files may `import SwiftQiskit`/`SwiftQiskitViews` (and `SwiftUI`, etc.)
+  because the playground sets `buildActiveScheme='true'` — the active scheme's products
+  build first. Use the `SwiftQiskit-Package` scheme (not the per-product `SwiftQiskit`
+  scheme) so `SwiftQiskitViews` actually gets built too.
 - Shared code compiles once, so pages run faster than if the same code were inline.
 - `Sources/` is **not** covered by `swift build` or the test suite; it only compiles
   inside Xcode.
+- Unlike `Sources/`, `SwiftQiskitViews` is a regular package product — it is **not**
+  auto-imported. Every page or `Sources/` file that uses `BlochVector`/`CHSHChartView`
+  needs its own explicit `import SwiftQiskitViews`.
 
 ## The shared types at a glance
 
-| Type | File | Kind | Stateful? | `init` | Used by |
-|---|---|---|---|---|---|
-| `BlochVector` | `BlochVector.swift` | plain type | no | `init(_ state: StateVector)`, and `init(x:y:z:)` for mixed-state (sub-unit-length) vectors | 01, 02, 03, 04 (via `BlochExplorerView`), 08, 13, 14, 19, 20 |
-| `BlochSphereView` | `BlochSphereView.swift` | view | no | `init(label:bloch:size:)` — `size` defaults to 220 | 01, 02, 03, 13, 14, 19, 20 |
-| `BlochProjectionView` | `BlochProjectionView.swift` | view | no | `init(label:horizontal:vertical:verticalPointsDown:)` | 03 |
-| `Bloch3DView` | `Bloch3DView.swift` | view | **yes** — `@State azimuth/elevation/lastDrag` | `init(label:bloch:size:)` — `size` defaults to 300 | 04 (via `BlochExplorerView`), 08 (static) |
-| `BlochExplorerView` | `BlochExplorerView.swift` | view | **yes** — `@State theta/phi` | `init()` — no arguments | 04 |
-| `CHSHChartView` | `CHSHChartView.swift` | view | no | `init(title:xRange:yRange:series:size:)` — `size` defaults to 480 × 300 | 15, 18, 21, 22 |
+| Type | File | Module | Kind | Stateful? | `init` | Used by |
+|---|---|---|---|---|---|---|
+| `BlochVector` | `SwiftQiskitViews/BlochVector.swift` | `SwiftQiskitViews` | plain type | no | `init(_ state: StateVector)`, `init(_:qubit:)`, `init?(_:DensityMatrix)`, `init(_:DensityMatrix,qubit:)`, and `init(x:y:z:)` for mixed-state (sub-unit-length) vectors | 01, 02, 03, 04 (via `BlochExplorerView`), 08, 13, 14, 19, 20 |
+| `BlochSphereView` | `Sources/BlochSphereView.swift` | playground `Sources/` | view | no | `init(label:bloch:size:)` — `size` defaults to 220 | 01, 02, 03, 13, 14, 19, 20 |
+| `BlochProjectionView` | `Sources/BlochProjectionView.swift` | playground `Sources/` | view | no | `init(label:horizontal:vertical:verticalPointsDown:)` | 03 |
+| `Bloch3DView` | `Sources/Bloch3DView.swift` | playground `Sources/` | view | **yes** — `@State azimuth/elevation/lastDrag` | `init(label:bloch:size:)` — `size` defaults to 300 | 04 (via `BlochExplorerView`), 08 (static) |
+| `BlochExplorerView` | `Sources/BlochExplorerView.swift` | playground `Sources/` | view | **yes** — `@State theta/phi` | `init()` — no arguments | 04 |
+| `CHSHChartView` | `SwiftQiskitViews/CHSHChartView.swift` | `SwiftQiskitViews` | view | no | `init(title:xRange:yRange:series:size:)` — `size` defaults to 480 × 300 | 15, 18, 21, 22 |
 
 The *Kind* column is what makes `BlochVector`'s non-view status visible at a glance — it's
-the only row usable with no `import SwiftUI` at all. *Stateful?* is what decides where a
-type may live — see "Page-inline vs `Sources/`" below.
+the only row usable with no `import SwiftUI` at all. The *Module* column is what decides
+whether a page needs `import SwiftQiskitViews` (the top and bottom rows) in addition to the
+auto-imported playground `Sources/` module (everything else). *Stateful?* is what decides
+where a type may live — see "Page-inline vs `Sources/`" below.
 
 ## Using each type
 
 ### `BlochVector`
 
-The non-view type. Maps a single-qubit state |ψ⟩ = α|0⟩ + β|1⟩ to Bloch coordinates:
+The non-view type, in `SwiftQiskitViews` rather than the playground's own `Sources/`.
+Maps a single-qubit state |ψ⟩ = α|0⟩ + β|1⟩ to Bloch coordinates:
 
 ```swift
 import SwiftQiskit
+import SwiftQiskitViews
 
 let qc = QuantumCircuit(qubits: 1)
 qc.h(0)
@@ -62,13 +73,19 @@ print(bloch.x, bloch.y, bloch.z)    // 1.0 0.0 0.0
 print(bloch.theta, bloch.phi)       // acos(z), atan2(y, x) — π/2, 0
 ```
 
-No `import SwiftUI` or live view needed — this compiles and runs on a console-only page.
-`theta`/`phi` clamp/`atan2` their inputs, so a pole (x = y = 0) reports `φ = 0` by
-convention, not because the azimuth is meaningful there (see
+No `import SwiftUI` or live view needed — this compiles and runs on a console-only page
+(just the two `import`s above). `theta`/`phi` clamp/`atan2` their inputs, so a pole
+(x = y = 0) reports `φ = 0` by convention, not because the azimuth is meaningful there (see
 `PlaygroundDocs/02BLOCH2DHELP.md`'s reading notes for the worked example).
 
-**`init(x:y:z:)`** — a second, additive initializer for vectors that don't come from a
-normalized `StateVector` at all: a *mixed*-state Bloch vector r = (Tr(ρX), Tr(ρY), Tr(ρZ)),
+**`init(_:qubit:)`, `init?(_:DensityMatrix)`, `init(_:DensityMatrix, qubit:)`** — the
+reduced (partial-trace) qubit of a multi-qubit `StateVector`, and the two `DensityMatrix`-
+driven equivalents (the second `nil` unless the matrix is 2×2). Pages 13/14 use the
+`StateVector` reduced init; page 19's density-matrix work predates these and still builds
+its points via `init(x:y:z:)` directly (below).
+
+**`init(x:y:z:)`** — a further initializer for vectors built by hand rather than through
+any of the above: a *mixed*-state Bloch vector r = (Tr(ρX), Tr(ρY), Tr(ρZ)),
 which has |r| ≤ 1 rather than identically 1. Pages 19 and 20 build one of these whenever the
 point they want to plot is the result of a density-matrix calculation or a shot-based
 reconstruction, not a pure `StateVector`:
@@ -91,6 +108,7 @@ Fixed 2D oblique projection (y → right, z → up, x foreshortened toward the v
 import SwiftUI
 import PlaygroundSupport
 import SwiftQiskit
+import SwiftQiskitViews
 
 let bloch = BlochVector(QuantumCircuit(qubits: 1).run())   // |0⟩
 PlaygroundPage.current.setLiveView(
@@ -158,9 +176,13 @@ somewhere else.
 
 ### `CHSHChartView`
 
-A stateless 2D line/scatter chart, general enough for any `(x, y)` data:
+A stateless 2D line/scatter chart, general enough for any `(x, y)` data. Lives in
+`SwiftQiskitViews` alongside `BlochVector` — `import SwiftQiskitViews` on any page that
+uses it:
 
 ```swift
+import SwiftQiskitViews
+
 PlaygroundPage.current.setLiveView(
     CHSHChartView(
         title: "E(θ)",
@@ -213,8 +235,10 @@ PlaygroundPage.current.setLiveView(
 5. **Everything a page touches in `Sources/` must be explicitly `public`** — types,
    initializers, properties. Swift's synthesized memberwise inits are only `internal`,
    so shared views need a written-out `public init` (see `BlochSphereView.init`).
-6. **The scheme must build.** Pages set `buildActiveScheme='true'`; `Sources/` may
-   `import SwiftQiskit` (and `SwiftUI`) because the SwiftQiskit scheme builds first.
+6. **The active scheme must build both products.** Pages set `buildActiveScheme='true'`;
+   `Sources/` may `import SwiftQiskit`/`SwiftQiskitViews` (and `SwiftUI`) because the active
+   scheme's products build first — use the `SwiftQiskit-Package` scheme (not the
+   per-product `SwiftQiskit` scheme) so `SwiftQiskitViews` actually gets built too.
 7. **Xcode 27 beta only (machine-specific):** any page importing SwiftUI may hit the
    missing-`libcups.dylib` evaluator bug; the shim recipe is in `PLAYGROUNDSUPPORT.md`
    § "Xcode 27 beta workarounds". Rerun it after Clean Build Folder — or after almost any
@@ -227,7 +251,10 @@ The decision rule:
 - A stateless helper used by exactly one page can stay **inline** in that page.
 - Promote to `Sources/` once a second page needs it (`BlochSphereView`), or when the type
   is clearly general-purpose regardless of how many pages currently use it
-  (`BlochProjectionView`, `CHSHChartView`).
+  (`BlochProjectionView`).
+- If a type also needs to be usable *outside* the playground (e.g. by `SwiftQiskitApp`),
+  it belongs in the package's `SwiftQiskitViews` library target instead — `BlochVector`
+  and `CHSHChartView` both live there for this reason, not in `Sources/`.
 - Anything using `@State` (or another SwiftUI macro) **must** live in `Sources/` — the
   page-code evaluator can't expand it. This is why `BlochExplorerView` lives in
   `Sources/` even though only page 04 uses it, and equally why `Bloch3DView` does: its
@@ -236,7 +263,9 @@ The decision rule:
 
 ## Adding a shared type — checklist
 
-1. One type per file, named after the type, in `Playgrounds.playground/Sources/`.
+1. One type per file, named after the type, in `Playgrounds.playground/Sources/` — or in
+   `Sources/SwiftQiskitViews/` instead, if `SwiftQiskitApp` needs it too (see "Page-inline
+   vs `Sources/`" above).
 2. Make the type, its `init`, and anything a page reads `public`.
 3. Keep the *lecture commentary* (the math walkthrough) in the page; keep the
    *implementation* here — pages reference the shared type by name.
@@ -268,10 +297,14 @@ Failures below are shared-code failures, distinct from anything specific to one 
 math. The `@State` bug is SwiftUI-macro-specific; the libcups bug fires for any page that
 imports SwiftUI; the rest apply to shared code generally.
 
-- **Page won't run / no output at all** — the `SwiftQiskit` scheme must build first;
-  check for compile errors in `Sources/SwiftQiskit/`.
-- **`Cannot find 'X' in scope`** — the `Sources/` declaration (or its `init`) isn't
-  `public`, or the file isn't in the playground's top-level `Sources/` folder.
+- **Page won't run / no output at all** — the `SwiftQiskit` and `SwiftQiskitViews`
+  targets must both build first; check for compile errors in `Sources/SwiftQiskit/`
+  and `Sources/SwiftQiskitViews/`, and that the active scheme is `SwiftQiskit-Package`
+  (not the per-product `SwiftQiskit` scheme, which won't build `SwiftQiskitViews`).
+- **`Cannot find 'X' in scope`** — for a playground `Sources/` type, the declaration
+  (or its `init`) isn't `public`, or the file isn't in the playground's top-level
+  `Sources/` folder; for `BlochVector`/`CHSHChartView`, the page is missing
+  `import SwiftQiskitViews`.
 - **A shared type's `init` "doesn't exist"** — Swift's synthesized memberwise
   initializers are only `internal`; every shared type needs an explicit `public init`.
 - **`plugin for module 'SwiftUIMacros' not found`, or `'self' is immutable` at a

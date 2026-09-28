@@ -5,7 +5,7 @@ plus this fork's working TODO list.
 
 ## Project Status
 
-**SwiftQiskit is currently in an early experimental stage (v0.1).**
+**SwiftQiskit is currently in an early experimental stage (v0.2).**
 
 - Core quantum simulation is implemented
 - API is subject to change
@@ -53,10 +53,21 @@ any item here.
       tolerance needed, since every gate involved only ever permutes basis amplitudes.
 
 **P3 — new Core features**
-- [ ] A shared, UI-free-Core-preserving `SwiftQiskitViews` module for `CHSHChartView` and a
+- [x] A shared, UI-free-Core-preserving `SwiftQiskitViews` module for `CHSHChartView` and a
       single package-level `BlochVector`, replacing the hand-vendored copies in the playground
       and in `SwiftQiskitApp` (see "Proposed Core extensions — open systems" below for why this
-      is deliberately *not* a `SwiftQiskit`-namespaced type).
+      is deliberately *not* a `SwiftQiskit`-namespaced type). Done — a new `SwiftQiskitViews`
+      library product/target (`Sources/SwiftQiskitViews/`, depends only on `SwiftQiskit`),
+      tagged `0.2.0`. `BlochVector` gains `DensityMatrix`-driven initializers
+      (`init?(_:DensityMatrix)`, `init(_:DensityMatrix, qubit:)`) alongside the two
+      `StateVector` ones and the raw `init(x:y:z:)`; `CHSHChartView` moved verbatim.
+      `Playgrounds.playground/Sources/BlochVector.swift`/`CHSHChartView.swift` are deleted;
+      every page/`Sources/` file that used either type now `import SwiftQiskitViews`.
+      `SwiftQiskitApp`'s own `BlochVector.swift` is deleted too, retargeted onto the same
+      module, and its package dependency bumped to `0.2.0`. Tested in
+      `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`: pure-state, reduced,
+      `DensityMatrix`-driven, and raw-coordinate agreement checks; `CHSHChartViewTests.swift`:
+      instantiation smoke test).
 - [x] A permutation-aware fast path in `StateVector.apply(_:)` — the first concrete step under
       "Performance optimizations" below; every walk step, Shor's modular multiplication, and
       the error-correction syndrome fix are permutation matrices today paying for a full dense
@@ -106,10 +117,11 @@ any item here.
 Signed θ range (no Core dependency) → Toffoli tile (unblocked by `ccx`) → marginal/grouped
 `ResultsView` (unblocked by `marginalProbabilities`/`marginalCounts`) → Energy panel (unblocked
 by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked by
-`DensityMatrix`/`KrausChannel`/`NoiseModel`) → adopt the shared `SwiftQiskitViews` module once
-P3's item above lands.
+`DensityMatrix`/`KrausChannel`/`NoiseModel`) → adopt the shared `SwiftQiskitViews` module
+(done — see P3 item 1 above; the app's package dependency now pins `0.2.0` and its own
+`BlochVector.swift` is gone).
 
-## What Works (v0.1)
+## What Works (v0.2)
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and
@@ -128,6 +140,9 @@ P3's item above lands.
   user guide `PlaygroundDocs/08DIRACHELP.md`)
 - Bell State example
 - Unit tests for correctness
+- `SwiftQiskitViews`: a shared, UI-free-Core-preserving SwiftUI library (`BlochVector`,
+  `CHSHChartView`) used by both `Playgrounds.playground` and `SwiftQiskitApp`
+  (`Sources/SwiftQiskitViews/`, tested in `Tests/SwiftQiskitViewsTests/`)
 
 ## Roadmap
 
@@ -322,7 +337,8 @@ page 13 adds a Bloch-sphere live view:
 Four more pages, closing gaps pages 01–18 left open: every earlier page assumed a perfect,
 pure, noiseless state read out by direct amplitude access, and none of them simulated physics
 or interference-driven distributions. All four ship with **no `SwiftQiskit` changes**;
-page 19 adds one small additive initializer to the playground's shared `BlochVector`.
+page 19 adds one small additive initializer to the playground's shared `BlochVector`
+(now `SwiftQiskitViews.BlochVector` — see P3 item 1 above).
 
 - [x] Noise — page `19Noise`: the density matrix ρ = |ψ⟩⟨ψ| via the existing `Ket * Bra`
       outer product, a mixture vs. a superposition contrasted at identical Z-statistics,
@@ -361,9 +377,9 @@ page 19 adds one small additive initializer to the playground's shared `BlochVec
 
 Writing the SwiftQiskitApp book's Noise chapter (`Docs/Introduction/21-Noise.md`) surfaced a
 set of Core gaps that page `19Noise` and that chapter both route around today with page/app-
-level helpers. All but the package-level `BlochVector` are now implemented, turning
-open-systems support into a first-class Core feature (see the Roadmap's "Noise models"
-entry above):
+level helpers. All of these, including the package-level `BlochVector` (see P3 item 1 above),
+are now implemented, turning open-systems support into a first-class Core feature (see the
+Roadmap's "Noise models" entry above):
 
 - [x] `Matrix.trace` — sum of the diagonal entries; retires `19Noise`'s last page-level helper.
       Implemented in `Math/Matrix.swift`; tested in `MatrixArithmeticTests.swift`.
@@ -406,14 +422,16 @@ entry above):
       this same gap again independently (its `exactExpectation(_:_:)` re-derives the
       one-liner `(psi† * A * psi).real`) — see "Proposed Core extensions — tomography"
       below. Implemented in `Quantum/DensityMatrix.swift`; tested in `DensityMatrixTests.swift`.
-- [ ] A single package-level `BlochVector` (pure-state and `DensityMatrix`-driven initializers),
+- [x] A single package-level `BlochVector` (pure-state and `DensityMatrix`-driven initializers),
       replacing the three hand-vendored copies (`Playgrounds.playground/Sources/BlochVector.swift`,
-      `SwiftQiskitApp/BlochVector.swift`, and the app's `blochOf(_:Matrix)`) — do together with
-      `DensityMatrix`. The app's Chapter 22 findings add a fourth hand-vendored consumer (its
-      tomography live-view section, this time for a *reconstructed* rather than exact vector).
-      Deliberately not done alongside `DensityMatrix` above: a Core type named `BlochVector`
-      would collide with the playground's own (see `StateTomography`'s identical reasoning,
-      "Proposed Core extensions — tomography" below).
+      `SwiftQiskitApp/BlochVector.swift`, and the app's `blochOf(_:Matrix)`). The app's
+      Chapter 22 findings add a fourth hand-vendored consumer (its tomography live-view
+      section, this time for a *reconstructed* rather than exact vector) — also retargeted.
+      Deliberately not done alongside `DensityMatrix` above, and not folded into
+      `SwiftQiskit` itself: a Core type named `BlochVector` would collide with the
+      playground's own (see `StateTomography`'s identical reasoning, "Proposed Core
+      extensions — tomography" below) — done later, together with `CHSHChartView`, as the
+      standalone `SwiftQiskitViews` module (P3 item 1 above).
 - [x] Tests (Swift `Testing`, shape of `AdditionalGatesTests.swift`): trace preservation for all
       five channels at a few p/γ values; `DensityMatrix.purity`/`vonNeumannEntropy` on a known
       pure state, a maximally mixed state, and a partially mixed state with a hand-computed
@@ -458,8 +476,8 @@ real MLE/linear-inversion reconstruction are implemented now:
       tolerance`), and `clampToPhysical(_:)` (rescales an out-of-ball estimate back onto the
       unit sphere, `r -> r/|r|` — a named, tested version of page `20Tomography`'s rescaling
       idea, not a real MLE estimator). Returns `(x:, y:, z:)` tuples rather than a
-      package-level `BlochVector`, to avoid colliding with the playground's own copy of that
-      name. Implemented in `Quantum/StateTomography.swift`; tested (against a known pure
+      package-level `BlochVector`, to avoid colliding with `SwiftQiskitViews.BlochVector`
+      (P3 item 1 above). Implemented in `Quantum/StateTomography.swift`; tested (against a known pure
       state's exact Pauli expectations and a Bell pair's qubit-0 marginal, without needing
       `DensityMatrix`) in `StateTomographyTests.swift`. Retrofitting page `20Tomography` onto
       it is still open — see "SwiftQiskitApp follow-ups" below.
@@ -512,11 +530,10 @@ would need:
       and page 18's own one-parameter ansatz, and gradient descent converging to a known
       closed-form single-qubit ground energy. Retrofitting page `18VQE` onto it is still open —
       see "SwiftQiskitApp follow-ups" below.
-- Lower priority, purely presentational: promoting `CHSHChartView`
-  (`Playgrounds.playground/Sources/`) into a shared module the app can import, so the app can
-  draw the same E(θ)-with-optimizer-path chart the playground already has. See "SwiftQiskitApp
-  follow-ups" below — this doesn't unlock new computation, only a nicer view of computation the
-  app can already do once the items above land.
+- [x] Lower priority, purely presentational: promoting `CHSHChartView` into a shared module
+  the app can import, so the app can draw the same E(θ)-with-optimizer-path chart the
+  playground already has. Done as part of the `SwiftQiskitViews` module (P3 item 1 above) —
+  this didn't unlock new computation, only a nicer view of computation the app can already do.
 
 ## Proposed Core extensions — Hamiltonian simulation (from the app's Chapter 24 findings)
 
@@ -706,10 +723,11 @@ gathered here so they can be sequenced against the Core work above rather than t
 - [ ] An "Energy" panel (alongside the existing State Vector / Results / Display buttons) letting a
       user attach a fixed Hamiltonian and read its expectation value live — the `Hamiltonian`
       type and `measureExpectation` (above) are now implemented, so this is unblocked.
-- [ ] Promote `CHSHChartView` and a single package-level `BlochVector` out of
+- [x] Promote `CHSHChartView` and a single package-level `BlochVector` out of
       `Playgrounds.playground/Sources/` into a shared, importable module (a new SwiftUI library
-      target, e.g. `SwiftQiskitViews`, so Core itself stays UI-free) — replaces the hand-vendored
-      copies in the playground and in `SwiftQiskitApp`. Purely visual; can happen any time.
+      target, `SwiftQiskitViews`, so Core itself stays UI-free) — replaces the hand-vendored
+      copies in the playground and in `SwiftQiskitApp`. Done — see P3 item 1 above; the app now
+      `import SwiftQiskitViews` in place of its own `BlochVector.swift`.
 - [ ] Density-matrix / noise-channel views in the app — `DensityMatrix`/`KrausChannel`/
       `NoiseModel` (under "Proposed Core extensions — open systems" above) are now
       implemented, so this is unblocked.
@@ -748,9 +766,9 @@ picks this up next:
 6. Open systems track (independent of 2–5, only needs step 1): `DensityMatrix` →
    `KrausChannel` → `NoiseModel`/`runDensityMatrix`/`runTrajectories` are all **done** —
    `DensityMatrix` in `DensityMatrixTests.swift`, `KrausChannel` in `KrausChannelTests.swift`,
-   `NoiseModel`/`runDensityMatrix`/`runTrajectories` in `NoiseModelTests.swift`. Only the
-   package-level `BlochVector` remains open (deliberately deferred — see "Proposed Core
-   extensions — open systems" above).
+   `NoiseModel`/`runDensityMatrix`/`runTrajectories` in `NoiseModelTests.swift`. The
+   package-level `BlochVector` is also **done**, as part of the `SwiftQiskitViews` module
+   (P3 item 1 above) rather than folded into `SwiftQiskit` itself.
 7. Performance: the permutation-aware fast path in `apply` is **done** (`Matrix.permutationImage`,
    `Math/Matrix.swift`; tested in `PermutationFastPathTests.swift`); general optimizations
    (applying gates directly to amplitudes instead of full 2ⁿ×2ⁿ operation matrices) remain open.
@@ -860,5 +878,6 @@ Now that step 6's open-systems track has landed, its own retrofit is open too:
 3. The `rzz` tile — also after Core step 2. **Done.**
 4. The marginal/grouped `ResultsView` — after Core step 3.
 5. The Energy panel — Core step 4 is done, so this is unblocked.
-6. The shared views module (`CHSHChartView`/`BlochVector`) — any time; purely presentational.
+6. The shared views module (`CHSHChartView`/`BlochVector`) — purely presentational. **Done**
+   (`SwiftQiskitViews`, tag `0.2.0`; the app's package dependency and `import`s updated).
 7. Density-matrix / noise views — after Core step 6.
