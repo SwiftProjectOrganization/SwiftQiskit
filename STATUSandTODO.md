@@ -52,17 +52,27 @@ any item here.
       single package-level `BlochVector`, replacing the hand-vendored copies in the playground
       and in `SwiftQiskitApp` (see "Proposed Core extensions — open systems" below for why this
       is deliberately *not* a `SwiftQiskit`-namespaced type).
-- [ ] A permutation-aware fast path in `StateVector.apply(_:)` — the first concrete step under
+- [x] A permutation-aware fast path in `StateVector.apply(_:)` — the first concrete step under
       "Performance optimizations" below; every walk step, Shor's modular multiplication, and
       the error-correction syndrome fix are permutation matrices today paying for a full dense
-      multiply.
+      multiply. Done — `Matrix.permutationImage: [Int]?` (internal; `Math/Matrix.swift`)
+      detects an *exact* permutation (0/1 entries, bijective) via cheap comparisons that bail
+      out on the first entry ruling it out, so a genuinely dense gate (H, RX/RY/RZ, a
+      Trotter-step matrix) pays almost nothing extra; `apply(_:)` uses it for an O(2ⁿ) reindex
+      instead of the O(4ⁿ) dense multiply. Tested in `PermutationFastPathTests.swift`
+      (detection against `cx`/`ccx`/`mcx` truth tables, rejection of dense gates/non-square/
+      non-bijective 0-1 matrices, and bit-for-bit agreement between the fast and dense paths).
 - [ ] Commuting-term grouping for `Hamiltonian.trotterCircuit`/`QuantumCircuit.evolve` and for
       `measureExpectation(of: Hamiltonian, shots:)` (currently one `pauliRotation`/measurement
       per term, caller-ordered).
 - [ ] A real linear-inversion or maximum-likelihood state tomography reconstruction, beyond
       `StateTomography`'s per-axis estimate + physicality clamp.
-- [ ] `15CHSH`: a genuine multi-angle search over all four CHSH settings confirming Tsirelson's
-      bound, rather than today's single-setting sweep.
+- [x] `15CHSH`: a genuine multi-angle search over all four CHSH settings confirming Tsirelson's
+      bound, rather than today's single-setting sweep. Done — reuses page 18's
+      `ParameterShift`/`GradientDescent` rather than a hand-rolled grid search: `E(x,y) =
+      cos(x−y)` for this Bell state, so gradient ascent on S is exact, and three fixed generic
+      starting points all converge to 2√2 (verified against a hand-derived analytic gradient
+      first, which caught a sign error before trusting the page code).
 
 **P4 — longer horizon**
 - [ ] General performance work: apply gates directly to state-vector amplitudes instead of
@@ -128,9 +138,10 @@ P3's item above lands.
       `expectationZ0`/`energy`-style wrapper names, so it's cheap and no longer marginal. Also
       listed under "Proposed Core extensions — open systems" and "— variational" below.
       Implemented in `Quantum/Dirac.swift`; tested in `DiracNotationTests.swift`.
-- [ ] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
+- [x] Page `15CHSH`: extend the Tsirelson-bound check from a sweep over one setting (b, with
       a, a′ fixed) to a genuine multi-angle search over all four settings, if a true
-      confirmation of the bound (rather than a consistency check) is wanted.
+      confirmation of the bound (rather than a consistency check) is wanted. Done — see the
+      P3 checklist above for the implementation.
 - [x] `QuantumCircuit.measure(shots:)` runs the circuit once and samples the resulting
       `probabilities` `shots` times, instead of calling `runAndMeasure()` (which replays every
       recorded operation via `run()`) once per shot — only the final random draw differs shot
@@ -139,7 +150,9 @@ P3's item above lands.
       Tested in `MeasurementTests.swift`, including a regression check against the old
       replay-per-shot behavior. Pages 12 and 13's own local samplers (added to route around the
       old cost) are kept as see-through stand-ins and updated to say so.
-- [ ] Performance optimizations
+- [ ] Performance optimizations — first slice done: a permutation-aware fast path in
+      `StateVector.apply(_:)` (see "Proposed Core extensions — open systems" below); applying
+      gates directly to amplitudes instead of building full 2ⁿ×2ⁿ operation matrices remains open.
 - [ ] Stable public API (v1.0)
 
 ## Bloch sphere playground pages (this fork)
@@ -618,12 +631,11 @@ work:
       key including zero-probability ones) and `Quantum/SimulationResult.swift`
       (`marginalCounts`, observed keys only); tested in `ReadoutTests.swift`. The page
       retrofits are still open — see "SwiftQiskitApp follow-ups" below.
-- [ ] A permutation-aware fast path in `StateVector.apply(_:)` — a permutation matrix (every walk
+- [x] A permutation-aware fast path in `StateVector.apply(_:)` — a permutation matrix (every walk
       step, Shor's modular multiplication, the error-correction syndrome fix) needs only one
       multiply-free array reindex per amplitude rather than a full dense matrix-vector multiply.
-      Doesn't block anything today (existing circuits are small), but is the natural home for
-      future work under the Roadmap's "Performance optimizations" entry — flagging the connection
-      here since permutation-shaped operators are the easy, easy-to-verify case to start with.
+      Done — see the Roadmap's "Performance optimizations" entry above for the implementation;
+      it turned out to be the natural first slice of that entry, exactly as flagged here.
 - [x] Tests: `increment`/`decrement` against modular arithmetic on a small register — done in
       `RegisterArithmeticTests.swift`, above. (`Matrix.permutation`/`isUnitary` landed with those
       helpers themselves, `ToffoliGate`/`ccx` in `ToffoliTests.swift`, and
@@ -701,7 +713,9 @@ picks this up next:
    `NoiseModel`/`runDensityMatrix`/`runTrajectories` in `NoiseModelTests.swift`. Only the
    package-level `BlochVector` remains open (deliberately deferred — see "Proposed Core
    extensions — open systems" above).
-7. Performance: the permutation-aware fast path in `apply`, then general optimizations.
+7. Performance: the permutation-aware fast path in `apply` is **done** (`Matrix.permutationImage`,
+   `Math/Matrix.swift`; tested in `PermutationFastPathTests.swift`); general optimizations
+   (applying gates directly to amplitudes instead of full 2ⁿ×2ⁿ operation matrices) remain open.
 
 Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` onto
 `Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`

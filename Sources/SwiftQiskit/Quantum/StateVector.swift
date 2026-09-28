@@ -98,13 +98,21 @@ public struct StateVector: Equatable {
 // MARK: - Applying Operators
 public extension StateVector {
 
-    /// Apply a matrix operator to the state (|ψ'⟩ = U |ψ⟩)
+    /// Apply a matrix operator to the state (|ψ'⟩ = U |ψ⟩). A permutation-shaped matrix
+    /// (`cx`/`ccx`/`mcx`, or anything built from `Matrix.permutation(size:image:)`) takes an
+    /// O(2ⁿ) reindex via `Matrix.permutationImage` instead of the full O(4ⁿ) dense multiply
+    /// every other matrix still uses.
     mutating func apply(_ matrix: Matrix) {
         precondition(matrix.cols == amplitudes.count,
                      "Matrix dimension must match state vector dimension")
 
-        let newAmps = matrix.multiply(by: amplitudes)
-        amplitudes = newAmps
+        if let image = matrix.permutationImage {
+            var newAmps = Array(repeating: Complex.zero, count: amplitudes.count)
+            for col in amplitudes.indices { newAmps[image[col]] = amplitudes[col] }
+            amplitudes = newAmps
+        } else {
+            amplitudes = matrix.multiply(by: amplitudes)
+        }
         normalize()
     }
 }

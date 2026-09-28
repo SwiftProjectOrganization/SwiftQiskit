@@ -209,6 +209,31 @@ print("max |S| over b (a = 0, a′ = π/2 fixed): \(fmt(maxSweptS))   (Tsirelson
 // Expected: 2.8284 again — this slice's ceiling and the hand-picked
 // angles from Section 4 agree; nothing beats 2√2.
 
+// A one-setting sweep with the other three angles pinned is a consistency check, not a
+// genuine confirmation. E(x,y) = cos(x−y) here, so each of S's four partial derivatives is a
+// single cosine's derivative in one variable — exactly the shape `ParameterShift.gradient`
+// (page 18) is *exact* for, not approximate — so a real search over all four settings needs
+// no hand-derived calculus, just gradient ascent on S (via `GradientDescent.minimize` on
+// −S) from a few generic starting points.
+func chshS(_ params: [Double]) -> Double {
+    let (x, xp, y, yp) = (params[0], params[1], params[2], params[3])
+    return exactCorrelator(x, y, state: bellState) - exactCorrelator(x, yp, state: bellState)
+        + exactCorrelator(xp, y, state: bellState) + exactCorrelator(xp, yp, state: bellState)
+}
+
+var bestS = 0.0
+for start in [[0.1, 0.2, 0.3, 0.4], [1.0, -1.0, 2.0, -2.0], [0.5, 1.5, -0.5, 2.5]] {
+    let result = GradientDescent.minimize(
+        initial: start, learningRate: 0.3, maxIterations: 200, tolerance: 1e-12,
+        cost: { params in -chshS(params) }
+    )
+    bestS = max(bestS, -result.value)
+}
+print("\nmulti-angle search (3 starting points, all four settings free): max |S| = \(fmt(bestS))")
+print("Tsirelson's bound 2√2 = \(fmt(2 * sqrt(2)))")
+// Expected: 2.8284, matching 2√2 exactly, from every one of the three starting points — a
+// genuine search of the whole 4-angle space, not a sweep with three settings pinned.
+
 // ============================================================
 // Section 6 — the angle sweep, and the gap made visible
 // ============================================================

@@ -236,6 +236,48 @@ public extension Matrix {
     }
 }
 
+// MARK: - Permutation detection
+
+extension Matrix {
+
+    /// If this matrix is *exactly* a permutation matrix (every entry exactly `.zero` or
+    /// `.one`, each row and column holding exactly one `.one`), the column→row mapping —
+    /// the same `image` `permutation(size:image:)` above is built from. `nil` for anything
+    /// else (non-square, a non-0/1 entry, or a 0/1 matrix that isn't a bijection), including
+    /// an "almost" permutation with floating-point rounding — every permutation-shaped gate
+    /// this library actually builds (`permutation(size:image:)` and everything built from
+    /// it: `CNOTGate`, `ToffoliGate`, `MultiControlledXGate`) uses exact `.zero`/`.one`
+    /// entries, never a rounded unitary, so this is the same "exact, not approximate"
+    /// standard `Matrix.==` already holds permutation matrices to elsewhere.
+    ///
+    /// Internal: a private implementation detail behind `StateVector.apply(_:)`'s fast
+    /// path, not something a caller needs directly. Detection is O(rows·cols) comparisons
+    /// (no arithmetic) and bails out on the first entry that rules out a permutation, so
+    /// it's cheap for the common dense (non-permutation) gate — H, RX/RY/RZ, a Trotter-step
+    /// matrix — which fails on its very first non-0/1 entry.
+    var permutationImage: [Int]? {
+        guard rows == cols else { return nil }
+        var image = Array(repeating: -1, count: rows)
+        var seenRows = Array(repeating: false, count: rows)
+        for col in 0..<cols {
+            var foundRow: Int?
+            for row in 0..<rows {
+                let entry = self[row, col]
+                if entry == .one {
+                    guard foundRow == nil else { return nil }
+                    foundRow = row
+                } else if entry != .zero {
+                    return nil
+                }
+            }
+            guard let row = foundRow, !seenRows[row] else { return nil }
+            seenRows[row] = true
+            image[col] = row
+        }
+        return image
+    }
+}
+
 // MARK: - Matrix Exponential
 
 public extension Matrix {

@@ -50,7 +50,12 @@ entanglement is *necessary* for the violation, not incidental. A fine sweep over
 second setting (b, with b′ = b + π/2, holding a = 0 and a′ = π/2 fixed) finds this slice's
 ceiling is exactly 2√2 — consistent with Tsirelson's bound (quantum mechanics beats the
 classical bound but doesn't reach the algebraic maximum of 4), though a single-slice sweep
-isn't itself a full proof of that bound.
+isn't itself a full proof of that bound. A genuine search over *all four* settings follows:
+`E(x,y) = cos(x−y)` for this Bell state, so each of S's four partial derivatives is a single
+cosine's derivative in one variable — exactly the shape `ParameterShift.gradient` (page 18)
+is *exact* for — so gradient ascent on S via `GradientDescent.minimize`, from three fixed,
+generic starting points (none symmetric — the one degenerate all-equal-angles start sticks at
+the classical bound S = 2 instead), reaches 2√2 from every one of them.
 
 **Section 6 — the sweep, plotted.** E(θ) = ⟨A(0)⊗A(θ)⟩ as an exact cos θ curve, 500-shot
 samples, and the Section 1 classical line, all on one chart — the visible gap between the
@@ -92,6 +97,9 @@ sampled S ≈ 2.83   (statistical, ±~0.05)
 
 product state |+⟩⊗|+⟩: S = 1.4142
 max |S| over b (a = 0, a′ = π/2 fixed): 2.8284   (Tsirelson: 2.8284)
+
+multi-angle search (3 starting points, all four settings free): max |S| = 2.8284
+Tsirelson's bound 2√2 = 2.8284
 
 θ        quantum cos θ   classical line
 0.0000    1.0000          1.0000
