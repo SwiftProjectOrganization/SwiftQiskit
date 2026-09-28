@@ -70,6 +70,10 @@ public enum GradientDescent {
         public let value: Double
         /// `cost` evaluated at every visited parameter vector, starting with `initial`.
         public let history: [Double]
+        /// Every visited parameter vector, starting with `initial` — `parameterHistory[i]`
+        /// is the point `history[i]` was evaluated at, so zipping the two gives the full
+        /// optimization trajectory (e.g. for a landscape/descent-path chart).
+        public let parameterHistory: [[Double]]
         /// Number of gradient steps actually taken.
         public let iterations: Int
         /// Whether the gradient norm dropped below `tolerance` before `maxIterations`.
@@ -96,6 +100,7 @@ public enum GradientDescent {
 
         var parameters = initial
         var history: [Double] = [cost(parameters)]
+        var parameterHistory: [[Double]] = [parameters]
         var iterations = 0
         var converged = false
 
@@ -110,6 +115,7 @@ public enum GradientDescent {
                 parameters[k] -= learningRate * g[k]
             }
             history.append(cost(parameters))
+            parameterHistory.append(parameters)
             iterations += 1
         }
 
@@ -117,6 +123,7 @@ public enum GradientDescent {
             parameters: parameters,
             value: history.last!,
             history: history,
+            parameterHistory: parameterHistory,
             iterations: iterations,
             converged: converged
         )

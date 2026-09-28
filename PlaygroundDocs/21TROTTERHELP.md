@@ -19,9 +19,26 @@ checked against Core's *exact* `RXGate` before being trusted as ground truth for
 `cx(0,1); rz(θ,1); cx(0,1)`, checked against `expm()` directly. Core's `RZGate` is exactly
 exp(−iθZ/2), so this holds with no sign correction.
 
-**Section 3 — Trotter error scaling.** For H = −J·Z⊗Z − h·(X⊗I + I⊗X): first-order error
-roughly halves each time the step count n doubles (O(1/n)); second-order (Suzuki) error
-roughly quarters (O(1/n²)) at the same gate cost per step.
+**Section 3 — Trotter error scaling.** For H = −J·Z⊗Z − h·(X⊗I + I⊗X), now a `Hamiltonian` of
+three `PauliString` terms rather than a hand-assembled `Matrix`, and each step a circuit built
+with `QuantumCircuit.evolve(_:time:steps:order:)` rather than page-level gate arithmetic: first-
+order error roughly halves each time the step count n doubles (O(1/n)); second-order (Suzuki)
+error roughly quarters (O(1/n²)) at the same gate cost per step. (Numerically identical to the
+page's original hand-rolled version — `XI` and `IX` commute, so `evolve`'s generic per-term
+Suzuki split reduces algebraically to the same 2-group split the old code used directly.)
+
+**Aside — layer order doesn't matter here.** Swapping a first-order step's internal layer
+order (the X layers applied before the ZZ layer instead of after) gives a genuinely different
+step unitary — yet its error against the exact evolution matches the original order's error to
+floating-point precision, at every step count. This isn't a coincidence: Z⊗Z, X⊗I, and I⊗X are
+all real and symmetric, so every `expm`/gate-identity factor built from them is its own
+transpose, which makes reversing a step's layer order equivalent to transposing it; the exact
+e^(−iHt) is symmetric too, so the reversed step's error matrix is exactly the transpose of the
+original's, and `maxDiff` (entrywise magnitude) can't tell a matrix from its transpose apart.
+The second-order (Strang) step is already a palindrome (half-ZZ, X, half-ZZ), so reversing its
+layer order gives back the identical step, not just an identical error curve. The symmetric-
+generator argument is specific to this page's real Hamiltonian — a term built from Y would
+break it.
 
 **Section 4 — the observable-level view.** ⟨Z₀⟩(t) tracked at n=2 (visibly off) vs. n=8 (much
 closer) against the exact curve — the error shows up in a measurable quantity, not just an
@@ -85,23 +102,31 @@ n=2 (orange dots, visibly off the curve) and n=8 (green dots, tracking it closel
 ```swift
 import SwiftQiskit
 
-// exp(-iθ·Z⊗Z/2) via the exact gate identity — no expm needed at runtime.
-func zzRotation(_ theta: Double) -> Matrix {
-    let I2 = Matrix.identity(size: 2)
-    let cx = CNOTGate.matrix(qubits: 2, control: 0, target: 1)
-    let rz1 = I2.tensor(RZGate.matrix(theta: theta))
-    return cx * rz1 * cx
-}
+// H = -J·Z⊗Z - h·(X⊗I + I⊗X) as a Hamiltonian of three Pauli terms —
+// no hand-assembled Matrix needed.
+let J = 1.0, h = 0.5
+let Hising = Hamiltonian([
+    PauliString("ZZ", coefficient: -J),
+    PauliString("XI", coefficient: -h),
+    PauliString("IX", coefficient: -h),
+])
 
-// One first-order Trotter step for H = -J·Z⊗Z - h·(X⊗I + I⊗X):
-func trotterStep(J: Double, h: Double, dt: Double) -> Matrix {
-    let I2 = Matrix.identity(size: 2)
-    let uZZ = zzRotation(-2 * J * dt)
-    let rx = RXGate.matrix(theta: -2 * h * dt)
-    return (rx.tensor(I2)) * (I2.tensor(rx)) * uZZ
-    // NOTE: apply n times for evolution over time n·dt.
-}
+// A circuit implementing exp(-i·Hising·t), Trotterized into `steps` first-order
+// (order: 1) or second-order/Suzuki (order: 2) steps:
+let circuit = Hising.trotterCircuit(time: 1.0, steps: 8, order: 1)
+let evolved = circuit.run()
+// Equivalently, append the same steps onto a circuit you've already
+// prepared some other way: `QuantumCircuit.evolve(_:time:steps:order:)`.
 ```
+
+The page itself needs the Trotter step's dense *matrix* (to grade it against
+`Matrix.expm()`), which `QuantumCircuit.run()` alone doesn't give — it always starts from
+|0…0⟩. It reconstructs the matrix column by column instead, running the same circuit once
+per computational basis input (see `matrixFromCircuit` in the page). The exact
+`exp(-iθ·Z⊗Z/2) = cx(0,1); rz(θ,1); cx(0,1)` identity from Section 2 still appears as
+`zzViaGates`, kept for its own derivation (Section 5's commuting-only check reuses it) —
+`pauliRotation`/`evolve` above build the equivalent gate sequence internally, for any Pauli
+string rather than just `ZZ`.
 
 ## Troubleshooting
 

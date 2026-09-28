@@ -25,28 +25,26 @@ import SwiftQiskit
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
 // ============================================================
-// Section 1 — the Hamiltonian, built with Matrix's + and scalar *
+// Section 1 — the Hamiltonian, built from PauliString/Hamiltonian
 // ============================================================
-// The six Pauli terms are combined with `Matrix`'s `+` and scalar
-// `*` (page 12's QFT† idiom and page 15's tilted observable predate
-// both operators, hence the entrywise workaround there), with the
-// Pauli matrices tensored via Core's `⊗`.
+// The six Pauli terms are each a `PauliString` (a label plus a real
+// coefficient), summed into a `Hamiltonian` — replacing the earlier
+// entrywise `Matrix`-`+`/scalar-`*` accumulation this page used before
+// that type landed (page 12's QFT† idiom and page 15's tilted
+// observable still use the entrywise form, since they predate it).
 
 let g: [Double] = [-0.4804, 0.3435, -0.4347, 0.5716, 0.0910, 0.0910]
 let nuclearRepulsion = 0.7055
 
-let I2 = Matrix.identity(size: 2)
-let Z = PauliZGate.matrix
-let X = PauliXGate.matrix
-let Y = PauliYGate.matrix
-
-let terms: [(coefficient: Double, matrix: Matrix)] = [
-    (g[0], I2 ⊗ I2), (g[1], Z ⊗ I2), (g[2], I2 ⊗ Z),
-    (g[3], Z ⊗ Z), (g[4], Y ⊗ Y), (g[5], X ⊗ X)
-]
-
-let H = terms.reduce(Matrix(rows: 4, cols: 4)) { $0 + $1.coefficient * $1.matrix }
-print("Hamiltonian assembled from \(terms.count) Pauli terms.")
+let H = Hamiltonian([
+    PauliString("II", coefficient: g[0]),
+    PauliString("ZI", coefficient: g[1]),
+    PauliString("IZ", coefficient: g[2]),
+    PauliString("ZZ", coefficient: g[3]),
+    PauliString("YY", coefficient: g[4]),
+    PauliString("XX", coefficient: g[5]),
+])
+print("Hamiltonian assembled from \(H.terms.count) Pauli terms.")
 
 // ============================================================
 // Section 2 — a one-parameter ansatz
@@ -69,13 +67,15 @@ print("ansatz(0.9): |00⟩=\(probe[0])  |01⟩=\(probe[1])  |10⟩=\(probe[2])  
 // ansatz never leaves the single-excitation subspace, by construction.
 
 // ============================================================
-// Section 3 — the energy, via the Dirac expectation value
+// Section 3 — the energy, via Hamiltonian.expectation
 // ============================================================
-// E(θ) = ⟨ψ(θ)|H|ψ(θ)⟩, exactly page 08's `psi† * H * psi` idiom.
+// E(θ) = ⟨ψ(θ)|H|ψ(θ)⟩ via `Hamiltonian.expectation(_:)` — internally
+// the same `psi† * H * psi` idiom page 08 introduced (see
+// `StateVector.expectation`/`PauliString.expectation`), just summed
+// term by term instead of against one dense matrix.
 
 func energy(_ theta: Double) -> Double {
-    let psi = ansatz(theta)
-    return (psi† * H * psi).real
+    H.expectation(ansatz(theta))
 }
 
 print("\nθ        E(θ)")
@@ -92,7 +92,7 @@ for theta in [0.0, Double.pi / 2, Double.pi, 3 * Double.pi / 2] {
 // {|01⟩, |10⟩}, so that block's eigenvalues are the exact answer —
 // no eigensolver needed, just the quadratic formula.
 
-let a = H[1, 1].real, b = H[1, 2].real, d = H[2, 2].real
+let a = H.matrix[1, 1].real, b = H.matrix[1, 2].real, d = H.matrix[2, 2].real
 let exactElectronic = (a + d) / 2 - sqrt(pow((a - d) / 2, 2) + b * b)
 print("\nexact electronic ground energy = \(fmt(exactElectronic)) Ha")
 print("total with nuclear repulsion   = \(fmt(exactElectronic + nuclearRepulsion)) Ha")
@@ -103,11 +103,16 @@ print("total with nuclear repulsion   = \(fmt(exactElectronic + nuclearRepulsion
 // ============================================================
 // dE/dθ = [E(θ+π/2) − E(θ−π/2)] / 2 is not an approximation — for a
 // gate whose only θ-dependence is a single Pauli rotation, this
-// identity is exact. Pinned here against an ordinary finite
-// difference before trusting it to drive an optimizer.
+// identity is exact. Now via `ParameterShift.gradient(at:_:)` instead
+// of hand-deriving the shift formula (the `Hamiltonian`/`ansatz`
+// convenience overload expects a closure returning `QuantumCircuit`;
+// this page's own `ansatz` already returns the run `StateVector`, so
+// the plain cost-closure form fits it directly); pinned here against
+// an ordinary finite difference before trusting it to drive an
+// optimizer.
 
 func parameterShiftGradient(_ theta: Double) -> Double {
-    (energy(theta + Double.pi / 2) - energy(theta - Double.pi / 2)) / 2
+    ParameterShift.gradient(at: [theta]) { params in energy(params[0]) }[0]
 }
 
 func finiteDifferenceGradient(_ theta: Double, epsilon: Double = 1e-6) -> Double {
@@ -124,23 +129,34 @@ for theta in [0.0, 0.4, 1.0, 2.5] {
 // Section 6 — gradient descent to the ground state
 // ============================================================
 // Plain gradient descent from θ = 0, fixed learning rate — no line
-// search, no momentum.
+// search, no momentum — now via `GradientDescent.minimize`.
+// `tolerance: 0` keeps it running the full 40 steps rather than
+// stopping early once the (exact) gradient reaches ~0, matching this
+// page's original unconditional loop.
 
-var theta = 0.0
-var trajectory: [(theta: Double, energy: Double)] = [(theta, energy(theta))]
-let learningRate = 1.0
+let descent = GradientDescent.minimize(
+    initial: [0.0],
+    learningRate: 1.0,
+    maxIterations: 40,
+    tolerance: 0,
+    cost: { params in energy(params[0]) },
+    gradient: { params in [parameterShiftGradient(params[0])] }
+)
+
+let trajectory = zip(descent.parameterHistory, descent.history)
+    .map { (theta: $0[0], energy: $1) }
 
 print("\nstep   θ           E(θ)")
-for step in 1...40 {
-    let grad = parameterShiftGradient(theta)
-    theta -= learningRate * grad
-    trajectory.append((theta, energy(theta)))
+for step in 1...descent.iterations {
+    let theta = descent.parameterHistory[step][0]
+    let e = descent.history[step]
     if step == 1 || step % 10 == 0 {
-        print("\(step)      \(fmt(theta))   \(fmt(energy(theta)))")
+        print("\(step)      \(fmt(theta))   \(fmt(e))")
     }
 }
-let converged = energy(theta)
-print("\nconverged: θ = \(fmt(theta)), E = \(fmt(converged))")
+let finalTheta = descent.parameters[0]
+let converged = descent.value
+print("\nconverged: θ = \(fmt(finalTheta)), E = \(fmt(converged))")
 print("error vs. exact = \(String(format: "%.2e", converged - exactElectronic))")
 // Expected: converges by ~step 10 to θ ≈ -0.22974, E = -1.851199,
 // error 0.00e+00 against Section 4's closed form.

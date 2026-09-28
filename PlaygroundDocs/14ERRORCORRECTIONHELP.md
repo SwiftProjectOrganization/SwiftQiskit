@@ -52,17 +52,25 @@ data qubit, not a per-qubit gate) — `cx(0,2)`, `cx(0,1)` (decode).
 | 11 | q1 flipped |
 | 01 | q2 flipped |
 
-**Why the correction is a hand-built matrix.** "Flip q0 if the syndrome is 10" is a
-Toffoli-with-mixed-controls (control on q3 = 1, q4 = 0, target q0) — `SwiftQiskit` has
-no Toffoli gate directly (one could be built from `h`/`t`/`tdg`/`cx` — the standard
-Clifford+T decomposition page 11's "Using the algorithm in your own code" section already
-alludes to for a related multi-controlled gate — but that runs several gates deep, once
-per accused qubit).
-Following pages 11–12's precedent, the whole three-case correction is one 32×32 permutation
-matrix instead, built by decoding each basis index's syndrome bits and computing which
-index it maps to, then applied with `apply(_:)`. (A more resource-frugal version of this
-code skips the two syndrome ancillas entirely, extracting the syndrome from the data
-qubits' own parities instead — out of scope here, but worth knowing if you extend this
+**Why the correction is still one matrix.** "Flip q0 if the syndrome is 10" is a
+Toffoli-with-mixed-controls (control on q3 = 1, q4 = 0, target q0) — now built from
+`ToffoliGate.matrix(qubits:control1:control2:target:)`, conjugated by
+`MultiControlledXGate.matrix(qubits:controls:target:)` with an empty `controls` array (an
+unconditional flip, i.e. `x` embedded on the full register) to turn the control-on-0 into a
+control-on-1: `xOnQ4 * ToffoliGate.matrix(qubits: 5, control1: 3, control2: 4, target: 0) *
+xOnQ4`, one such branch per accused qubit, multiplied together. The three branches act on
+disjoint targets (q0, q1, q2) and never *permanently* touch the shared controls (q3, q4), so
+they commute — the multiplication order doesn't matter. This replaces the page's original
+hand-rolled `Matrix.permutation` closure (written before `ToffoliGate` existed), verified
+identical to it entry by entry before the swap.
+
+The whole three-case correction is still built as one combined `Matrix`, applied with a single
+`apply(_:)`, rather than as separate `x`/`ccx` circuit calls — Section 6's `NoiseModel` counts
+`apply(_:)` as one multi-qubit operation, so splitting the correction into its own gate calls
+would introduce new single-qubit `x` gates a `singleQubitGate`-only noise model would
+(incorrectly) treat as noisy points the original design never had. (A more resource-frugal
+version of this code skips the two syndrome ancillas entirely, extracting the syndrome from the
+data qubits' own parities instead — out of scope here, but worth knowing if you extend this
 page.)
 
 ## Why the correction works on *every* error strength

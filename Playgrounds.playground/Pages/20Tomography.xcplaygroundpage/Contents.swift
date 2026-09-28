@@ -64,7 +64,7 @@ func tiltedCircuit() -> QuantumCircuit {
 func exactExpectation(_ psi: Ket, _ A: Matrix) -> Double { (psi† * A * psi).real }
 
 func estimate(_ basis: PauliBasis, circuit: QuantumCircuit, shots: Int) -> Double {
-    circuit.measure(shots: shots, basis: [basis]).parityExpectation(qubits: [0])
+    StateTomography.estimate(qubit: 0, result: circuit.measure(shots: shots, basis: [basis]))
 }
 
 let tilted = tiltedCircuit()
@@ -106,10 +106,8 @@ for n in [100, 1_000, 10_000, 100_000] {
 // state's frequency shrinks toward zero with N.
 
 func reconstructedMagnitude(_ circuit: QuantumCircuit, shots: Int) -> Double {
-    let ex = estimate(.x, circuit: circuit, shots: shots)
-    let ey = estimate(.y, circuit: circuit, shots: shots)
-    let ez = estimate(.z, circuit: circuit, shots: shots)
-    return (ex * ex + ey * ey + ez * ez).squareRoot()
+    let v = StateTomography.estimateBlochVector(of: circuit, qubit: 0, shots: shots)
+    return (v.x * v.x + v.y * v.y + v.z * v.z).squareRoot()
 }
 func unphysicalFrequency(_ circuit: QuantumCircuit, shots: Int, trials: Int) -> Double {
     let hits = (0..<trials).filter { _ in reconstructedMagnitude(circuit, shots: shots) > 1.0 }.count
@@ -180,7 +178,10 @@ func estimateQubit0(_ basis: PauliBasis, shots: Int) -> Double {
     // Qubit 1's basis is arbitrary here — qubit 0's marginal is
     // maximally mixed, so it reads the same regardless of what basis
     // qubit 1 is measured in.
-    bellCircuit.measure(shots: shots, basis: [basis, .z]).parityExpectation(qubits: [0])
+    StateTomography.estimate(
+        qubit: 0,
+        result: bellCircuit.measure(shots: shots, basis: [basis, .z])
+    )
 }
 
 let bx = estimateQubit0(.x, shots: 50_000)

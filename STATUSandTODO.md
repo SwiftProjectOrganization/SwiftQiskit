@@ -15,6 +15,71 @@ plus this fork's working TODO list.
 
 The project is actively evolving, and major features are planned.
 
+## Prioritized TODO (2026-09-27)
+
+A short, prioritized list of what's actually left, pulled from the detailed sections below
+(each of which stays as history/design-rationale). Check those sections for the "why" behind
+any item here.
+
+**P1 — doc drift (quick, do first)**
+- [x] Fix stale "no Toffoli" claims now that `ToffoliGate`/`ccx` exist: the `14ErrorCorrection`
+      page comment and `CLAUDE.md`'s page-14 entry (both updated to note the retrofit is open
+      rather than impossible); `PlaygroundDocs/14ERRORCORRECTIONHELP.md`'s explanation likewise.
+- [x] `PlaygroundDocs/21TROTTERHELP.md`: add the callout noted under "Proposed Core extensions
+      — Hamiltonian simulation" below (reversing a Trotter step's layer order gives an
+      identical error curve, to floating-point precision, at every step count).
+
+**P2 — page retrofits onto Core helpers that have already landed**
+(see "Suggested implementation sequence" below for the full checklist this summarizes)
+- [x] `18VQE`: `Hamiltonian`/`PauliString` for the H₂ Hamiltonian, `Hamiltonian.expectation(_:)`
+      for the energy, `ParameterShift.gradient`/`GradientDescent.minimize` for the optimizer loop.
+- [x] `21Trotter`: page-level `trotterUnitary` → `Hamiltonian` + `trotterCircuit`/`evolve`.
+- [x] `20Tomography`: page-level `estimate`/`estimateQubit0` → `StateTomography.estimate`/
+      `estimateBlochVector` (the mixed-ensemble section's per-shot re-preparation still needs
+      its own loop).
+- [x] `11GroverExample`, `22Walk`: hand-rolled marginal loop-and-sum →
+      `StateVector.marginalProbabilities`/`SimulationResult.marginalCounts` (only `22Walk` had
+      one to retrofit; see the detailed checklist below).
+- [x] `12ShorExample`, `14ErrorCorrection`: hand-built permutations that are really
+      controlled-controlled flips → `ToffoliGate`/`ccx` (only `14ErrorCorrection` had one to
+      retrofit — see the detailed checklist below).
+- [ ] (Low priority) `22Walk`: express `buildShift` via `increment`/`decrement` instead of a
+      hand-built permutation — the page's current version already reads clearly for a fixed
+      4-site cycle, so this is cosmetic.
+
+**P3 — new Core features**
+- [ ] A shared, UI-free-Core-preserving `SwiftQiskitViews` module for `CHSHChartView` and a
+      single package-level `BlochVector`, replacing the hand-vendored copies in the playground
+      and in `SwiftQiskitApp` (see "Proposed Core extensions — open systems" below for why this
+      is deliberately *not* a `SwiftQiskit`-namespaced type).
+- [ ] A permutation-aware fast path in `StateVector.apply(_:)` — the first concrete step under
+      "Performance optimizations" below; every walk step, Shor's modular multiplication, and
+      the error-correction syndrome fix are permutation matrices today paying for a full dense
+      multiply.
+- [ ] Commuting-term grouping for `Hamiltonian.trotterCircuit`/`QuantumCircuit.evolve` and for
+      `measureExpectation(of: Hamiltonian, shots:)` (currently one `pauliRotation`/measurement
+      per term, caller-ordered).
+- [ ] A real linear-inversion or maximum-likelihood state tomography reconstruction, beyond
+      `StateTomography`'s per-axis estimate + physicality clamp.
+- [ ] `15CHSH`: a genuine multi-angle search over all four CHSH settings confirming Tsirelson's
+      bound, rather than today's single-setting sweep.
+
+**P4 — longer horizon**
+- [ ] General performance work: apply gates directly to state-vector amplitudes instead of
+      building full 2ⁿ×2ⁿ operation matrices (the permutation fast path above is the first slice
+      of this).
+- [ ] Mid-circuit / partial measurement — pages `13Teleportation` and `14ErrorCorrection` both
+      route around its absence today (deferred measurement, hand-built permutation corrections).
+- [ ] Stable public API (v1.0) — a deliberate breaking-change review pass, keeping `API.md` in
+      sync as it happens rather than after.
+
+**SwiftQiskitApp (separate repo — tracked here only for sequencing against Core work above)**
+Signed θ range (no Core dependency) → Toffoli tile (unblocked by `ccx`) → marginal/grouped
+`ResultsView` (unblocked by `marginalProbabilities`/`marginalCounts`) → Energy panel (unblocked
+by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked by
+`DensityMatrix`/`KrausChannel`/`NoiseModel`) → adopt the shared `SwiftQiskitViews` module once
+P3's item above lands.
+
 ## What Works (v0.1)
 
 - QuantumCircuit abstraction
@@ -480,11 +545,15 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       terms into commuting layers before emitting `pauliRotation` calls, so a caller doesn't have
       to hand-order `terms` to get the cheapest split. Not needed for any current page; flagged
       as a follow-up on the item above rather than blocking it.
-- [ ] Doc TODO: a one-line callout in `PlaygroundDocs/21TROTTERHELP.md` noting that reversing a
+- [x] Doc TODO: a one-line callout in `PlaygroundDocs/21TROTTERHELP.md` noting that reversing a
       Trotter step's internal layer order (X-layer before ZZ instead of after) produces an error
       curve identical to the original order to floating-point precision, at every step count —
       a mildly surprising fact about product-formula splitting the current guide doesn't mention
-      either way. Pick this up the next time that file is touched.
+      either way. Done — added as an "Aside" after Section 3, with the transpose argument for
+      *why* (Z⊗Z/X⊗I/I⊗X are real symmetric, so reversing a step's layers is transposing it, and
+      the exact e^(−iHt) is symmetric too), numerically confirmed at n = 1…32 (order-1 step
+      matrices genuinely differ, ~0.06 max entry, yet their errors match to ~1e-16) and the
+      order-2 case noted as a trivial palindrome rather than a distinct instance.
 
 ## Proposed Core extensions — permutations, Toffoli & registers (from the app's Chapter 25 findings)
 
@@ -650,25 +719,65 @@ change additive-only):
       `measure(shots:basis:)`. Done — the mixed-ensemble section (each shot needs a fresh
       random preparation, so `measure(shots:)` can't sample it directly) now builds its two
       branch circuits once per basis via `rotateToZ` and calls `runAndMeasure()` per shot.
-- [ ] Pages `11GroverExample`, `22Walk`: replace their hand-rolled marginal
+- [x] Pages `11GroverExample`, `22Walk`: replace their hand-rolled marginal
       loop-and-sum with `StateVector.marginalProbabilities`/`SimulationResult.marginalCounts`.
-- [ ] Pages `12ShorExample`, `14ErrorCorrection`: where a hand-built permutation matrix is
-      really a controlled-controlled flip, replace it with `ToffoliGate`/`ccx`.
+      Done for `22Walk` — `positionDistribution` now sums out the coin qubit via
+      `psi.marginalProbabilities(over: [1, 2, 3, 4])` instead of a double loop over both coin
+      values, converting the returned `[String: Double]` back into the page's `[Double]`
+      (indexed by site) so `stddevSigned`/the chart-point code stay unchanged. Nothing to do
+      for `11GroverExample` on inspection — it never actually sums a marginal (it reads single
+      basis-state probabilities via `probabilities[oracle.markedIndex]`/`probabilities[5]` and
+      groups shot counts via the pre-existing `SimulationResult.sortedCounts`, not a hand-rolled
+      loop); the original proposal note was speculative about which pages would need this.
+- [x] Pages `12ShorExample`, `14ErrorCorrection`: where a hand-built permutation matrix is
+      really a controlled-controlled flip, replace it with `ToffoliGate`/`ccx`. Done for
+      `14ErrorCorrection` — the `correction` matrix is now three X-conjugated
+      `ToffoliGate.matrix`/`MultiControlledXGate.matrix` branches multiplied together (kept as
+      one combined `Matrix` fed to a single `apply(_:)`, not separate circuit gate calls, so
+      Section 6's `NoiseModel` still sees it as one multi-qubit operation and doesn't pick up
+      new single-qubit `x` noise points the original design never had), verified identical to
+      the old hand-rolled permutation entry by entry before the swap. Nothing to do for
+      `12ShorExample` on inspection — `modMultiplyGate`/`controlledModMultiply` are modular
+      *multiplication* permutations (an arbitrary bijection on 15 values), not single-target
+      controlled flips, so they don't fit the `ToffoliGate`/`ccx`/`mcx` shape at all; the
+      original proposal note was speculative here too.
 
 Now that step 4's Pauli-algebra hub has landed, its own retrofit is open too:
 
-- [ ] Page `18VQE`: replace its entrywise-built H₂ Hamiltonian with `Hamiltonian`/
-      `PauliString`, and its exact `ψ†Hψ` energy call with `Hamiltonian.expectation(_:)`.
-- [ ] Page `20Tomography`: replace its page-level per-axis `estimate`/basis-rotation helpers
-      with `StateTomography.estimate`/`estimateBlochVector`.
+- [x] Page `18VQE`: replace its entrywise-built H₂ Hamiltonian with `Hamiltonian`/
+      `PauliString`, and its exact `ψ†Hψ` energy call with `Hamiltonian.expectation(_:)`. Done —
+      the six terms are now `PauliString("II"/"ZI"/"IZ"/"ZZ"/"YY"/"XX", coefficient: g[i])`
+      summed into a `Hamiltonian`; `energy(_:)` calls `H.expectation(ansatz(theta))`; Section 4's
+      2×2-block grading uses `H.matrix[1,1]`/etc. in place of the old bare `Matrix` subscripts.
+- [x] Page `20Tomography`: replace its page-level per-axis `estimate`/basis-rotation helpers
+      with `StateTomography.estimate`/`estimateBlochVector`. Done — `estimate`/`estimateQubit0`
+      (Section 5's Bell-marginal estimator) now wrap `StateTomography.estimate(qubit:result:)`;
+      `reconstructedMagnitude` (Section 4's pure-state unphysical-frequency check) uses
+      `StateTomography.estimateBlochVector(of:qubit:shots:)` directly instead of three separate
+      `estimate` calls. `estimateMixed`/`unphysicalFrequencyMixed` (the mixed-ensemble
+      per-shot-re-preparation section) are unchanged, as noted — no Core helper samples a
+      fresh classical mixture per shot.
 
 Now that step 5's builders have landed, their own retrofit is open too:
 
-- [ ] Page `21Trotter`: replace its page-level `trotterUnitary`/hand-rolled Ising Hamiltonian
+- [x] Page `21Trotter`: replace its page-level `trotterUnitary`/hand-rolled Ising Hamiltonian
       with `Hamiltonian`/`PauliString` + `Hamiltonian.trotterCircuit(time:steps:order:)` (or
-      `QuantumCircuit.evolve(_:time:steps:order:)` on a prepared circuit).
-- [ ] Page `18VQE`: replace its hand-written `parameterShiftGradient`/gradient-descent loop with
-      `ParameterShift.gradient`/`GradientDescent.minimize`.
+      `QuantumCircuit.evolve(_:time:steps:order:)` on a prepared circuit). Done — `Hising` is
+      now a 3-term `Hamiltonian`; `trotterUnitary` builds its matrix by running
+      `qc.evolve(Hising, ...)` from every computational basis input (a new page-level
+      `matrixFromCircuit` helper, since `QuantumCircuit.run()` always starts from |0…0⟩ and a
+      circuit has no public way to expose its combined unitary directly). Verified numerically
+      identical to the old hand-rolled version at every pinned n in `21TROTTERHELP.md` (exactly,
+      not just to displayed precision — `XI`/`IX` commute, so `evolve`'s generic per-term Suzuki
+      split reduces algebraically to the old 2-group split).
+- [x] Page `18VQE`: replace its hand-written `parameterShiftGradient`/gradient-descent loop with
+      `ParameterShift.gradient`/`GradientDescent.minimize`. Done — `parameterShiftGradient` now
+      calls `ParameterShift.gradient(at:_:)`; Section 6 uses `GradientDescent.minimize`
+      (`tolerance: 0` to keep running the full 40 steps, matching the page's original
+      unconditional loop). Needed a small Core addition, `GradientDescent.Result
+      .parameterHistory: [[Double]]` (mirroring `history`), since the page's live chart plots
+      the (θ, E) trajectory gradient descent visited, which `Result` didn't previously expose;
+      tested in `ParameterShiftTests.swift`.
 - [ ] Page `22Walk`: where `buildShift`'s permutation is really a ripple-carry ±1 on the site
       register, consider expressing it via `QuantumCircuit.increment`/`decrement` instead — a
       lower-priority cleanup, since the page's own `Matrix.permutation`-based construction

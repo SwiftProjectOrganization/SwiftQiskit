@@ -233,8 +233,12 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   four uncorrected branches and Bob's corrected state on the shared `BlochSphereView`
   (plan in `PlaygroundDocs/13TELEPORTATIONPLAN.md`, user guide in `PlaygroundDocs/13TELEPORTATIONHELP.md`).
 - `14ErrorCorrection` — the 3-qubit bit-flip/phase-flip repetition code: `cx`-based encode
-  and syndrome extraction onto two ancillas, a hand-built 32×32 permutation correction via
-  `apply(_:)` (Core has no Toffoli), an `rx(θ)` sweep showing a continuous error digitized
+  and syndrome extraction onto two ancillas, a 32×32 permutation correction built from
+  `ToffoliGate.matrix`/`MultiControlledXGate.matrix` (three X-conjugated Toffolis, one per
+  syndrome branch, since the syndrome→qubit mapping is a 3-way conditional rather than a
+  single Toffoli) and applied as one combined `Matrix` via `apply(_:)` — kept as a single
+  operation rather than separate gate calls so a `NoiseModel` still sees it as one
+  multi-qubit gate — an `rx(θ)` sweep showing a continuous error digitized
   to exact fidelity 1.0000 at every θ, the distance-3 failure mode (two errors alias to a
   wrong syndrome, giving a silent logical X) with the enumerated logical error rate
   p_L = 3p² − 2p³ — reproduced a second way, exactly (`runDensityMatrix`) and by Monte Carlo

@@ -15,8 +15,8 @@ import SwiftQiskit
 //
 // Target: a 2-qubit transverse-field Ising chain
 //   H = −J·Z⊗Z − h·(X⊗I + I⊗X)
-// built with `Matrix`'s `+`/`-` and scalar `*` (page 18's old entrywise
-// idiom is retired now that those operators exist).
+// built as a `Hamiltonian` of three `PauliString` terms (Section 3) —
+// the same type page 18's VQE Hamiltonian uses.
 
 func fmt(_ d: Double) -> String { String(format: "%.6f", d) }
 
@@ -66,29 +66,46 @@ print("expm(-iθZ⊗Z/2) vs. cx;rz;cx (θ=0.7): max diff = \(String(format: "%.2
 // ============================================================
 // Section 3 — Trotter error scales as 1/n (order 1), 1/n² (order 2)
 // ============================================================
+// `Hising` is now a `Hamiltonian` (three `PauliString` terms) instead
+// of a hand-assembled `Matrix`, and each Trotter step comes from
+// `QuantumCircuit.evolve(_:time:steps:order:)` rather than a page-level
+// `trotterUnitary` built from `zzViaGates`/`RXGate` directly — the
+// same generalization page 18 made for its Hamiltonian, applied here
+// to the circuit-building side too.
 
 let J = 1.0, h = 0.5
-let Hising = -J * ZZ - h * X.tensor(I2) - h * I2.tensor(X)
+let Hising = Hamiltonian([
+    PauliString("ZZ", coefficient: -J),
+    PauliString("XI", coefficient: -h),
+    PauliString("IX", coefficient: -h),
+])
+
+// `QuantumCircuit.run()` always starts from |0…0⟩ and has no way to set an
+// arbitrary initial state, so a circuit's dense unitary is reconstructed
+// column by column: run it once per computational basis input (prepared with
+// `x` gates), and each resulting state vector is one column of the matrix.
+func matrixFromCircuit(qubits: Int, build: (QuantumCircuit) -> Void) -> Matrix {
+    let dimension = 1 << qubits
+    var m = Matrix(rows: dimension, cols: dimension)
+    for basis in 0..<dimension {
+        let qc = QuantumCircuit(qubits: qubits)
+        let bits = Array(String(basis, radix: 2).leftPadding(toLength: qubits, withPad: "0"))
+        for (i, bit) in bits.enumerated() where bit == "1" { qc.x(i) }
+        build(qc)
+        let column = qc.run()
+        for row in 0..<dimension { m[row, basis] = column[row] }
+    }
+    return m
+}
 
 func trotterUnitary(_ t: Double, _ n: Int, order: Int) -> Matrix {
-    let dt = t / Double(n)
-    let uZZ = zzViaGates(-2 * J * dt)
-    let rxQ0 = RXGate.matrix(theta: -2 * h * dt).tensor(I2)
-    let rxQ1 = I2.tensor(RXGate.matrix(theta: -2 * h * dt))
-    let step: Matrix
-    if order == 1 {
-        step = rxQ1 * rxQ0 * uZZ
-    } else {
-        let uZZhalf = zzViaGates(-2 * J * (dt / 2))
-        step = uZZhalf * rxQ1 * rxQ0 * uZZhalf
+    matrixFromCircuit(qubits: 2) { qc in
+        qc.evolve(Hising, time: t, steps: n, order: order)
     }
-    var result = Matrix.identity(size: 4)
-    for _ in 0..<n { result = step * result }
-    return result
 }
 
 let t = 1.0
-let exact = (Complex(0, -t) * Hising).expm()
+let exact = (Complex(0, -t) * Hising.matrix).expm()
 
 print("\n1st-order Trotter error (max diff from exact), t=1:")
 for n in [1, 2, 4, 8, 16, 32] {
@@ -148,7 +165,7 @@ print("commuting-only Hamiltonian, n=1 error: \(String(format: "%.2e", maxDiff(e
 
 func exactZ0(at time: Double) -> Double {
     var s = psi0
-    s.apply((Complex(0, -time) * Hising).expm())
+    s.apply((Complex(0, -time) * Hising.matrix).expm())
     return expectationZ0(s)
 }
 func trotterZ0(at time: Double, n: Int) -> Double {

@@ -464,10 +464,11 @@ public enum ParameterShift {
 public enum GradientDescent {
     public struct Result {
         public let parameters: [Double]
-        public let value: Double        // cost(parameters), the last entry of history
-        public let history: [Double]    // cost at every visited parameter vector
+        public let value: Double                    // cost(parameters), the last entry of history
+        public let history: [Double]                // cost at every visited parameter vector
+        public let parameterHistory: [[Double]]      // the parameter vector at every history entry
         public let iterations: Int
-        public let converged: Bool      // true iff the gradient norm dropped below tolerance
+        public let converged: Bool                  // true iff the gradient norm dropped below tolerance
     }
 
     static func minimize(initial: [Double], learningRate: Double = 0.1,
@@ -494,7 +495,9 @@ gradient's Euclidean norm drops below `tolerance` or `maxIterations` is reached.
 `gradient` defaults to `ParameterShift.gradient(at:_:)` applied to `cost` itself. No line
 search, momentum, or COBYLA/Nelder-Mead — sufficient for the small, smooth landscapes a
 VQE-style ansatz produces. Traps if `initial` is empty, `learningRate <= 0`, or
-`maxIterations <= 0`.
+`maxIterations <= 0`. `parameterHistory[i]` is the parameter vector `history[i]` was
+evaluated at, so zipping the two gives the full optimization trajectory (e.g. for a
+landscape/descent-path chart, as page `18VQE`'s live view does).
 
 ---
 

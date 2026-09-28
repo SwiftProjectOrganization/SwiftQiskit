@@ -106,12 +106,15 @@ shot-reconstructed marginal, which lands very close to — but not exactly at �
 ```swift
 import SwiftQiskit
 
+// `PauliBasis` and `rotateToZ`/`measure(shots:basis:)` are Core's own
+// (`Quantum/PauliBasis.swift`, `Circuit/QuantumCircuit.swift`); the estimator itself is
+// `StateTomography.estimate(qubit:result:)` — a named wrapper over
+// `SimulationResult.parityExpectation(qubits:)`.
 func estimate(_ basis: PauliBasis, circuit: QuantumCircuit, shots: Int) -> Double {
-    // `PauliBasis` and `rotateToZ`/`measure(shots:basis:)` are Core's own
-    // (`Quantum/PauliBasis.swift`, `Circuit/QuantumCircuit.swift`); the shot-based
-    // estimator is `SimulationResult.parityExpectation(qubits:)`.
-    circuit.measure(shots: shots, basis: [basis]).parityExpectation(qubits: [0])
+    StateTomography.estimate(qubit: 0, result: circuit.measure(shots: shots, basis: [basis]))
 }
+
+// Or, for all three axes at once: `StateTomography.estimateBlochVector(of:qubit:shots:)`.
 ```
 
 ## Troubleshooting

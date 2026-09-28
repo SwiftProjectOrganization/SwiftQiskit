@@ -57,12 +57,14 @@ func initialState(coin: Ket) -> Ket {
     posAmp[0] = .one
     return coin.tensor(StateVector(posAmp))
 }
+// The coin is qubit 0, the 4-bit position register qubits 1...4 — summing out the coin via
+// `StateVector.marginalProbabilities(over:)` instead of a hand-rolled double loop over both
+// coin values.
 func positionDistribution(_ psi: Ket) -> [Double] {
-    var dist = Array(repeating: 0.0, count: numSites)
-    for coin in 0...1 {
-        for pos in 0..<numSites { dist[pos] += psi[coin * numSites + pos].magnitudeSquared }
+    let marginal = psi.marginalProbabilities(over: [1, 2, 3, 4])
+    return (0..<numSites).map { pos in
+        marginal[String(pos, radix: 2).leftPadding(toLength: 4, withPad: "0")]!
     }
-    return dist
 }
 
 // ============================================================

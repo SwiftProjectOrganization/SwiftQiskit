@@ -20,10 +20,14 @@ import SwiftQiskit
 //   q0, q1, q2 — the encoded data (q0 also holds |ψ⟩ before encoding)
 //   q3, q4     — syndrome ancillas
 //
-// `SwiftQiskit` has no Toffoli and no partial measurement, so the
-// coherent correction — "look at the syndrome, then flip the accused
-// qubit" — is built as a single 32×32 permutation matrix fed to
-// `apply(_:)`, in the spirit of pages 11–12's hand-built gates.
+// `SwiftQiskit` has no partial measurement, so the coherent correction —
+// "look at the syndrome, then flip the accused qubit" — is still a
+// single 32×32 permutation matrix fed to `apply(_:)` (needed as one
+// combined operation so a `NoiseModel` sees it as a single multi-qubit
+// gate — see Section 6), but built from `ToffoliGate.matrix`/
+// `MultiControlledXGate.matrix` (three X-conjugated Toffolis, one per
+// syndrome branch) rather than hand-rolled via `Matrix.permutation`'s
+// closure directly, the way pages 11–12 still do.
 
 func lbl(_ i: Int, _ n: Int) -> String {
     var s = String(i, radix: 2)
@@ -104,25 +108,28 @@ for (name, errs) in [("none", []), ("q0  ", [0]), ("q1  ", [1]), ("q2  ", [2])] 
 // ============================================================
 // Section 3 — coherent correction
 // ============================================================
-// One 32×32 basis-state permutation, built via `Matrix.permutation`: for
-// each basis index, decode the syndrome bits (q3, q4) and flip the
-// data qubit they accuse. This is three Toffoli-with-mixed-controls
-// folded into a single matrix — exactly page 11/12's "hand-build the
-// permutation, hand it to `apply(_:)`" idiom. `Matrix.permutation`'s own
-// bijection check is the unitarity argument below, not just an
-// assertion of it.
+// One 32×32 basis-state permutation: decode the syndrome bits (q3, q4)
+// and flip the data qubit they accuse. This is three
+// Toffoli-with-mixed-controls, each now built directly from
+// `ToffoliGate.matrix(qubits:control1:control2:target:)` — a
+// "control on 0" conjugated with `MultiControlledXGate.matrix(qubits:
+// controls: [], target:)` (0 controls = an unconditional flip, i.e.
+// `x` embedded on the full 5-qubit register) rather than hand-rolled
+// via `Matrix.permutation`'s closure directly, as pages 11/12 still
+// do (no Toffoli existed yet when this page was first written — see
+// `STATUSandTODO.md`'s retrofit checklist). The three branches act on
+// disjoint targets (q0, q1, q2) and never permanently touch the
+// shared controls (q3, q4), so they commute — multiplication order
+// doesn't matter, confirmed against the original hand-rolled matrix
+// entry by entry before this replaced it.
 
-let correction = Matrix.permutation(size: 32) { i in
-    let bits = lbl(i, 5).map { Int(String($0))! }
-    var c = bits
-    switch (bits[3], bits[4]) {
-    case (1, 0): c[0] = 1 - c[0]   // syndrome 10 accuses q0
-    case (1, 1): c[1] = 1 - c[1]   // syndrome 11 accuses q1
-    case (0, 1): c[2] = 1 - c[2]   // syndrome 01 accuses q2
-    default: break                 // syndrome 00: nothing to fix
-    }
-    return c[0] * 16 + c[1] * 8 + c[2] * 4 + c[3] * 2 + c[4]
-}
+let xOnQ3 = MultiControlledXGate.matrix(qubits: 5, controls: [], target: 3)
+let xOnQ4 = MultiControlledXGate.matrix(qubits: 5, controls: [], target: 4)
+let flipQ0IfSyndrome10 = xOnQ4 * ToffoliGate.matrix(qubits: 5, control1: 3, control2: 4, target: 0) * xOnQ4
+let flipQ1IfSyndrome11 = ToffoliGate.matrix(qubits: 5, control1: 3, control2: 4, target: 1)
+let flipQ2IfSyndrome01 = xOnQ3 * ToffoliGate.matrix(qubits: 5, control1: 3, control2: 4, target: 2) * xOnQ3
+
+let correction = flipQ2IfSyndrome01 * flipQ1IfSyndrome11 * flipQ0IfSyndrome10
 
 print("\ncorrection matrix is unitary: \(correction.isUnitary())")
 // Expected: true — it's a permutation, so it can't help but be unitary.

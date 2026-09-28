@@ -130,4 +130,41 @@ struct ParameterShiftTests {
         #expect(result.converged)
         #expect(result.value <= result.history.first!)
     }
+
+    /// `parameterHistory` tracks `history` one-for-one: same length, same starting point,
+    /// same final point, and every recorded cost matches re-evaluating `energy` at the
+    /// parameter vector recorded alongside it (needed to plot a descent path against an
+    /// E(θ) landscape, as page `18VQE`'s live view does).
+    @Test func `parameterHistory lines up with history`() {
+        let hamiltonian = Hamiltonian([
+            PauliString("Z", coefficient: 1.0),
+            PauliString("X", coefficient: 0.5),
+        ])
+
+        func ansatz(_ theta: [Double]) -> QuantumCircuit {
+            let qc = QuantumCircuit(qubits: 1)
+            qc.ry(theta[0], 0)
+            return qc
+        }
+
+        func energy(_ theta: [Double]) -> Double {
+            hamiltonian.expectation(ansatz(theta).run())
+        }
+
+        let result = GradientDescent.minimize(
+            initial: [0.0],
+            learningRate: 0.2,
+            maxIterations: 40,
+            tolerance: 0,
+            cost: energy
+        )
+
+        #expect(result.iterations == 40)
+        #expect(result.parameterHistory.count == result.history.count)
+        #expect(result.parameterHistory.first! == [0.0])
+        #expect(result.parameterHistory.last! == result.parameters)
+        for (theta, e) in zip(result.parameterHistory, result.history) {
+            #expect(abs(energy(theta) - e) < 1e-12)
+        }
+    }
 }
