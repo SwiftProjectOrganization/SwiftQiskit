@@ -366,21 +366,48 @@ public extension QuantumCircuit {
         return pauli.coefficient * result.parityExpectation(qubits: pauli.activeQubits)
     }
 
-    /// Shot-based estimate of a `Hamiltonian`'s expectation value: the sum of
-    /// `measureExpectation(of:shots:)` over each term, with `shots` spent **per term**
-    /// (terms are not grouped by commuting basis, so this samples `terms.count · shots`
-    /// times in total — `evolve`/`trotterCircuit` below have the same no-grouping
-    /// characteristic, applying every term in the order `hamiltonian.terms` lists them).
+    /// Shot-based estimate of a `Hamiltonian`'s expectation value. Terms are grouped into
+    /// qubit-wise-commuting (QWC) groups via `Hamiltonian.commutingGroups()`, and `shots`
+    /// is spent **once per group** rather than once per term: every term in a QWC group
+    /// shares one combined per-qubit basis (each qubit's basis is whichever group member's
+    /// label is non-`I` there — QWC guarantees every member that specifies one agrees), so
+    /// a single `measure(shots:basis:)` call yields every term's `parityExpectation` at
+    /// once. This samples `hamiltonian.commutingGroups().count · shots` times in total,
+    /// down from `hamiltonian.terms.count · shots` — e.g. page `18VQE`'s six-term H₂
+    /// Hamiltonian groups into three settings, halving the shot cost. An all-`I` term needs
+    /// no sampling in either scheme, matching `measureExpectation(of: PauliString, shots:)`.
+    ///
+    /// (`evolve`/`trotterCircuit` below have no equivalent automatic grouping — see there.)
     func measureExpectation(of hamiltonian: Hamiltonian, shots: Int) -> Double {
         precondition(hamiltonian.qubits == qubits, "Hamiltonian must act on this circuit's qubit count")
-        return hamiltonian.terms.reduce(0.0) { $0 + measureExpectation(of: $1, shots: shots) }
+
+        var total = 0.0
+        for group in hamiltonian.commutingGroups() {
+            let (active, identity) = (group.filter { !$0.activeQubits.isEmpty },
+                                       group.filter { $0.activeQubits.isEmpty })
+            total += identity.reduce(0.0) { $0 + $1.coefficient }
+            guard !active.isEmpty else { continue }
+
+            var basis = Array(repeating: PauliBasis.z, count: qubits)
+            for term in active {
+                for qubit in term.activeQubits { basis[qubit] = term.labels[qubit]! }
+            }
+            let result = measure(shots: shots, basis: basis)
+            total += active.reduce(0.0) { $0 + $1.coefficient * result.parityExpectation(qubits: $1.activeQubits) }
+        }
+        return total
     }
 
     /// Append a Trotterized time evolution `exp(-i·hamiltonian·time)` to this circuit, via
     /// `steps` repetitions of a product formula built from `pauliRotation` (one call per
     /// `hamiltonian` term). Terms are applied in the order `hamiltonian.terms` lists them —
-    /// there is no automatic grouping into commuting layers; the caller controls layering by
-    /// ordering the terms.
+    /// there is no automatic grouping into commuting layers; a caller who wants one groups
+    /// first via `Hamiltonian.commutingGroups()` and flattens the result into a fresh
+    /// `Hamiltonian` (`Hamiltonian(hamiltonian.commutingGroups().flatMap { $0 })`) before
+    /// calling `evolve`/`trotterCircuit` — grouping is left opt-in here (unlike
+    /// `measureExpectation(of: Hamiltonian, shots:)`, which groups automatically) since
+    /// reordering changes the *finite-step* Trotter error, and this method's current term
+    /// order is what existing callers' error-scaling numbers are pinned against.
     ///
     /// - Parameter order: `1` for a first-order (Lie–Trotter) step — every term in order, each
     ///   scaled by the full step `dt = time/steps`; `2` for a second-order (Strang/Suzuki) step

@@ -326,9 +326,13 @@ product formula for `exp(-i·hamiltonian·time)`, one `pauliRotation` call per t
 the full step `dt = time/steps`; `order: 2` is a second-order (Strang/Suzuki) step — every
 term but the last at half `dt`, the last term at full `dt`, then every term but the last
 again at half `dt` in reverse. There is no automatic grouping into commuting layers — the
-caller controls layering by ordering `hamiltonian.terms`. Traps if `hamiltonian.qubits !=
-qubits`, `steps <= 0`, or `order` isn't `1` or `2`. `Hamiltonian.trotterCircuit(time:steps:
-order:)` (below) is a `QuantumCircuit(qubits:)` + `evolve(...)` convenience.
+caller controls layering by ordering `hamiltonian.terms`; a caller who wants a grouped order
+reorders first via `Hamiltonian.commutingGroups()` (below) and flattens the result into a
+fresh `Hamiltonian`. (Unlike `measureExpectation(of: Hamiltonian, shots:)`, which groups
+automatically — reordering here would change already-pinned finite-step Trotter error
+numbers, so it stays opt-in.) Traps if `hamiltonian.qubits != qubits`, `steps <= 0`, or
+`order` isn't `1` or `2`. `Hamiltonian.trotterCircuit(time:steps:order:)` (below) is a
+`QuantumCircuit(qubits:)` + `evolve(...)` convenience.
 
 `increment(register:controlledBy:)`/`decrement(register:controlledBy:)` implement
 ripple-carry `±1` on `register` — a binary number stored most-significant qubit first
@@ -349,7 +353,7 @@ out-of-range qubit, or `control` is out of range or one of the `register` qubits
 | `measure(shots:)` | `(Int) -> SimulationResult` | Traps if `shots <= 0`. Runs the circuit **once** to get the final probability distribution, then draws `shots` independent samples from it — it does *not* replay the whole circuit per shot, since a full measurement of a pure state never changes the probabilities of the underlying state that produced it. |
 | `measure(shots:basis:)` | `(Int, [PauliBasis]) -> SimulationResult` | Traps if `basis.count != qubits`. Appends each qubit's `rotateToZ` rotation to a **copy** of the recorded operations and measures that copy — the receiver's own operation list is untouched, so the same circuit can be measured in different bases without rebuilding it. |
 | `measureExpectation(of:shots:)` | `(PauliString, Int) -> Double` | Shot-based estimate of one Pauli term's expectation value, built on `measure(shots:basis:)` + `SimulationResult.parityExpectation(qubits:)`. Traps if `pauli.qubits != qubits`. An all-`I` term returns `pauli.coefficient` exactly, with no sampling. |
-| `measureExpectation(of:shots:)` | `(Hamiltonian, Int) -> Double` | The sum of the Pauli-term overload over every term in `hamiltonian`, spending `shots` **per term** (terms aren't grouped by commuting basis, so this samples `hamiltonian.terms.count · shots` times total). Traps if `hamiltonian.qubits != qubits`. |
+| `measureExpectation(of:shots:)` | `(Hamiltonian, Int) -> Double` | Groups `hamiltonian.terms` via `Hamiltonian.commutingGroups()` and spends `shots` **once per group** rather than once per term: every term in a qubit-wise-commuting group shares one combined basis, so one `measure(shots:basis:)` call yields every term's `parityExpectation` at once (samples `hamiltonian.commutingGroups().count · shots` times total — e.g. the H₂ Hamiltonian's six terms group into three settings). An all-`I` term still needs no sampling. Traps if `hamiltonian.qubits != qubits`. |
 | `runDensityMatrix(noise:)` | `(NoiseModel? = nil) -> DensityMatrix` | Replays every recorded operation on a `DensityMatrix` starting from \|0…0⟩⟨0…0\|, applying `noise`'s single-/multi-qubit `KrausChannel` (whichever matches the gate's qubit count) to every qubit that gate touched, right after it. `noise: nil` gives the exact result — mathematically identical to `DensityMatrix(run())`. |
 | `runTrajectories(noise:shots:)` | `(NoiseModel, Int) -> SimulationResult` | The Monte-Carlo "quantum trajectories" unraveling of `runDensityMatrix(noise:)`: runs `shots` independent pure-state simulations, each stochastically applying one Kraus operator (chosen with probability `‖Kᵢ\|ψ⟩‖²`) after every noisy gate, then measures once per shot. Converges to `runDensityMatrix(noise:)`'s probabilities as `shots` grows. Traps if `shots <= 0`. |
 
@@ -412,6 +416,7 @@ public struct PauliString: Equatable, Hashable {
     public var label: String { get }         // round-trips through init(_:coefficient:)
     public var matrix: Matrix { get }        // coefficient · (P₀ ⊗ P₁ ⊗ …)
     public func expectation(_ state: StateVector) -> Double   // coefficient · ⟨ψ|P₀⊗P₁⊗…|ψ⟩
+    public func isQubitWiseCommuting(with other: PauliString) -> Bool
 }
 ```
 
@@ -420,12 +425,19 @@ public struct PauliString: Equatable, Hashable {
 `QuantumCircuit.rotateToZ`/`pauliRotation(_:theta:)` — `label` is exactly the string
 `pauliRotation` accepts.
 
+`isQubitWiseCommuting(with:)` — true iff, on every qubit, the two strings' labels agree or
+at least one is `I`. Stricter than literal Pauli commutativity (which only needs an *even*
+number of disagreeing qubits) but the condition that actually matters for
+`Hamiltonian.commutingGroups()`: two QWC-compatible terms share one well-defined per-qubit
+basis. Traps if `qubits != other.qubits`.
+
 ---
 
 ## `Hamiltonian`
 
 `Sources/SwiftQiskit/Quantum/Hamiltonian.swift` — a qubit Hamiltonian as a plain sum of
-`PauliString` terms (no merging of duplicate labels, no commuting-term grouping).
+`PauliString` terms (no merging of duplicate labels; `commutingGroups()` below groups terms
+without merging them).
 
 ```swift
 public struct Hamiltonian: Equatable {
@@ -435,6 +447,7 @@ public struct Hamiltonian: Equatable {
     public var matrix: Matrix { get }             // Σ term.matrix
     public func expectation(_ state: StateVector) -> Double   // Σ term.expectation(state)
     public func trotterCircuit(time: Double, steps: Int, order: Int = 1) -> QuantumCircuit
+    public func commutingGroups() -> [[PauliString]]
 }
 ```
 
@@ -443,6 +456,15 @@ idiom page `18VQE` (and the app's VQE/Trotter chapters) hand-roll for an H₂-st
 Hamiltonian. `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
 `QuantumCircuit.evolve(_:time:steps:order:)` (see above) — a fresh circuit implementing
 Trotterized time evolution `exp(-i·self·time)`.
+
+`commutingGroups()` partitions `terms` into groups where every pair is qubit-wise commuting
+(`PauliString.isQubitWiseCommuting(with:)`), via a greedy heuristic (Qiskit's default
+`group_commuting` strategy: each term joins the first existing group every member of which
+it's compatible with, else starts a new group) — deterministic given `terms`' order, but not
+guaranteed to minimize the group count. `measureExpectation(of: Hamiltonian, shots:)` (above)
+uses it automatically; `evolve`/`trotterCircuit` don't (see there) — a caller opts in with
+`Hamiltonian(hamiltonian.commutingGroups().flatMap { $0 })`. Example: the six-term H₂
+Hamiltonian (`II, ZI, IZ, ZZ, YY, XX`) groups into three: `{II, ZI, IZ, ZZ}`, `{YY}`, `{XX}`.
 
 ---
 

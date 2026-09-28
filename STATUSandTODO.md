@@ -62,9 +62,23 @@ any item here.
       instead of the O(4ⁿ) dense multiply. Tested in `PermutationFastPathTests.swift`
       (detection against `cx`/`ccx`/`mcx` truth tables, rejection of dense gates/non-square/
       non-bijective 0-1 matrices, and bit-for-bit agreement between the fast and dense paths).
-- [ ] Commuting-term grouping for `Hamiltonian.trotterCircuit`/`QuantumCircuit.evolve` and for
+- [x] Commuting-term grouping for `Hamiltonian.trotterCircuit`/`QuantumCircuit.evolve` and for
       `measureExpectation(of: Hamiltonian, shots:)` (currently one `pauliRotation`/measurement
-      per term, caller-ordered).
+      per term, caller-ordered). Done, in two different ways per consumer (see "Proposed Core
+      extensions — variational"/"— Hamiltonian simulation" below for the split reasoning):
+      `measureExpectation(of: Hamiltonian, shots:)` now groups and measures automatically
+      (`Hamiltonian.commutingGroups()`, built on new `PauliString.isQubitWiseCommuting(with:)`
+      — H₂'s six terms group into three settings); `evolve`/`trotterCircuit` keep their
+      existing term order by default (reordering changes the *finite-step* Trotter error, and
+      `TrotterTests.swift`/page `21Trotter` already pin numbers against the current order) —
+      `commutingGroups()` is available for a caller who wants to opt into a grouped layering.
+      Tested in `CommutingGroupsTests.swift` (the grouping algorithm itself: QWC pairwise
+      checks, the H₂ 3-group case, an all-commuting collapse, a pairwise-conflicting
+      singleton case, and partition/determinism invariants on a 15-term synthetic
+      Hamiltonian), `MeasureExpectationTests.swift` (a hand-picked shared-batch correctness
+      check plus convergence to the exact value), and `TrotterTests.swift` (grouping doesn't
+      break convergence, and — verified numerically before writing the assertion — is never
+      worse than a scrambled order at a fixed step count, for this example).
 - [ ] A real linear-inversion or maximum-likelihood state tomography reconstruction, beyond
       `StateTomography`'s per-axis estimate + physicality clamp.
 - [x] `15CHSH`: a genuine multi-angle search over all four CHSH settings confirming Tsirelson's
@@ -476,9 +490,12 @@ would need:
       chapter show the actual noisy VQE loop (energy with shot noise) instead of the exact
       `ψ†Hψ` every chapter uses today, and would give the app's proposed Energy panel real
       statistical jitter instead of a hand-computed exact number. The `Hamiltonian` overload
-      spends `shots` per term, with no commuting-term grouping. Implemented in
-      `Circuit/QuantumCircuit.swift`; tested in `MeasureExpectationTests.swift`, including the
-      H₂ energy converging within shot noise and that neither overload mutates the receiver.
+      spends `shots` per term. Implemented in `Circuit/QuantumCircuit.swift`; tested in
+      `MeasureExpectationTests.swift`, including the H₂ energy converging within shot noise
+      and that neither overload mutates the receiver. The `Hamiltonian` overload was later
+      upgraded to spend `shots` per *commuting group* rather than per term — see
+      `Hamiltonian.commutingGroups()` under "Proposed Core extensions — Hamiltonian
+      simulation" below.
 - [x] A general multi-parameter parameter-shift gradient — generalizing this chapter's
       one-parameter `parameterShiftGradient(_ theta: Double) -> Double` to a `[Double]` of angles
       over an arbitrary `[Double] -> Double` cost closure (plus a `Hamiltonian`/ansatz-closure
@@ -545,19 +562,35 @@ tappable first-order Trotter step from the existing `cx`/`rz`/`rx` palette. Prop
       the last at half step, the last term at full step, then every term but the last again at
       half step in reverse). No automatic grouping into commuting layers — the caller controls
       layering by ordering `hamiltonian.terms` — so this is a narrower scope than originally
-      proposed (which asked for commuting-layer grouping); grouping remains open below. Would let
-      both this chapter's Ising chain and a future, larger Hamiltonian-simulation chapter be
-      expressed and run in the app directly, instead of hand-assembled matrix code with no path
-      onto a circuit builder. Implemented in `Circuit/QuantumCircuit.swift`/
-      `Quantum/Hamiltonian.swift`; tested in `TrotterTests.swift` against `Matrix.expm()`,
-      including the O(1/n)/O(1/n²) error-scaling rates for first- and second-order steps on
-      page `21Trotter`'s transverse-field Ising chain, exactness for a single term and for
-      commuting terms at one step, the all-`I` global-phase case, and a 3-qubit chain. Retrofitting
-      page `21Trotter` onto it is still open — see "SwiftQiskitApp follow-ups" below.
-- [ ] Commuting-term grouping for `evolve`/`trotterCircuit` above — grouping a `Hamiltonian`'s
+      proposed (which asked for commuting-layer grouping); grouping remains available but
+      opt-in, below. Would let both this chapter's Ising chain and a future, larger
+      Hamiltonian-simulation chapter be expressed and run in the app directly, instead of
+      hand-assembled matrix code with no path onto a circuit builder. Implemented in
+      `Circuit/QuantumCircuit.swift`/`Quantum/Hamiltonian.swift`; tested in
+      `TrotterTests.swift` against `Matrix.expm()`, including the O(1/n)/O(1/n²) error-scaling
+      rates for first- and second-order steps on page `21Trotter`'s transverse-field Ising
+      chain, exactness for a single term and for commuting terms at one step, the all-`I`
+      global-phase case, and a 3-qubit chain. Retrofitting page `21Trotter` onto it is still
+      open — see "SwiftQiskitApp follow-ups" below.
+- [x] Commuting-term grouping for `evolve`/`trotterCircuit` above — grouping a `Hamiltonian`'s
       terms into commuting layers before emitting `pauliRotation` calls, so a caller doesn't have
-      to hand-order `terms` to get the cheapest split. Not needed for any current page; flagged
-      as a follow-up on the item above rather than blocking it.
+      to hand-order `terms` to get the cheapest split. Landed as `Hamiltonian.commutingGroups()`
+      (`Quantum/Hamiltonian.swift`) — a caller opts in via
+      `Hamiltonian(hamiltonian.commutingGroups().flatMap { $0 })` before calling
+      `evolve`/`trotterCircuit`, rather than `evolve` grouping automatically: reordering
+      changes the *finite-step* Trotter error (never the ∞-step limit), and `TrotterTests.swift`
+      plus page `21Trotter`'s printed output already pin exact error-scaling numbers against
+      the current term order, so a default-behavior change would have silently moved them.
+      `commutingGroups()` doubles as the primitive `measureExpectation(of: Hamiltonian,
+      shots:)` now uses automatically (below) — same algorithm, different opt-in-vs-automatic
+      choice per consumer. Built on new `PauliString.isQubitWiseCommuting(with:)`: a greedy
+      heuristic (Qiskit's default `group_commuting` strategy) partitioning terms into groups
+      where every pair is *qubit-wise commuting* — on every qubit, labels agree or one is `I`
+      — the stricter-than-literal-Pauli-commutativity condition that actually hands you one
+      shared per-qubit basis. Tested in `CommutingGroupsTests.swift` (the algorithm itself)
+      and `TrotterTests.swift` (a scrambled-vs-grouped Ising example, verified numerically in
+      Python before writing the assertion to confirm the grouped order's error is never worse
+      at a fixed step count, for that example, while both still converge to `Matrix.expm()`).
 - [x] Doc TODO: a one-line callout in `PlaygroundDocs/21TROTTERHELP.md` noting that reversing a
       Trotter step's internal layer order (X-layer before ZZ instead of after) produces an error
       curve identical to the original order to floating-point precision, at every step count —

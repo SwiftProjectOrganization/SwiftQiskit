@@ -44,10 +44,43 @@ public struct Hamiltonian: Equatable {
     }
 
     /// A fresh `QuantumCircuit` implementing Trotterized time evolution
-    /// `exp(-i·self·time)` via `QuantumCircuit.evolve(_:time:steps:order:)`.
+    /// `exp(-i·self·time)` via `QuantumCircuit.evolve(_:time:steps:order:)`. `evolve` applies
+    /// `terms` in the order this `Hamiltonian` lists them — reorder via `commutingGroups()`
+    /// first (`Hamiltonian(hamiltonian.commutingGroups().flatMap { $0 })`) if a grouped
+    /// layering is wanted; there is no automatic grouping here.
     public func trotterCircuit(time: Double, steps: Int, order: Int = 1) -> QuantumCircuit {
         let circuit = QuantumCircuit(qubits: qubits)
         circuit.evolve(self, time: time, steps: steps, order: order)
         return circuit
+    }
+
+    /// Partitions `terms` into groups where every pair within a group is *qubit-wise
+    /// commuting* (`PauliString.isQubitWiseCommuting(with:)`) — the condition
+    /// `QuantumCircuit.measureExpectation(of:shots:)` uses to measure every term in a group
+    /// from a single shared shot batch, and that a caller can use to co-locate commuting
+    /// terms before `evolve`/`trotterCircuit` (see there).
+    ///
+    /// Built via a greedy heuristic (the same strategy Qiskit's default
+    /// `group_commuting` uses): each term joins the *first* existing group every one of
+    /// whose members it's QWC-compatible with, or starts a new group if none fits.
+    /// Deterministic — depends only on the order `terms` lists them in — but *not*
+    /// guaranteed to minimize the number of groups; finding the true minimum is graph
+    /// coloring, NP-hard in general, and not needed for the sizes this library deals with.
+    ///
+    /// Example — the six-term H₂ Hamiltonian page `18VQE` builds (`II, ZI, IZ, ZZ, YY, XX`)
+    /// groups into exactly three: `{II, ZI, IZ, ZZ}` (a shared Z,Z basis), `{YY}`, `{XX}` —
+    /// three measurement settings instead of six.
+    public func commutingGroups() -> [[PauliString]] {
+        var groups: [[PauliString]] = []
+        for term in terms {
+            if let index = groups.firstIndex(where: { group in
+                group.allSatisfy { $0.isQubitWiseCommuting(with: term) }
+            }) {
+                groups[index].append(term)
+            } else {
+                groups.append([term])
+            }
+        }
+        return groups
     }
 }

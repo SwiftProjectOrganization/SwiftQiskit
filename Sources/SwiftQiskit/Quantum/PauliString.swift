@@ -79,6 +79,23 @@ public struct PauliString: Equatable, Hashable {
         return state.expectation(matrix)
     }
 
+    /// Whether `self` and `other` are *qubit-wise commuting* (QWC): on every qubit, their
+    /// labels either agree or at least one is `I`. Stricter than literal Pauli
+    /// commutativity (which only needs an *even* number of disagreeing qubits — e.g. `XI`
+    /// and `IY` commute in that sense, since they share no qubit, but so would `XY` and
+    /// `YX`, which don't reduce to a single shared basis anywhere) — QWC is the condition
+    /// that actually matters for `Hamiltonian.commutingGroups()`: two QWC-compatible terms
+    /// share one well-defined per-qubit measurement/rotation basis, since wherever both
+    /// specify a label they specify the *same* one.
+    ///
+    /// Traps if `qubits != other.qubits`.
+    public func isQubitWiseCommuting(with other: PauliString) -> Bool {
+        precondition(qubits == other.qubits, "Both Pauli strings must act on the same number of qubits")
+        return zip(labels, other.labels).allSatisfy { a, b in
+            a == nil || b == nil || a == b
+        }
+    }
+
     /// The 2×2 matrix for one label: `I` (`nil`) or the corresponding Pauli gate.
     private static func matrix(for label: PauliBasis?) -> Matrix {
         switch label {

@@ -143,6 +143,49 @@ struct TrotterTests {
         #expect((3.0...5.0).contains(e8 / e16))
     }
 
+    // MARK: - Commuting-term grouping (opt-in reordering via `commutingGroups()`)
+
+    /// `evolve`/`trotterCircuit` don't group terms automatically (reordering changes the
+    /// *finite-step* error, and existing callers' numbers are pinned against the current
+    /// order — see `Hamiltonian.commutingGroups()`'s doc comment). A caller who wants a
+    /// grouped layering reorders their own `Hamiltonian` first. Using page `21Trotter`'s
+    /// Ising Hamiltonian deliberately scrambled (`XI, ZZ, IX` — `ZZ` conflicts with both
+    /// neighbors, giving *two* non-commuting boundaries), `commutingGroups()` reorders to
+    /// `XI, IX, ZZ` (`XI`/`IX` are qubit-wise commuting and end up adjacent, leaving *one*
+    /// non-commuting boundary) — confirmed both orderings still converge to `expm()`, and
+    /// at a fixed step count the grouped order's error is no worse than the scrambled
+    /// order's (verified numerically before writing this test).
+    @Test func `reordering via commutingGroups does not break Trotter convergence`() {
+        let scrambled = Hamiltonian([
+            PauliString("XI", coefficient: 0.5),
+            PauliString("ZZ", coefficient: 1.0),
+            PauliString("IX", coefficient: 0.5),
+        ])
+        let grouped = Hamiltonian(scrambled.commutingGroups().flatMap { $0 })
+        #expect(grouped.terms.map(\.label) == ["XI", "IX", "ZZ"])
+
+        let exact = exactEvolution(scrambled, time: 1.0)
+
+        func error(_ hamiltonian: Hamiltonian, steps: Int, order: Int) -> Double {
+            let trotter = unitaryMatrix(qubits: 2) {
+                $0.evolve(hamiltonian, time: 1.0, steps: steps, order: order)
+            }
+            return maxDiff(exact, trotter)
+        }
+
+        // Both orderings converge to the same exact evolution at a large step count.
+        #expect(error(scrambled, steps: 64, order: 2) < 1e-4)
+        #expect(error(grouped, steps: 64, order: 2) < 1e-4)
+
+        // At a fixed modest step count, the grouped order is no worse (a small epsilon
+        // guards against exact ties, seen at steps: 1, comparing as floating-point equal).
+        for order in [1, 2] {
+            let scrambledError = error(scrambled, steps: 4, order: order)
+            let groupedError = error(grouped, steps: 4, order: order)
+            #expect(groupedError <= scrambledError + 1e-12)
+        }
+    }
+
     // MARK: - Multi-qubit (3-qubit chain)
 
     /// A 3-qubit Ising chain also converges to `expm()` as the step count grows.
