@@ -307,7 +307,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   the shared `CHSHChartView` (plan in `PlaygroundDocs/21TROTTERPLAN.md`, user guide in
   `PlaygroundDocs/21TROTTERHELP.md`).
 - `22Walk` — the discrete-time coined quantum walk on a 16-site cycle (no Core changes): a
-  hand-built conditional-shift permutation checked as unitary; ballistic (∝t) spreading
+  conditional-shift permutation built from `increment`/`decrement` on the position register
+  (cross-checked for exact equality against the earlier hand-built version) and confirmed
+  unitary; ballistic (∝t) spreading
   against an exactly diffusive (∝√t) classical random walk; a caught-and-documented
   cyclic-coordinate variance bug (raw site indices vs. signed offsets from the start); and the
   `|0⟩`-vs-`|+i⟩` coin contrast showing the walk's asymmetry is interference, not a flaw; live

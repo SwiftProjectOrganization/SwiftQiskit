@@ -12,8 +12,11 @@ shape of that spread is a direct signature of interference.
 
 ## Section by section
 
-**Section 1 — the shift, as a permutation.** |0,x⟩ → |0,x+1⟩, |1,x⟩ → |1,x−1⟩ (mod 16 sites),
-built by hand and checked as a genuine permutation (S†S = I).
+**Section 1 — the shift, from increment/decrement.** |0,x⟩ → |0,x+1⟩, |1,x⟩ → |1,x−1⟩ (mod 16
+sites), built from `QuantumCircuit.increment`/`decrement(register:controlledBy:)` — the
+position register is exactly a 4-bit counter, so the shift is a controlled ±1 on it, rather
+than a hand-built `Matrix.permutation`. Cross-checked against the old permutation construction
+(exact equality) and confirmed unitary.
 
 **Section 2 — one step.** Coin flip (`H`) then conditional shift; the position marginal is
 read off by summing over the coin.
@@ -49,7 +52,8 @@ continuous-time walk is `expm` (page 21) applied to a graph's adjacency matrix.
 ## Expected output
 
 ```text
-S†S = I max diff: 0.00e+00
+S matches the hand-built permutation: true
+S is unitary: true
 
 t   quantum σ   σ/t
 1   1.0000      1.0000
@@ -99,13 +103,30 @@ import SwiftQiskit
 let numSites = 16
 let dim = 32   // coin (2) × position (16)
 
+// Coin 1 steps left, coin 0 steps right (flipped around the same
+// `increment` call since `controlledBy` fires on 1).
+func appendShift(to qc: QuantumCircuit) {
+    qc.decrement(register: [1, 2, 3, 4], controlledBy: 0)
+    qc.x(0)
+    qc.increment(register: [1, 2, 3, 4], controlledBy: 0)
+    qc.x(0)
+}
+
+// `QuantumCircuit` has no "give me the matrix" accessor, so build S
+// column by column from basis states.
 func buildShift() -> Matrix {
-    Matrix.permutation(size: dim) { fromIndex in
-        let coin = fromIndex / numSites
-        let pos = fromIndex % numSites
-        let newPos = coin == 0 ? (pos + 1) % numSites : (pos - 1 + numSites) % numSites
-        return coin * numSites + newPos
+    var columns: [[Complex]] = []
+    for j in 0..<dim {
+        let qc = QuantumCircuit(qubits: 5)
+        for bit in 0..<5 where j & (1 << (4 - bit)) != 0 { qc.x(bit) }
+        appendShift(to: qc)
+        columns.append(qc.run().amplitudes)
     }
+    var data = Array(repeating: Array(repeating: Complex.zero, count: dim), count: dim)
+    for j in 0..<dim {
+        for row in 0..<dim { data[row][j] = columns[j][row] }
+    }
+    return Matrix(data)
 }
 
 let U = buildShift() * HadamardGate.matrix.tensor(Matrix.identity(size: numSites))

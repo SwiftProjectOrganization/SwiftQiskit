@@ -99,3 +99,11 @@ distributions at t=7 as two series — no new shared view.
 4. When the page is built: open `22Walk` in Xcode and run it (console + chart only); re-copy
    the `libcups` shim immediately before running
    (`PLAYGROUNDSUPPORT.md` § "Xcode 27 beta workarounds").
+
+## Later retrofit (P2 cleanup)
+
+Section 1's shift is later re-expressed via `QuantumCircuit.increment`/`decrement`
+(register q1..q4 is exactly a 4-bit counter, so the conditional shift is a controlled ±1 on
+it) instead of `Matrix.permutation`, cross-checked for exact equality against the original
+permutation construction (kept as `referenceShift`). No `SwiftQiskit` changes — both
+`increment`/`decrement` already existed. See `PlaygroundDocs/22WALKHELP.md`.

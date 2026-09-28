@@ -25,13 +25,50 @@ let numSites = 16
 let dim = 32
 
 // ============================================================
-// Section 1 — the conditional shift, as a permutation matrix
+// Section 1 — the conditional shift, from increment/decrement
 // ============================================================
 // |0,x⟩ → |0,x+1 mod 16⟩ (coin 0: step right), |1,x⟩ → |1,x−1 mod 16⟩
-// (coin 1: step left) — via `Matrix.permutation`, whose own bijection
-// check is the unitarity argument below, not just an assertion of it.
+// (coin 1: step left). The position register q1..q4 is exactly a
+// 4-bit counter, so the shift is a controlled ±1 on it —
+// `QuantumCircuit.increment`/`decrement(register:controlledBy:)`
+// (most-significant qubit first, matching q1..q4 here) — rather than
+// a hand-built `Matrix.permutation`. `decrement` handles coin 1
+// directly (`controlledBy` fires on 1); coin 0 reuses the same
+// `increment` by flipping the coin around it with `x(0)`.
 
+func appendShift(to qc: QuantumCircuit) {
+    qc.decrement(register: [1, 2, 3, 4], controlledBy: 0)
+    qc.x(0)
+    qc.increment(register: [1, 2, 3, 4], controlledBy: 0)
+    qc.x(0)
+}
+
+// `QuantumCircuit` has no built-in "give me the matrix" accessor, so
+// build S column by column: prepare each of the 32 basis states with
+// `x`, run one step of the shift, and read off the resulting
+// amplitudes as that column.
 func buildShift() -> Matrix {
+    var columns: [[Complex]] = []
+    for j in 0..<dim {
+        let qc = QuantumCircuit(qubits: 5)
+        for bit in 0..<5 where j & (1 << (4 - bit)) != 0 {
+            qc.x(bit)
+        }
+        appendShift(to: qc)
+        columns.append(qc.run().amplitudes)
+    }
+    var data = Array(repeating: Array(repeating: Complex.zero, count: dim), count: dim)
+    for j in 0..<dim {
+        for row in 0..<dim { data[row][j] = columns[j][row] }
+    }
+    return Matrix(data)
+}
+let S = buildShift()
+
+// Cross-check against the old hand-built permutation: every gate
+// above only ever moves 0/1 amplitudes around, so this equality is
+// exact — no floating-point tolerance needed.
+func referenceShift() -> Matrix {
     Matrix.permutation(size: dim) { fromIndex in
         let coin = fromIndex / numSites
         let pos = fromIndex % numSites
@@ -39,10 +76,11 @@ func buildShift() -> Matrix {
         return coin * numSites + newPos
     }
 }
-let S = buildShift()
-
+print("S matches the hand-built permutation: \(S == referenceShift())")
 print("S is unitary: \(S.isUnitary())")
-// Expected: true — S is a genuine permutation (unitary).
+// Expected: both true — the increment/decrement construction agrees
+// with the permutation exactly, and is itself a genuine permutation
+// (unitary).
 
 // ============================================================
 // Section 2 — one step: coin flip, then conditional shift

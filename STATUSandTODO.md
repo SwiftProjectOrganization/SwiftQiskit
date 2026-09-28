@@ -43,9 +43,14 @@ any item here.
 - [x] `12ShorExample`, `14ErrorCorrection`: hand-built permutations that are really
       controlled-controlled flips → `ToffoliGate`/`ccx` (only `14ErrorCorrection` had one to
       retrofit — see the detailed checklist below).
-- [ ] (Low priority) `22Walk`: express `buildShift` via `increment`/`decrement` instead of a
-      hand-built permutation — the page's current version already reads clearly for a fixed
-      4-site cycle, so this is cosmetic.
+- [x] (Low priority) `22Walk`: express `buildShift` via `increment`/`decrement` instead of a
+      hand-built permutation. Done — the position register (q1..q4) is exactly a 4-bit counter
+      on the 16-site cycle, so the shift is a controlled ±1 on it; `appendShift(to:)` builds it
+      from `decrement(register:controlledBy:)` (coin 1) and `increment` flipped around `x(0)`
+      (coin 0), with the matrix reconstructed column-by-column via `run()` (no
+      `QuantumCircuit` → `Matrix` accessor exists). Cross-checked for exact equality against the
+      original `Matrix.permutation` construction (kept as `referenceShift`) — no floating-point
+      tolerance needed, since every gate involved only ever permutes basis amplitudes.
 
 **P3 — new Core features**
 - [ ] A shared, UI-free-Core-preserving `SwiftQiskitViews` module for `CHSHChartView` and a
@@ -825,10 +830,12 @@ Now that step 5's builders have landed, their own retrofit is open too:
       .parameterHistory: [[Double]]` (mirroring `history`), since the page's live chart plots
       the (θ, E) trajectory gradient descent visited, which `Result` didn't previously expose;
       tested in `ParameterShiftTests.swift`.
-- [ ] Page `22Walk`: where `buildShift`'s permutation is really a ripple-carry ±1 on the site
-      register, consider expressing it via `QuantumCircuit.increment`/`decrement` instead — a
-      lower-priority cleanup, since the page's own `Matrix.permutation`-based construction
-      already reads clearly for a fixed 4-site cycle.
+- [x] Page `22Walk`: where `buildShift`'s permutation is really a ripple-carry ±1 on the site
+      register, express it via `QuantumCircuit.increment`/`decrement` instead. Done —
+      `appendShift(to:)` builds the coin-controlled shift from `increment`/`decrement` on the
+      4-qubit position register (q1..q4, 16-site cycle); the resulting `Matrix` (assembled
+      column-by-column via `run()`, since `QuantumCircuit` has no direct unitary accessor) is
+      cross-checked for exact equality against the original `Matrix.permutation` construction.
 
 Now that step 6's open-systems track has landed, its own retrofit is open too:
 
