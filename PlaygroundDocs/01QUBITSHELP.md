@@ -16,7 +16,7 @@ to a line, or the "Show Result" inline bubble). There is no console output to re
 you're looking at the console for output, the page is working, you're just looking in
 the wrong pane.
 
-The page has four parts:
+The page has five parts:
 
 1. **Single-qubit examples** — two named Dirac states, `q0 = .zero`, `q1 = .plusI`.
 2. **Multi-qubit creation examples** — `sv0`/`sv1` built from binary labels, and `sv2`
@@ -25,17 +25,23 @@ The page has four parts:
    into `BlochVector`s at every stage and shown live at the bottom of the page.
 4. **Bra/Ket operations** — `†`, inner and outer products, `⊗`, and a Bra–Matrix product,
    exercised on two states, `ket0` and `ket1`.
+5. **Basis transformations** — a preview of page `41BasisTransformations`' §1–4:
+   expressing `.zero`, `.plus`, `.plusI`, and `ket1` in the {|+⟩, |−⟩} and {|+i⟩, |−i⟩}
+   bases via `T` and `T†`.
+
+The code is marked with `// §N — …` banners matching the table below.
 
 ## The page's sections
 
 | Section | What it shows |
 |---|---|
-| 1 — Single-qubit examples | `q0 = Ket.zero` (\|0⟩), `q1 = Ket.plusI` (\|i⟩) — sidebar only, no further use |
-| 2 — Multi-qubit creation | `sv0 = Ket("000")`, `sv1 = Ket("010")` from binary labels; `sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` — see below |
-| 3 — `circuit1` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `p(1.571, 0)` → `p(3.142, 0)`, each stage's `BlochVector` appended to `stages1` |
-| 4 — `circuit2` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `z(0)` → `h(0)`, each stage's `BlochVector` appended to `stages2`, with `.probabilities` printed to the sidebar between steps |
-| 5 — Bra/Ket operations | `ket0` (built from unnormalized amplitudes), `ket1` (the same ψ used in `08DIRACHELP.md`), their bras, inner/outer products, `⊗`, double-dagger, and a `Bra * Matrix.identity` check |
-| 6 — Live view | `CircuitStagesView` (an inline, stateless `View`) rendering both stage sequences as two labeled `BlochSphereView` grids |
+| §1 — Single-qubit examples | `q0 = Ket.zero` (\|0⟩), `q1 = Ket.plusI` (\|i⟩) — sidebar only, no further use |
+| §2 — Multi-qubit creation | `sv0 = Ket("000")`, `sv1 = Ket("010")` from binary labels; `sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` — see below |
+| §3 — `circuit1` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `p(1.571, 0)` → `p(3.142, 0)`, each stage's `BlochVector` appended to `stages1` |
+| §4 — `circuit2` stages | `QuantumCircuit(qubits: 1)` → `h(0)` → `z(0)` → `h(0)`, each stage's `BlochVector` appended to `stages2`, with `.probabilities` printed to the sidebar between steps |
+| §5 — Bra/Ket operations | `ket0` (built from unnormalized amplitudes), `ket1` (the same ψ used in `08DIRACHELP.md`), their bras, inner/outer products, `⊗`, double-dagger, and a `Bra * Matrix.identity` check |
+| §6 — Live view | `CircuitStagesView` (an inline, stateless `View`) rendering both stage sequences as two labeled `BlochSphereView` grids |
+| §7 — Basis transformations | `T` built from the new basis kets as columns (`Matrix((0..<2).map { row in [Ket.plus[row], Ket.minus[row]] })`), `Tdag = T†` (the library's adjoint, not a hand-built row-of-bras), the new amplitudes `Tdag.multiply(by:)`, and the same recipe repeated for `T2`/`Tdag2` over {|+i⟩, |−i⟩} — see `41BASISTRANSFORMATIONSHELP.md` for the full derivation (transpose vs. adjoint, measuring in the new basis) |
 
 **`sv2` combines four single-qubit kets into one multi-qubit register via `⊗`.**
 `let sv2: StateVector = .zero ⊗ .plusI ⊗ .zero ⊗ .zero` chains three tensor products
@@ -133,6 +139,36 @@ Reading notes:
 - **`ket1 * ket1†` is the density-matrix-style projector \|ψ⟩⟨ψ\|** — Hermitian, trace 1
   (0.75 + 0.25), with the off-diagonal entries complex conjugates of each other.
 
+**Section 7 — basis transformations**
+
+| Expression | Value |
+|---|---|
+| `T` | `Ket.plus`/`Ket.minus` amplitudes as columns — equals `HadamardGate.matrix` |
+| `Tdag = T†` | equals `HadamardGate.matrix` too (the ± basis's `T` is its own adjoint) |
+| `c = Tdag.multiply(by: psi.amplitudes)` | `[0.7071067811865475, 0.7071067811865475]` |
+| `Ket.plus† * psi`, `Ket.minus† * psi` | `0.7071067811865475`, `0.7071067811865475` — identical to `c[0]`, `c[1]` |
+| `c.map { $0.magnitudeSquared }` | `[0.5, 0.5]` |
+| `Tdag.multiply(by: Ket.plus.amplitudes)` | `[1.0, 0.0]` |
+| `Tdag.multiply(by: Ket.plusI.amplitudes)` | `[0.5+0.5i, 0.5-0.5i]` — magnitudes-squared `[0.5, 0.5]` |
+| `c1 = Tdag.multiply(by: ket1.amplitudes)` | `[0.8623724356957945+0.25i, 0.3623724356957945-0.25i]` |
+| `c1.map { $0.magnitudeSquared }` | `[0.8061862178478971, 0.1938137821521027]` — vs. `ket1`'s own Z-basis `[0.75, 0.25]` |
+| `Tdag2.multiply(by: Ket.plusI.amplitudes)` | `[1.0, 0.0]` |
+
+Reading notes:
+
+- **`T` for the {|+⟩, |−⟩} basis is built purely from the column mapping**
+  (`Matrix((0..<2).map { row in [Ket.plus[row], Ket.minus[row]] })`), and its adjoint
+  `T†` is obtained with the library's own `†` operator — no hand-built row-of-bras
+  matrix, unlike `41BasisTransformations`'s §3 (which builds one to *demonstrate* it
+  matches `T.adjoint`). Because every amplitude in this basis happens to be real, `T`
+  and `Tdag` both equal `HadamardGate.matrix` exactly.
+- **`ket1` (from §5) is not a Z eigenstate, so its ± probabilities differ from its Z
+  probabilities**: `[0.806…, 0.194…]` in ± vs. `[0.75, 0.25]` in Z — a different basis,
+  a genuinely different distribution, not a relabeling.
+- See `41BASISTRANSFORMATIONSHELP.md` for why the *conjugate* transpose (not a plain
+  transpose) is required for a complex basis like {|+i⟩, |−i⟩}, and how to measure
+  directly in a new basis via the same `T†` as a gate (`h`/`sdg;h`).
+
 ## Reading the live view
 
 `CircuitStagesView` renders two titled sections, `"circuit1"` and `"circuit2"`, each a
@@ -173,6 +209,10 @@ let psi = Ket([Complex(0.6), Complex(0.8)])
 let overlap = psi† * psi                    // ⟨ψ|ψ⟩ ≈ 1.0
 let projector = psi * psi†                  // |ψ⟩⟨ψ| — a Matrix
 let doubled = psi ⊗ psi                     // |ψ⟩ ⊗ |ψ⟩ — a 4-dim StateVector
+
+// Basis transformation: new basis kets as T's columns, T† for the new amplitudes
+let T = Matrix((0..<2).map { row in [Ket.plus[row], Ket.minus[row]] })
+let newAmplitudes = T†.multiply(by: psi.amplitudes)   // see 41BasisTransformations for more
 ```
 
 ## Troubleshooting
