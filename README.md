@@ -79,20 +79,35 @@ Multi-qubit basis kets come from the binary-label initializer, e.g. `Ket("01")` 
 `static let matrix: Matrix` (parameterized gates expose `static func matrix(theta:)`),
 with a matching convenience method on `QuantumCircuit`:
 
-| Gate | Circuit API | Type | Used in |
-|------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16, 20; page 19 (`HadamardGate.matrix` applied directly via `StateVector.apply(_:)` — Bell-pair prep, basis rotations — rather than the circuit method, since page 19 doesn't use `QuantumCircuit` at all); page 22 (`HadamardGate.matrix` as the walk's coin flip) |
-| Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18; page 19 (`PauliXGate.matrix` as a Kraus operator) |
-| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); pages 19–20 (`PauliYGate.matrix` as a Monte-Carlo error gate / an exact-expectation check) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; pages 19–21 (`PauliZGate.matrix` as a Monte-Carlo error gate and the exact ZZ-rotation identity's core piece) |
-| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05; page 20 (`SDaggerGate.matrix` applied raw for the Y-basis measurement rotation, sign-checked against a known Y-eigenstate) |
-| T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
-| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05; page 16 (the building block of the hand-built controlled-phase CP(θ), five gates deep) |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter); page 20 (`RYGate`/`RZGate.matrix(θ)` build a generic tilted state, raw); page 21 (`RXGate.matrix(θ)` self-checks `Matrix.expm()`; `RZGate.matrix(θ)` is the core of the hand-derived ZZ-rotation identity — the actual Ising evolution now runs through `Hamiltonian`/`evolve` instead) |
-| CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18; pages 19–21 (`CNOTGate.matrix(qubits:control:target:)` applied directly via `StateVector.apply(_:)` for Bell-pair prep and the ZZ-rotation identity) |
-| Toffoli (CCX) | `ccx(control1, control2, target)` — any distinct triple | `ToffoliGate` (also `matrix(qubits:control1:control2:target:)`) | `ToffoliTests`; page 14 (three X-conjugated Toffolis build the syndrome-driven bit-flip correction) |
-| Multi-controlled X (MCX) | `mcx(controls, target)` — any number of distinct controls | `MultiControlledXGate` (also `matrix(qubits:controls:target:)`; 0 controls = X, 1 = CNOT, 2 = Toffoli) | page 14 (the "control on 0" halves of the syndrome correction); `increment`/`decrement` below are built on it |
-| RZZ/RXX/RYY (θ) | `rzz/rxx/ryy(theta, q0, q1)` — any distinct pair | `RZZGate` / `RXXGate` / `RYYGate` (fixed 2-qubit `exp(-iθ·P⊗P/2)`) | `TwoQubitRotationTests`; page 21 (`RZZGate`'s `cx;rz;cx` identity is the exact building block of every Trotter step; also the general `pauliRotation` circuit methods below are built from the same basis-change + CNOT-staircase idiom) |
+| Gate | Circuit API | Type |
+|------|-------------|------|
+| Hadamard (H) | `h(qubit)` | `HadamardGate` |
+| Pauli-X (X) | `x(qubit)` | `PauliXGate` |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` |
+| S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` |
+| T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` |
+| Phase P(θ) | `p(theta, qubit)` | `PhaseGate` |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` |
+| CNOT (CX) | `cx(control, target)` | `CNOTGate` |
+| Toffoli (CCX) | `ccx(control1, control2, target)` | `ToffoliGate` |
+| MCX | `mcx(controls, target)` | `MultiControlledXGate` |
+| RZZ/RXX/RYY (θ) | `rzz/rxx/ryy(theta, q0, q1)` | `RZZGate` / `RXXGate` / `RYYGate` |
+
+Used in:
+
+- **Hadamard (H)** — Bell example; all five test suites; playground pages 01, 02, 05–16, 20; page 19 (`HadamardGate.matrix` applied directly via `StateVector.apply(_:)` — Bell-pair prep, basis rotations — rather than the circuit method, since page 19 doesn't use `QuantumCircuit` at all); page 22 (`HadamardGate.matrix` as the walk's coin flip)
+- **Pauli-X (X)** — `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18; page 19 (`PauliXGate.matrix` as a Kraus operator)
+- **Pauli-Y (Y)** — `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ|Y|ψ⟩); pages 19–20 (`PauliYGate.matrix` as a Monte-Carlo error gate / an exact-expectation check)
+- **Pauli-Z (Z)** — `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; pages 19–21 (`PauliZGate.matrix` as a Monte-Carlo error gate and the exact ZZ-rotation identity's core piece)
+- **S / S†** — `AdditionalGatesTests`; pages 02 (the |±i⟩ states), 05; page 20 (`SDaggerGate.matrix` applied raw for the Y-basis measurement rotation, sign-checked against a known Y-eigenstate)
+- **T / T†** — `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page)
+- **Phase P(θ)** — `AdditionalGatesTests`; pages 01, 05; page 16 (the building block of the hand-built controlled-phase CP(θ), five gates deep)
+- **RX/RY/RZ (θ)** — `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter); page 20 (`RYGate`/`RZGate.matrix(θ)` build a generic tilted state, raw); page 21 (`RXGate.matrix(θ)` self-checks `Matrix.expm()`; `RZGate.matrix(θ)` is the core of the hand-derived ZZ-rotation identity — the actual Ising evolution now runs through `Hamiltonian`/`evolve` instead)
+- **CNOT (CX)** — any distinct control/target pair; also `CNOTGate.matrix(qubits:control:target:)`. Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18; pages 19–21 (`CNOTGate.matrix(qubits:control:target:)` applied directly via `StateVector.apply(_:)` for Bell-pair prep and the ZZ-rotation identity)
+- **Toffoli (CCX)** — any distinct control/control/target triple; also `ToffoliGate.matrix(qubits:control1:control2:target:)`. `ToffoliTests`; page 14 (three X-conjugated Toffolis build the syndrome-driven bit-flip correction)
+- **MCX (Multi-controlled X)** — any number of distinct controls; also `MultiControlledXGate.matrix(qubits:controls:target:)` (0 controls = X, 1 = CNOT, 2 = Toffoli). page 14 (the "control on 0" halves of the syndrome correction); `increment`/`decrement` below are built on it
+- **RZZ/RXX/RYY (θ)** — any distinct qubit pair; fixed 2-qubit `exp(-iθ·P⊗P/2)`. `TwoQubitRotationTests`; page 21 (`RZZGate`'s `cx;rz;cx` identity is the exact building block of every Trotter step; also the general `pauliRotation` circuit methods below are built from the same basis-change + CNOT-staircase idiom)
 
 `QuantumCircuit` also has a few operations that aren't tied to a single fixed-size gate enum:
 `pauliRotation(_ pauli:theta:)` (the general Pauli-string rotation `rzz`/`rxx`/`ryy` are built
@@ -109,19 +124,33 @@ A few entries that used to live here have since moved into Core — `Matrix.expm
 factories — pages 18/19/21 now use those Core types directly (see the features list above),
 though a couple of pages keep the original hand-built version around as a cross-check:
 
-| Gate | Built from | Where |
-|------|------------|-------|
-| Pauli-Y (Y) | raw 2×2 `Matrix` | `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`) |
-| CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator); page 13 (`h(2); cx(0,2); h(2)` — the deferred Z^a correction) |
-| Bell-basis projector | `(Ket("ab") * Bra("ab")) ⊗ Matrix.identity(size: 2)` | page 13 (recovering one measurement branch without `measure()`) |
-| 3-qubit code correction | three X-conjugated `ToffoliGate.matrix`/`MultiControlledXGate.matrix` calls, combined into one 32×32 `Matrix` | page 14 (syndrome-driven error correction via `apply(_:)`) |
-| Tilted observable A(θ) | `cos θ·Z + sin θ·X`, built entrywise | page 15 (CHSH correlators; measured via `ry(-θ)`) |
-| CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
-| Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
-| QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
-| Controlled phase CP(θ) | `p(θ/2, c); cx(c,t); p(-θ/2, t); cx(c,t); p(θ/2, t)` | page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π) |
-| ZZ-rotation exp(−iθ·Z⊗Z/2), by hand | `cx(0,1); rz(θ,1); cx(0,1)` | page 21 (re-derives the identity and checks it against `Matrix.expm()`, even though `RZZGate`/`rzz` now build the same thing in Core) |
-| Coined-walk shift S, by hand | 32×32 permutation on (coin ⊗ 16-site position) — one `.one` per column | page 22 (kept only as a cross-check baseline; the walk itself now uses `increment`/`decrement`, confirmed to agree exactly) |
+| Gate | Built from |
+|------|------------|
+| Pauli-Y (Y) | raw 2×2 `Matrix` |
+| CZ | `h(1); cx(0,1); h(1)` |
+| Bell-basis projector | `(Ket * Bra) ⊗ I₂` |
+| 3-qubit code correction | one 32×32 `Matrix` |
+| Tilted observable A(θ) | `cos θ·Z + sin θ·X`, built entrywise |
+| CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 |
+| Modular multiplication U_a (mod 15) | 16×16 / 128×128 permutations |
+| QFT† (3-qubit inverse Fourier) | entrywise 8×8 inverse DFT ⊗ I₁₆ |
+| Controlled phase CP(θ) | `p(θ/2,c); cx(c,t); p(-θ/2,t); cx(c,t); p(θ/2,t)` |
+| ZZ-rotation exp(−iθ·Z⊗Z/2), by hand | `cx(0,1); rz(θ,1); cx(0,1)` |
+| Coined-walk shift S, by hand | 32×32 permutation on (coin ⊗ 16-site position) |
+
+Where:
+
+- **Pauli-Y (Y)** — `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`)
+- **CZ** — page 11 (phase oracles and diffusion operator); page 13 (`h(2); cx(0,2); h(2)` — the deferred Z^a correction)
+- **Bell-basis projector** — built as `(Ket("ab") * Bra("ab")) ⊗ Matrix.identity(size: 2)`. page 13 (recovering one measurement branch without `measure()`)
+- **3-qubit code correction** — three X-conjugated `ToffoliGate.matrix`/`MultiControlledXGate.matrix` calls, combined into one 32×32 `Matrix`. page 14 (syndrome-driven error correction via `apply(_:)`)
+- **Tilted observable A(θ)** — page 15 (CHSH correlators; measured via `ry(-θ)`)
+- **CCZ** — page 11 (3-qubit Grover finale)
+- **Modular multiplication U_a (mod 15)** — one `.one` per column; the controlled versions key on a counting bit. page 12 (Shor order finding)
+- **QFT† (3-qubit inverse Fourier)** — built entrywise from `cos`/`sin`. page 12 (phase-estimation readout)
+- **Controlled phase CP(θ)** — page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π)
+- **ZZ-rotation exp(−iθ·Z⊗Z/2), by hand** — page 21 (re-derives the identity and checks it against `Matrix.expm()`, even though `RZZGate`/`rzz` now build the same thing in Core)
+- **Coined-walk shift S, by hand** — one `.one` per column. page 22 (kept only as a cross-check baseline; the walk itself now uses `increment`/`decrement`, confirmed to agree exactly)
 
 ---
 
