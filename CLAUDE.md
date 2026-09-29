@@ -89,12 +89,15 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   leaving the receiver's own operation list untouched. `measureExpectation(of:shots:)`
   (overloaded for `PauliString`/`Hamiltonian`) is a shot-based expectation value built on
   `measure(shots:basis:)` + `SimulationResult.parityExpectation(qubits:)`; the `Hamiltonian`
-  overload spends `shots` per term, with no commuting-term grouping. `evolve(_ hamiltonian:
+  overload groups `hamiltonian.terms` via `Hamiltonian.commutingGroups()` below and spends
+  `shots` once per group rather than once per term (every term in a qubit-wise-commuting
+  group shares one `measure(shots:basis:)` call). `evolve(_ hamiltonian:
   time: steps: order:)` appends `steps` repetitions of a Trotterized product formula (one
   `pauliRotation` call per term; `order: 1` full-step Lie–Trotter, `order: 2` half/full/half
   Strang splitting), terms applied in the order `hamiltonian.terms` lists them — no
-  automatic commuting-layer grouping; `Hamiltonian.trotterCircuit(time:steps:order:)` below
-  wraps it on a fresh circuit. `increment`/`decrement(register: [Int], controlledBy: Int?)`
+  automatic commuting-layer grouping (unlike `measureExpectation` above; a caller who wants
+  one reorders `terms` via `commutingGroups()` first);
+  `Hamiltonian.trotterCircuit(time:steps:order:)` below wraps it on a fresh circuit. `increment`/`decrement(register: [Int], controlledBy: Int?)`
   are a ripple-carry ±1 on `register` (most-significant qubit first) built from `mcx` —
   `increment` applies most-significant to least-significant so every flip's controls are
   read before they're touched; `decrement` is the same gates in reverse (each `mcx` is
@@ -115,12 +118,19 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   (`[PauliBasis?]` labels, `nil` = `I`, plus a real `coefficient`), buildable from a label
   string (`"XIZ"`) or from `labels:`; exposes `qubits`, `activeQubits`, `label` (round-trips
   through the string initializer and matches `pauliRotation`'s own labels), `matrix`, and
-  `expectation(_ state:)`.
+  `expectation(_ state:)`. `isQubitWiseCommuting(with:)` is true iff, on every qubit, the
+  two strings' labels agree or at least one is `I` — stricter than literal Pauli
+  commutativity, but the condition `Hamiltonian.commutingGroups()` below actually needs
+  (two QWC-compatible terms share one well-defined per-qubit measurement basis).
 - `Quantum/Hamiltonian.swift` — `Hamiltonian`: a plain (unmerged, ungrouped) sum of
   `PauliString` terms, with `matrix` (Σ term matrices) and `expectation(_ state:)` (Σ term
   expectations). Replaces the entrywise Pauli-term accumulation page `18VQE` hand-rolls.
   `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
-  `QuantumCircuit.evolve(_:time:steps:order:)` above.
+  `QuantumCircuit.evolve(_:time:steps:order:)` above. `commutingGroups() -> [[PauliString]]`
+  partitions `terms` into qubit-wise-commuting groups via a greedy heuristic (Qiskit's
+  default `group_commuting` strategy: each term joins the first existing group every member
+  of which it's compatible with, else starts a new group) — used automatically by
+  `measureExpectation(of: Hamiltonian, shots:)` above.
 - `Quantum/ParameterShift.swift` — `ParameterShift.gradient(at:shift:_:)`: the
   parameter-shift rule generalized to any number of parameters and any `[Double] ->
   Double` cost closure (exact whenever every parameter is a single `exp(-iθP/2)` rotation's
@@ -128,7 +138,10 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   `Hamiltonian`/`ansatz`-closure convenience overload. `GradientDescent.minimize(initial:
   learningRate:maxIterations:tolerance:cost:gradient:)` is a minimal fixed-step optimizer
   (no line search/momentum) defaulting its `gradient` to `ParameterShift.gradient`,
-  returning a `Result` (`parameters`, `value`, `history`, `iterations`, `converged`).
+  returning a `Result` (`parameters`, `value`, `history`, `parameterHistory`, `iterations`,
+  `converged`) — `parameterHistory[i]` is the parameter vector `history[i]` was evaluated
+  at, so zipping the two gives the full optimization trajectory (e.g. page `15CHSH`'s and
+  `18VQE`'s live charts).
 - `Quantum/StateTomography.swift` — `StateTomography`: a caseless namespace turning
   `measure(shots:basis:)` results into a reconstructed single-qubit Bloch vector —
   `estimate(qubit:result:)` (a single-qubit `parityExpectation` wrapper),
@@ -275,8 +288,11 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   A(θ) = cos θ·Z + sin θ·X built with `Matrix`'s scalar `*`/`+` operators and measured via
   `ry(-θ)` with its sign pinned against the exact expectation value; correlators computed
   both exactly (`state† * (A(a) ⊗ A(b)) * state`) and via `measure(shots:)`; a Bell pair's
-  S = 2√2 against a product-state control and a sweep over the second setting consistent
-  with Tsirelson's bound; a `CHSHChartView`
+  S = 2√2 against a product-state control; and a genuine multi-angle search over all four
+  CHSH settings via `ParameterShift.gradient`/`GradientDescent.minimize` — E(x,y) = cos(x−y)
+  for this Bell state fits the parameter-shift rule's exactness condition exactly, and three
+  fixed starting points all converge to S = 2.8284…, matching 2√2 (Tsirelson's bound); a
+  `CHSHChartView`
   live chart of the violation (plan in `PlaygroundDocs/15CHSHPLAN.md`, user guide in
   `PlaygroundDocs/15CHSHHELP.md`).
 - `16QFT` — the quantum Fourier transform as a gate circuit (console only): a controlled

@@ -30,6 +30,8 @@ let T = Matrix((0..<2).map { row in [Ket.plus[row], Ket.minus[row]] })
 print(T)
 // column 0 is |+⟩'s amplitudes, column 1 is |−⟩'s — exactly T·(1,0) = |+⟩, T·(0,1) = |−⟩
 
+print(T†)
+
 // ------------------------------------------------------------
 // §3 — Construct the transpose by hand: its rows are the new bras
 // ------------------------------------------------------------
@@ -58,6 +60,23 @@ print(Tdag == T.adjoint, Tdag == plainTranspose(T))
 let c = Tdag.multiply(by: psi.amplitudes)
 print(c)
 // [0.7071067811865475, 0.7071067811865475]
+
+let psi2: Ket = .plus
+let c2 = Tdag.multiply(by: psi2.amplitudes)
+print(c2)
+
+let psi3: Ket = .plusI
+let c3 = Tdag.multiply(by: psi3.amplitudes)
+print(c3)
+
+let T2 = Matrix((0..<2).map { row in [Ket.plusI[row], Ket.minusI[row]] })
+print(T2)
+
+print(T2†)
+let Tdag2 = T2†
+let c4 = Tdag2.multiply(by: psi3.amplitudes)
+print(c4)
+
 
 print(Ket.plus† * psi, Ket.minus† * psi)
 // identical to c[0], c[1] — T†ψ IS the stack of inner products ⟨+|ψ⟩, ⟨−|ψ⟩

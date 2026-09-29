@@ -7,11 +7,15 @@ It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong foc
 
 Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
 1. The usage of Xcode playgrounds.
-2. Playgrounds 10 to 22 contain many different quantum computing examples.
+2. Playgrounds 10 to 22 contain many different quantum computing examples; pages 40+ walk
+   through the SwiftQiskitApp `INTRODUCTION.md` book chapter by chapter.
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
 5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package. SwiftQiskitGUI has been dropped.
 6. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application.
+7. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds
+   presentational SwiftUI types (`BlochVector`, `CHSHChartView`) shared by the playground and
+   by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
 
 ---
 
@@ -29,11 +33,23 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
   - Pauli-Z (Z)
   - Phase gates: S, S†, T, T†, and the general P(θ)
   - Rotations: RX(θ), RY(θ), RZ(θ)
-  - CNOT (Controlled-NOT)
+  - CNOT (Controlled-NOT), Toffoli (CCX), and general multi-controlled X (MCX)
+  - Two-qubit rotations RZZ(θ), RXX(θ), RYY(θ), and the general `pauliRotation`
 - ✅ Single-qubit gate embedding  
 - ✅ Quantum circuit abstraction  
 - ✅ Measurement & state collapse  
 - ✅ Bell State (Entanglement) example  
+- ✅ Pauli strings & Hamiltonians (`PauliString`/`Hamiltonian`), Pauli-basis measurement and
+  shot-based expectation values (`measureExpectation`)
+- ✅ Hamiltonian simulation via Trotterized time evolution (`evolve`/`trotterCircuit`)
+- ✅ Variational algorithms: exact parameter-shift gradients and a minimal gradient-descent
+  optimizer (`ParameterShift`, `GradientDescent`)
+- ✅ State tomography from measurement statistics (`StateTomography`)
+- ✅ Open-system simulation: density matrices, Kraus channels, and noise models
+  (`DensityMatrix`, `KrausChannel`, `NoiseModel`, `runDensityMatrix`/`runTrajectories`)
+- ✅ Register arithmetic (`increment`/`decrement`) and marginal/parity readout helpers
+- ✅ `SwiftQiskitViews` — a small, UI-only companion library (Bloch-vector math, a 2D chart
+  view) shared by the playground and by `SwiftQiskitApp`
 
 ---
 
@@ -65,37 +81,47 @@ with a matching convenience method on `QuantumCircuit`:
 
 | Gate | Circuit API | Type | Used in |
 |------|-------------|------|---------|
-| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16; pages 19–22 (`HadamardGate.matrix` applied directly via `StateVector.apply(_:)` — Bell-pair prep, basis rotations, the walk's coin flip — rather than the circuit method, since 19–22 don't use `QuantumCircuit` at all) |
+| Hadamard (H) | `h(qubit)` | `HadamardGate` | Bell example; all five test suites; playground pages 01, 02, 05–16, 20; page 19 (`HadamardGate.matrix` applied directly via `StateVector.apply(_:)` — Bell-pair prep, basis rotations — rather than the circuit method, since page 19 doesn't use `QuantumCircuit` at all); page 22 (`HadamardGate.matrix` as the walk's coin flip) |
 | Pauli-X (X) | `x(qubit)` | `PauliXGate` | `TensorProductTests`, `AdditionalGatesTests`; pages 02, 05, 09–14, 17, 18; page 19 (`PauliXGate.matrix` as a Kraus operator) |
-| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); page 18 (`PauliYGate.matrix` as a raw Hamiltonian term, not via `y(qubit)`); pages 19–20 (`PauliYGate.matrix` as a Kraus operator / an exact-expectation check) |
-| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; page 18 (`PauliZGate.matrix` as a raw Hamiltonian term); pages 19–21 (`PauliZGate.matrix` as a Kraus operator, an Ising-chain term, and the ZZ-rotation identity's core piece) |
+| Pauli-Y (Y) | `y(qubit)` | `PauliYGate` | `AdditionalGatesTests`; pages 05 (`y(0)`), 08 (Y† == Y, ⟨ψ\|Y\|ψ⟩); pages 19–20 (`PauliYGate.matrix` as a Monte-Carlo error gate / an exact-expectation check) |
+| Pauli-Z (Z) | `z(qubit)` | `PauliZGate` | `DiracNotationTests`, `AdditionalGatesTests`; pages 01, 02, 05, 08, 13, 14; pages 19–21 (`PauliZGate.matrix` as a Monte-Carlo error gate and the exact ZZ-rotation identity's core piece) |
 | S / S† | `s(qubit)` / `sdg(qubit)` | `SGate` / `SDaggerGate` | `AdditionalGatesTests`; pages 02 (the \|±i⟩ states), 05; page 20 (`SDaggerGate.matrix` applied raw for the Y-basis measurement rotation, sign-checked against a known Y-eigenstate) |
 | T / T† | `t(qubit)` / `tdg(qubit)` | `TGate` / `TDaggerGate` | `AdditionalGatesTests`; page 05 (`t` applied twice, T² == S — `tdg` isn't used on any page) |
 | Phase P(θ) | `p(theta, qubit)` | `PhaseGate` | `AdditionalGatesTests`; pages 01, 05; page 16 (the building block of the hand-built controlled-phase CP(θ), five gates deep) |
-| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter); page 20 (`RYGate`/`RZGate.matrix(θ)` build a generic tilted state, raw); page 21 (`RXGate.matrix(θ)` self-checks `expm` and drives the Ising field term; `RZGate.matrix(θ)` is the core of the exact ZZ-rotation identity) |
+| RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` | `AdditionalGatesTests`; page 05; page 13 (`ry`/`rz` prepare the teleported payload); page 14 (`rx(θ)` as a partial bit-flip error); page 15 (`ry(-θ)` rotates into a tilted measurement basis); page 18 (`ry(θ)` is the VQE ansatz's only parameter); page 20 (`RYGate`/`RZGate.matrix(θ)` build a generic tilted state, raw); page 21 (`RXGate.matrix(θ)` self-checks `Matrix.expm()`; `RZGate.matrix(θ)` is the core of the hand-derived ZZ-rotation identity — the actual Ising evolution now runs through `Hamiltonian`/`evolve` instead) |
 | CNOT (CX) | `cx(control, target)` — any distinct pair | `CNOTGate` (also `matrix(qubits:control:target:)`) | Bell example; `BellStateTests`, `CNOTTests`; pages 05, 07–11, 13–18; pages 19–21 (`CNOTGate.matrix(qubits:control:target:)` applied directly via `StateVector.apply(_:)` for Bell-pair prep and the ZZ-rotation identity) |
+| Toffoli (CCX) | `ccx(control1, control2, target)` — any distinct triple | `ToffoliGate` (also `matrix(qubits:control1:control2:target:)`) | `ToffoliTests`; page 14 (three X-conjugated Toffolis build the syndrome-driven bit-flip correction) |
+| Multi-controlled X (MCX) | `mcx(controls, target)` — any number of distinct controls | `MultiControlledXGate` (also `matrix(qubits:controls:target:)`; 0 controls = X, 1 = CNOT, 2 = Toffoli) | page 14 (the "control on 0" halves of the syndrome correction); `increment`/`decrement` below are built on it |
+| RZZ/RXX/RYY (θ) | `rzz/rxx/ryy(theta, q0, q1)` — any distinct pair | `RZZGate` / `RXXGate` / `RYYGate` (fixed 2-qubit `exp(-iθ·P⊗P/2)`) | `TwoQubitRotationTests`; page 21 (`RZZGate`'s `cx;rz;cx` identity is the exact building block of every Trotter step; also the general `pauliRotation` circuit methods below are built from the same basis-change + CNOT-staircase idiom) |
+
+`QuantumCircuit` also has a few operations that aren't tied to a single fixed-size gate enum:
+`pauliRotation(_ pauli:theta:)` (the general Pauli-string rotation `rzz`/`rxx`/`ryy` are built
+from), `rotateToZ(_:_:)` / `measure(shots:basis:)` (Pauli-basis measurement), `evolve(_:time:
+steps:order:)` (Trotterized Hamiltonian simulation), and `increment`/`decrement(register:
+controlledBy:)` (ripple-carry ±1 on a register, built from `mcx`). See [`API.md`](API.md) for
+full signatures.
 
 **Hand-built gates** — constructed in tests/playgrounds from raw `Matrix` values or gate
-compositions and applied with `circuit.apply(_:)` (or, on pages 19–22, which don't build a
-`QuantumCircuit` at all, directly via `StateVector.apply(_:)`); not (yet) part of Core:
+compositions and applied with `circuit.apply(_:)` (or, on page 19, which doesn't build a
+`QuantumCircuit` at all, directly via `StateVector`/`DensityMatrix`); not (yet) part of Core.
+A few entries that used to live here have since moved into Core — `Matrix.expm()`, the
+`RZZGate`/`rzz` ZZ-rotation identity, `Hamiltonian`/`PauliString`, and the `KrausChannel`
+factories — pages 18/19/21 now use those Core types directly (see the features list above),
+though a couple of pages keep the original hand-built version around as a cross-check:
 
 | Gate | Built from | Where |
 |------|------------|-------|
 | Pauli-Y (Y) | raw 2×2 `Matrix` | `DiracNotationTests` (adjoint of a non-symmetric matrix — the test predates `PauliYGate`) |
 | CZ | `h(1); cx(0,1); h(1)` | page 11 (phase oracles and diffusion operator); page 13 (`h(2); cx(0,2); h(2)` — the deferred Z^a correction) |
 | Bell-basis projector | `(Ket("ab") * Bra("ab")) ⊗ Matrix.identity(size: 2)` | page 13 (recovering one measurement branch without `measure()`) |
-| 3-qubit code correction | 32×32 permutation decoding two syndrome bits and flipping the accused data qubit | page 14 (syndrome-driven error correction via `apply(_:)`) |
+| 3-qubit code correction | three X-conjugated `ToffoliGate.matrix`/`MultiControlledXGate.matrix` calls, combined into one 32×32 `Matrix` | page 14 (syndrome-driven error correction via `apply(_:)`) |
 | Tilted observable A(θ) | `cos θ·Z + sin θ·X`, built entrywise | page 15 (CHSH correlators; measured via `ry(-θ)`) |
 | CCZ | `Matrix.identity(size: 8)` with the \|111⟩ entry set to −1 | page 11 (3-qubit Grover finale) |
 | Modular multiplication U_a (mod 15) | 16×16 / 128×128 basis-state permutations — one `.one` per column; the controlled versions key on a counting bit | page 12 (Shor order finding) |
 | QFT† (3-qubit inverse Fourier) | 8×8 inverse-DFT matrix built entrywise from `cos`/`sin`, embedded as `qftDagger ⊗ I₁₆` | page 12 (phase-estimation readout) |
 | Controlled phase CP(θ) | `p(θ/2, c); cx(c,t); p(-θ/2, t); cx(c,t); p(θ/2, t)` | page 16 (the QFT ladder and standalone phase estimation; reduces to CZ at θ=π) |
-| H₂ Hamiltonian (Jordan–Wigner, 2 qubits) | six Pauli terms (I⊗I, Z⊗I, I⊗Z, Z⊗Z, Y⊗Y, X⊗X) combined with `Matrix`'s `+`/scalar `*` | page 18 (VQE's energy operator) |
-| Kraus channels (bit-flip, phase-flip, depolarizing, amplitude damping) | pairs/quadruples of scaled `Matrix` values satisfying ΣKᵢ†Kᵢ = I | page 19 (noise channels, applied as ρ' = ΣKᵢρKᵢ†) |
-| `expm` (matrix exponential) | scaling-and-squaring Taylor series on `Matrix *` | page 21 (ground truth for Trotterized Hamiltonian simulation, self-checked against `RXGate`) |
-| ZZ-rotation exp(−iθ·Z⊗Z/2) | `cx(0,1); rz(θ,1); cx(0,1)` | page 21 (the exact building block of every Trotter step) |
-| Ising chain H = −J·Z⊗Z − h·(X⊗I + I⊗X) | two Pauli terms combined with `Matrix`'s `+`/scalar `*` | page 21 (Hamiltonian simulation target) |
-| Coined-walk shift S | 32×32 permutation on (coin ⊗ 16-site position) — one `.one` per column | page 22 (the conditional shift \|0,x⟩→\|0,x+1⟩, \|1,x⟩→\|1,x−1⟩) |
+| ZZ-rotation exp(−iθ·Z⊗Z/2), by hand | `cx(0,1); rz(θ,1); cx(0,1)` | page 21 (re-derives the identity and checks it against `Matrix.expm()`, even though `RZZGate`/`rzz` now build the same thing in Core) |
+| Coined-walk shift S, by hand | 32×32 permutation on (coin ⊗ 16-site position) — one `.one` per column | page 22 (kept only as a cross-check baseline; the walk itself now uses `increment`/`decrement`, confirmed to agree exactly) |
 
 ---
 
@@ -156,35 +182,70 @@ For a full listing of every public type and member in the core library, see [`AP
 ```text
 SwiftQiskit/
 ├── Sources/
-│   └── SwiftQiskit/
-│       ├── Math/
-│       │   ├── Complex.swift
-│       │   └── Matrix.swift
-│       ├── Quantum/
-│       │   ├── StateVector.swift
-│       │   ├── Dirac.swift
-│       │   └── SimulationResult.swift
-│       ├── Gates/
-│       │   ├── Hadamard.swift
-│       │   ├── PauliX.swift
-│       │   ├── PauliY.swift
-│       │   ├── PauliZ.swift
-│       │   ├── Phase.swift
-│       │   ├── Rotation.swift
-│       │   └── CNOT.swift
-│       ├── Circuit/
-│       │   └── QuantumCircuit.swift
-│       └── Utils/
-│           └── String+Padding.swift
+│   ├── SwiftQiskit/
+│   │   ├── Math/
+│   │   │   ├── Complex.swift
+│   │   │   └── Matrix.swift
+│   │   ├── Quantum/
+│   │   │   ├── StateVector.swift
+│   │   │   ├── Dirac.swift
+│   │   │   ├── SimulationResult.swift
+│   │   │   ├── PauliBasis.swift
+│   │   │   ├── PauliString.swift
+│   │   │   ├── Hamiltonian.swift
+│   │   │   ├── ParameterShift.swift
+│   │   │   ├── StateTomography.swift
+│   │   │   ├── DensityMatrix.swift
+│   │   │   ├── KrausChannel.swift
+│   │   │   └── NoiseModel.swift
+│   │   ├── Gates/
+│   │   │   ├── Hadamard.swift
+│   │   │   ├── PauliX.swift
+│   │   │   ├── PauliY.swift
+│   │   │   ├── PauliZ.swift
+│   │   │   ├── Phase.swift
+│   │   │   ├── Rotation.swift
+│   │   │   ├── CNOT.swift
+│   │   │   ├── Toffoli.swift
+│   │   │   ├── MultiControlledX.swift
+│   │   │   └── TwoQubitRotation.swift
+│   │   ├── Circuit/
+│   │   │   └── QuantumCircuit.swift
+│   │   └── Utils/
+│   │       └── String+Padding.swift
+│   └── SwiftQiskitViews/
+│       ├── BlochVector.swift
+│       └── CHSHChartView.swift
 ├── Examples/
 │   └── main.swift
 ├── Tests/
-│   └── SwiftQiskitTests/
-│       ├── BellStateTests.swift
-│       ├── TensorProductTests.swift
-│       ├── DiracNotationTests.swift
-│       ├── CNOTTests.swift
-│       └── AdditionalGatesTests.swift
+│   ├── SwiftQiskitTests/
+│   │   ├── BellStateTests.swift
+│   │   ├── TensorProductTests.swift
+│   │   ├── DiracNotationTests.swift
+│   │   ├── CNOTTests.swift
+│   │   ├── AdditionalGatesTests.swift
+│   │   ├── MatrixArithmeticTests.swift
+│   │   ├── MeasurementTests.swift
+│   │   ├── MatrixExponentialTests.swift
+│   │   ├── TwoQubitRotationTests.swift
+│   │   ├── ToffoliTests.swift
+│   │   ├── ReadoutTests.swift
+│   │   ├── PauliBasisTests.swift
+│   │   ├── PauliStringTests.swift
+│   │   ├── MeasureExpectationTests.swift
+│   │   ├── StateTomographyTests.swift
+│   │   ├── TrotterTests.swift
+│   │   ├── ParameterShiftTests.swift
+│   │   ├── RegisterArithmeticTests.swift
+│   │   ├── DensityMatrixTests.swift
+│   │   ├── KrausChannelTests.swift
+│   │   ├── NoiseModelTests.swift
+│   │   ├── CommutingGroupsTests.swift
+│   │   └── PermutationFastPathTests.swift
+│   └── SwiftQiskitViewsTests/
+│       ├── BlochVectorTests.swift
+│       └── CHSHChartViewTests.swift
 ├── PlaygroundDocs/
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
@@ -222,6 +283,7 @@ SwiftQiskit/
 │   ├── 21TROTTERHELP.md
 │   ├── 22WALKPLAN.md
 │   ├── 22WALKHELP.md
+│   ├── 41BASISTRANSFORMATIONSHELP.md
 │   └── 90LIVEVIEWHELP.md   (not page-numbered — sorts last on purpose; the shared-code/live-view guide)
 ├── Playgrounds.playground/
 │   ├── Sources/            (code shared by all pages — see PLAYGROUNDSUPPORT.md)
@@ -248,8 +310,14 @@ SwiftQiskit/
 │       ├── 19Noise
 │       ├── 20Tomography
 │       ├── 21Trotter
-│       └── 22Walk
+│       ├── 22Walk
+│       ├── 40ComplexAndMatrices
+│       └── 41BasisTransformations
 ├── Package.swift
+├── API.md               (full public API reference for the core library)
+├── CLAUDE.md             (guidance for Claude Code working in this repo)
+├── PLAYGROUNDSUPPORT.md  (playground implementation reference)
+├── STATUSandTODO.md      (project status, roadmap, working TODO list)
 └── References (tbd)
 ```
 
@@ -327,11 +395,16 @@ for (state, count) in result.sortedCounts {
 ##  Playgrounds
 
 `Playgrounds.playground` (at the repo root, macOS target) contains interactive, lecture-style
-explorations of the library. Open it in Xcode — pages build against the `SwiftQiskit` scheme
-and are linked sequentially with Previous/Next markers.
+explorations of the library. Open it in Xcode — pages `import SwiftQiskit` and, on the pages
+that use `BlochVector`/`CHSHChartView`, `import SwiftQiskitViews` too, so the active scheme
+must build **both** products: use the `SwiftQiskit-Package` scheme (or the autogenerated
+`SwiftQiskitViews` scheme), not the per-product `SwiftQiskit` scheme, which won't build
+`SwiftQiskitViews`. Pages are linked sequentially with Previous/Next markers.
 
-Code shared by multiple pages (the Bloch-sphere types and views) lives in the playground's
-`Sources/` folder — see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user-facing
+Code shared by multiple pages (the Bloch-sphere views) lives in the playground's
+`Sources/` folder — `BlochVector` and `CHSHChartView` themselves live in the `SwiftQiskitViews`
+package product instead, so Core stays UI-free. See
+[PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user-facing
 guide to that shared code and to putting a live view on a page, and
 [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the terse implementation reference.
 
@@ -535,8 +608,9 @@ fragile qubit without ever looking at it directly, with a Bloch-sphere live view
 
 - **Encode and extract a syndrome** — `cx`-based encoding and two ancilla parities that
   name the flipped qubit (or "none") without touching α or β.
-- **A hand-built correction** — a 32×32 permutation (Core has no Toffoli) that flips
-  whichever qubit the syndrome accuses, applied via `apply(_:)`.
+- **A hand-built correction** — a 32×32 permutation, built from three X-conjugated
+  `ToffoliGate`/`MultiControlledXGate` calls (one per syndrome branch), that flips
+  whichever qubit the syndrome accuses, applied via `apply(_:)` as a single combined operation.
 - **Continuous errors, digitized exactly** — an `rx(θ)` sweep shows the coherent correction
   restoring fidelity 1.0000 at *every* θ, while the syndrome ancillas alone carry the
   cos²(θ/2)/sin²(θ/2) branch weights.
@@ -609,14 +683,16 @@ The variational quantum eigensolver — the one page where the circuit isn't fix
 with a live chart of the optimization:
 
 - **The Hamiltonian** — the qubit Hamiltonian for H₂ (Jordan–Wigner, minimal basis), six
-  Pauli terms combined with `Matrix`'s `+`/scalar `*`.
+  `PauliString` terms summed into a `Hamiltonian`.
 - **A one-parameter ansatz** — `x(0); ry(θ,1); cx(1,0)`, provably confined to the
   {\|01⟩,\|10⟩} subspace.
-- **The energy** — `psi† * H * psi`, page 08's Dirac expectation-value idiom.
+- **The energy** — `Hamiltonian.expectation(_:)`, page 08's Dirac expectation-value idiom
+  summed over terms.
 - **The exact answer** — a closed-form 2×2 eigenvalue, used only to grade the optimizer.
-- **Parameter-shift gradients** — exact, not approximate, for a single-rotation ansatz;
-  pinned against a finite difference.
-- **Gradient descent** — converges to the exact ground energy (error 0.00e+00) in ~10 steps.
+- **Parameter-shift gradients** — exact, not approximate, for a single-rotation ansatz, via
+  `ParameterShift.gradient(at:_:)`; pinned against a finite difference.
+- **Gradient descent** — `GradientDescent.minimize` converges to the exact ground energy
+  (error 0.00e+00) in ~10 steps.
 - **A live chart** — the E(θ) landscape and the optimizer's own visited points, on the shared
   `CHSHChartView`.
 
@@ -624,21 +700,22 @@ Design notes in `PlaygroundDocs/18VQEPLAN.md`; user guide in `PlaygroundDocs/18V
 
 ### 19Noise
 
-Open systems: the density matrix, and how noise enters a state-vector simulator with **no
-`SwiftQiskit` changes**, plus a live Bloch gallery:
+Open systems, built on Core's `DensityMatrix`/`KrausChannel` types, plus a live Bloch gallery:
 
-- **ρ and coherence** — the density matrix ρ = |ψ⟩⟨ψ| from the existing `Ket * Bra` outer
-  product; a classical mixture ½|0⟩⟨0| + ½|1⟩⟨1| contrasted against the superposition |+⟩⟨+| —
-  identical Z-statistics, different off-diagonals.
-- **Kraus channels** — bit-flip, phase-flip, depolarizing, and amplitude damping, each checked
-  for trace preservation (ΣKᵢ†Kᵢ = I) before being trusted.
+- **ρ and coherence** — the density matrix ρ = |ψ⟩⟨ψ| via `DensityMatrix(_:)` (itself the
+  existing `Ket * Bra` outer product); a classical mixture ½|0⟩⟨0| + ½|1⟩⟨1| (via
+  `DensityMatrix(mixture:)`) contrasted against the superposition |+⟩⟨+| — identical
+  Z-statistics, different off-diagonals.
+- **Kraus channels** — the four `KrausChannel` factories (bit-flip, phase-flip, depolarizing,
+  amplitude damping), each checked for trace preservation via `isTracePreserving()`.
 - **Decoherence, exactly** — coherence decaying as (1−2p)ⁿ under repeated dephasing, and
   amplitude damping pulling the Bloch vector *inside* the sphere — the picture no pure state
   can draw.
 - **A Monte-Carlo unraveling** — the exact channel reproduced from ordinary pure-state code:
   flip a coin per shot, apply the error gate or not, then measure.
-- **Entanglement via a reduced state** — tracing out one qubit of a Bell pair gives entropy
-  exactly 1 bit, against 0 for a product state — the explanation page 13's marginals were owed.
+- **Entanglement via a reduced state** — `DensityMatrix.partialTrace(keeping:)` on one qubit
+  of a Bell pair gives entropy exactly 1 bit (`.vonNeumannEntropy`), against 0 for a product
+  state — the explanation page 13's marginals were owed.
 
 Design notes in `PlaygroundDocs/19NOISEPLAN.md`; user guide in `PlaygroundDocs/19NOISEHELP.md`.
 
@@ -647,10 +724,11 @@ Design notes in `PlaygroundDocs/19NOISEPLAN.md`; user guide in `PlaygroundDocs/1
 Reconstructing a state from `measure(shots:)` statistics alone — the honest version of "what a
 real device gives you," depending on page 19's mixed states for its sharpest result:
 
-- **Basis rotations, pinned by hand** — `h` for X, `sdg`+`h` for Y, checked against a known
-  Y-eigenstate rather than assumed.
-- **The estimator and its 1/√N error** — RMS error against the exact expectation value falls
-  by roughly √10 each time the shot count grows tenfold.
+- **Basis rotations, pinned by hand** — `h` for X, `sdg`+`h` for Y (matching Core's
+  `rotateToZ(_:_:)`), checked against a known Y-eigenstate rather than assumed.
+- **The estimator and its 1/√N error** — `StateTomography.estimate`/`estimateBlochVector`'s
+  RMS error against the exact expectation value falls by roughly √10 each time the shot count
+  grows tenfold.
 - **Pure vs. mixed unphysical estimates** — a *pure* state's per-axis reconstruction lands
   outside the Bloch ball about half the time at *any* N (it sits exactly on the boundary);
   only a genuinely mixed state's frequency shrinks toward zero.
@@ -666,12 +744,15 @@ Design notes in `PlaygroundDocs/20TOMOGRAPHYPLAN.md`; user guide in `PlaygroundD
 Hamiltonian simulation — evolving a state in time under a Hamiltonian too large for a single
 gate, the original motivation for quantum computers, with a live chart:
 
-- **`expm`, self-checked** — a page-level matrix exponential (scaling-and-squaring Taylor
+- **`Matrix.expm()`, self-checked** — Core's matrix exponential (scaling-and-squaring Taylor
   series) validated against Core's exact `RXGate` before being trusted as ground truth.
-- **An exact gate identity** — exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, derived from
-  Core's `RZGate` and checked against `expm`, not assumed.
-- **Trotter error scaling** — first-order error shrinking as O(1/n), second-order (Suzuki) as
-  O(1/n²), at the observable level (⟨Z₀⟩(t)) as well as the operator level.
+- **An exact gate identity** — exp(−iθ·Z⊗Z/2) = `cx(0,1); rz(θ,1); cx(0,1)`, re-derived from
+  Core's `RZGate` and checked against `expm`, not assumed — the same identity Core's `RZZGate`/
+  `rzz` build directly.
+- **Trotter error scaling** — the target is now a `Hamiltonian` (three `PauliString` terms)
+  evolved via `QuantumCircuit.evolve(_:time:steps:order:)`; first-order error shrinking as
+  O(1/n), second-order (Suzuki) as O(1/n²), at the observable level (⟨Z₀⟩(t)) as well as the
+  operator level.
 - **Why the error exists** — the non-zero commutator [Z⊗Z, X⊗I] identified as the cause; a
   commuting-only Hamiltonian is exact at n=1.
 
@@ -682,8 +763,10 @@ Design notes in `PlaygroundDocs/21TROTTERPLAN.md`; user guide in `PlaygroundDocs
 The discrete-time quantum walk — interference producing a *distribution*, rather than
 answering an oracle question or amplifying a marked item, with a live chart:
 
-- **The shift, as a permutation** — a hand-built conditional shift on a 16-site cycle, checked
-  as unitary (S†S = I).
+- **The shift, as a permutation** — a conditional-shift permutation on a 16-site cycle built
+  from Core's `increment`/`decrement(register:controlledBy:)`, cross-checked for exact
+  equality against the page's original hand-built permutation and confirmed unitary
+  (S†S = I).
 - **Ballistic vs. diffusive spreading** — the quantum walk's spread grows roughly linearly in
   t; a classical random walk's grows as exactly √t, at every step.
 - **A cyclic-coordinate gotcha, caught and documented** — computing spread from raw site
@@ -693,6 +776,28 @@ answering an oracle question or amplifying a marked item, with a live chart:
   `|+i⟩` basis ket restores left-right symmetry exactly.
 
 Design notes in `PlaygroundDocs/22WALKPLAN.md`; user guide in `PlaygroundDocs/22WALKHELP.md`.
+
+### 40ComplexAndMatrices
+
+The first of the `40+` pages, numbered separately from 01–22 because they accompany chapters
+of the `SwiftQiskitApp` `INTRODUCTION.md` book rather than continuing that sequence: every code
+fragment from the book's Chapter 2, in order — `Complex` construction/`*`/`/`/conjugate/
+magnitude, the Born rule, phase via Euler's formula, plain `[Complex]` vector helpers, inner
+products and normalization, `Matrix` as a transformation and why multiplication order matters,
+unitarity and why exact `==` lies on `H`, and the tensor product `⊗` (console only, no live
+view, no companion `PlaygroundDocs/` guide).
+
+### 41BasisTransformations
+
+Standalone, not tied to a book chapter (console only): expressing |ψ⟩ in a different basis by
+building the change-of-basis matrix `T` from the new basis kets as columns, constructing `T†`
+by hand as the stack of the new bras and checking it against `Matrix.adjoint`, reading off the
+new amplitudes as inner products ⟨bⱼ|ψ⟩, the {|+⟩, |−⟩} case reducing exactly to `H`, why the
+complex {|+i⟩, |−i⟩} case needs the conjugate transpose (a plain transpose silently swaps
+|+i⟩'s probabilities and fails the unitarity check), and measuring in the new basis via
+`h`/`sdg;h` before an ordinary `measure(shots:)`.
+
+User guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`.
 
 The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`)
 are shared between these pages via the playground's `Sources/` folder (not part of Core).
