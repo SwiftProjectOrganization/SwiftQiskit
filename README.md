@@ -238,12 +238,14 @@ SwiftQiskit/
 │   │   │   ├── MultiControlledX.swift
 │   │   │   └── TwoQubitRotation.swift
 │   │   ├── Circuit/
-│   │   │   └── QuantumCircuit.swift
+│   │   │   ├── QuantumCircuit.swift
+│   │   │   └── TensorNetwork.swift
 │   │   └── Utils/
 │   │       └── String+Padding.swift
 │   └── SwiftQiskitViews/
 │       ├── BlochVector.swift
-│       └── CHSHChartView.swift
+│       ├── CHSHChartView.swift
+│       └── TensorNetworkView.swift
 ├── Examples/
 │   └── main.swift
 ├── Tests/
@@ -270,10 +272,12 @@ SwiftQiskit/
 │   │   ├── KrausChannelTests.swift
 │   │   ├── NoiseModelTests.swift
 │   │   ├── CommutingGroupsTests.swift
-│   │   └── PermutationFastPathTests.swift
+│   │   ├── PermutationFastPathTests.swift
+│   │   └── TensorNetworkTests.swift
 │   └── SwiftQiskitViewsTests/
 │       ├── BlochVectorTests.swift
-│       └── CHSHChartViewTests.swift
+│       ├── CHSHChartViewTests.swift
+│       └── TensorNetworkViewTests.swift
 ├── PlaygroundDocs/
 │   ├── 01QUBITSHELP.md
 │   ├── 02BLOCH2DHELP.md
@@ -311,6 +315,8 @@ SwiftQiskit/
 │   ├── 21TROTTERHELP.md
 │   ├── 22WALKPLAN.md
 │   ├── 22WALKHELP.md
+│   ├── 23TENSORNETWORKPLAN.md
+│   ├── 23TENSORNETWORKHELP.md
 │   ├── 41BASISTRANSFORMATIONSHELP.md
 │   └── 90LIVEVIEWHELP.md   (not page-numbered — sorts last on purpose; the shared-code/live-view guide)
 ├── Playgrounds.playground/
@@ -339,6 +345,7 @@ SwiftQiskit/
 │       ├── 20Tomography
 │       ├── 21Trotter
 │       ├── 22Walk
+│       ├── 23TensorNetwork
 │       ├── 40ComplexAndMatrices
 │       └── 41BasisTransformations
 ├── Package.swift
@@ -805,6 +812,26 @@ answering an oracle question or amplifying a marked item, with a live chart:
 
 Design notes in `PlaygroundDocs/22WALKPLAN.md`; user guide in `PlaygroundDocs/22WALKHELP.md`.
 
+### 23TensorNetwork
+
+Building and drawing a tensor network from a circuit — a second, independent way to read a
+circuit, alongside `run()`'s full-matrix replay, with a live gallery:
+
+- **Wires as edges, gates as tensors** — every qubit wire is a bond-dimension-2 edge, a
+  k-qubit gate is a rank-2k tensor (Core's own un-embedded local matrix for that gate), and
+  each qubit's `|0⟩` start is a cap on the left of its wire.
+- **`TensorNetwork(circuit).contract()`, checked against `run()`** — evaluated from nothing
+  but those small local tensors and the wiring, never the full embedded matrices `run()`
+  uses, so agreement between the two is a genuine cross-check.
+- **Four worked networks** — a Bell pair, a GHZ state with a non-adjacent `cx` (page 07,
+  drawn with its skipped wire crossing the gate's box dashed), `rzz` unfolding into exactly
+  the `cx;rz;cx` identity (page 21), and a small 2-qubit QFT ladder (page 16).
+- **A bug found along the way** — `t()` was tagging every qubit for noise purposes instead
+  of just its own; fixed, with a regression test.
+
+Design notes in `PlaygroundDocs/23TENSORNETWORKPLAN.md`; user guide in
+`PlaygroundDocs/23TENSORNETWORKHELP.md`.
+
 ### 40ComplexAndMatrices
 
 The first of the `40+` pages, numbered separately from 01–22 because they accompany chapters
@@ -829,9 +856,10 @@ User guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`.
 
 The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`)
 are shared between these pages via the playground's `Sources/` folder (not part of Core).
-`BlochVector` and the shared 2D chart (`CHSHChartView`, used by pages 15, 18, 21, and 22) live
-instead in the `SwiftQiskitViews` package product — a small SwiftUI library depending only on
-`SwiftQiskit`, also used by the sibling `SwiftQiskitApp` repo, so Core itself stays UI-free —
+`BlochVector`, the shared 2D chart (`CHSHChartView`, used by pages 15, 18, 21, and 22), and the
+circuit-aligned `TensorNetworkView` (page 23) live instead in the `SwiftQiskitViews` package
+product — a small SwiftUI library depending only on `SwiftQiskit`, also used by the sibling
+`SwiftQiskitApp` repo, so Core itself stays UI-free —
 see [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user guide to
 each type and [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the implementation reference.
 `BlochVector` gained an additive `init(x:y:z:)` for page 19's mixed-state (sub-unit-length)
