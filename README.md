@@ -6,7 +6,7 @@
 
 Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
 1. The usage of Xcode playgrounds.
-2. Playgrounds 10 to 22 contain many different quantum computing examples; pages 40+ walk
+2. Playgrounds 10 to 23 contain many different quantum computing examples; pages 40+ walk
    through the SwiftQiskitApp `INTRODUCTION.md` book chapter by chapter.
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
