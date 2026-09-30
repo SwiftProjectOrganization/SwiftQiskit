@@ -11,16 +11,31 @@ import Foundation
 public final class QuantumCircuit {
 
     // MARK: - Types
-    private struct Operation {
+    struct Operation {
         let matrix: Matrix
         /// The qubits this operation acts on, used by `runDensityMatrix(noise:)`/
         /// `runTrajectories(noise:shots:)` to know where to apply per-gate noise.
         let qubits: [Int]
+        /// A short human-readable gate label (`"H"`, `"CX"`, `"RX(1.571)"`, …), used by
+        /// `TensorNetwork` to label each node.
+        let name: String
+        /// The gate's own small tensor — 2^qubits.count × 2^qubits.count (or 1×1 for a
+        /// leg-less global phase) — in the leg order `qubits` lists, *not* embedded across
+        /// the full register. `matrix` above stays the full 2ⁿ×2ⁿ embedding every existing
+        /// caller (`run()` etc.) uses; `local` is only consumed by `TensorNetwork`, which
+        /// contracts from these small tensors rather than the full matrices, making its
+        /// result an independent check of `run()`.
+        let local: Matrix
     }
 
     // MARK: - Properties
     public let qubits: Int
     private var operations: [Operation] = []
+
+    /// This circuit's recorded operations, in order — each one's name, the qubits it
+    /// acts on, and its local (un-embedded) tensor. Internal: consumed by `TensorNetwork`'s
+    /// `init(_:)`, not part of the public gate-building API.
+    var operationRecords: [Operation] { operations }
 
     // MARK: - Initializer
     public init(qubits: Int) {
@@ -39,15 +54,15 @@ public final class QuantumCircuit {
             matrix.rows == expectedDim && matrix.cols == expectedDim,
             "Gate matrix must match circuit dimension (2^n x 2^n)"
         )
-        record(matrix, actingOn: Array(0..<qubits))
+        record(matrix, actingOn: Array(0..<qubits), name: "U", local: matrix)
     }
 
-    /// Records an operation and the qubits it acts on. Used internally by every gate
-    /// method below (instead of the public `apply(_:)`) so `runDensityMatrix(noise:)`/
-    /// `runTrajectories(noise:shots:)` can place per-gate noise precisely, rather than on
-    /// every qubit for every gate.
-    private func record(_ matrix: Matrix, actingOn: [Int]) {
-        operations.append(Operation(matrix: matrix, qubits: actingOn))
+    /// Records an operation, the qubits it acts on, and its name/local tensor for
+    /// `TensorNetwork`. Used internally by every gate method below (instead of the public
+    /// `apply(_:)`) so `runDensityMatrix(noise:)`/`runTrajectories(noise:shots:)` can place
+    /// per-gate noise precisely, rather than on every qubit for every gate.
+    private func record(_ matrix: Matrix, actingOn: [Int], name: String, local: Matrix) {
+        operations.append(Operation(matrix: matrix, qubits: actingOn, name: name, local: local))
     }
 
     // MARK: - Execution
@@ -157,22 +172,26 @@ private extension QuantumCircuit {
 public extension QuantumCircuit {
     /// Apply CNOT gate (control -> target); any distinct pair of qubits.
     func cx(_ control: Int, _ target: Int) {
-        record(CNOTGate.matrix(qubits: qubits, control: control, target: target), actingOn: [control, target])
+        record(CNOTGate.matrix(qubits: qubits, control: control, target: target), actingOn: [control, target],
+               name: "CX", local: CNOTGate.matrix)
     }
 
     /// Apply Toffoli gate (CCNOT): flips `target` iff both controls are 1;
     /// any three distinct qubits.
     func ccx(_ control1: Int, _ control2: Int, _ target: Int) {
         record(ToffoliGate.matrix(qubits: qubits, control1: control1, control2: control2, target: target),
-               actingOn: [control1, control2, target])
+               actingOn: [control1, control2, target], name: "CCX", local: ToffoliGate.matrix)
     }
 
     /// Apply a multi-controlled X (flips `target` iff every qubit in `controls` is 1) to
     /// any distinct set of qubits. `controls` may be empty (an unconditional flip,
     /// equivalent to `x(target)`); one control is equivalent to `cx`, two to `ccx`.
     func mcx(_ controls: [Int], _ target: Int) {
+        let local = MultiControlledXGate.matrix(
+            qubits: controls.count + 1, controls: Array(0..<controls.count), target: controls.count
+        )
         record(MultiControlledXGate.matrix(qubits: qubits, controls: controls, target: target),
-               actingOn: controls + [target])
+               actingOn: controls + [target], name: "MCX", local: local)
     }
 
     /// Apply Hadamard gate to a specific qubit
@@ -182,7 +201,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "H", local: HadamardGate.matrix)
     }
 
     /// Apply Pauli-X gate to a specific qubit
@@ -192,7 +211,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "X", local: PauliXGate.matrix)
     }
     /// Apply Pauli-Y gate to a specific qubit
     func y(_ qubit: Int) {
@@ -201,7 +220,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "Y", local: PauliYGate.matrix)
     }
 
     /// Apply Pauli-Z gate to a specific qubit
@@ -211,7 +230,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "Z", local: PauliZGate.matrix)
     }
 
     /// Apply S gate (phase π/2) to a specific qubit
@@ -221,7 +240,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "S", local: SGate.matrix)
     }
 
     /// Apply S† gate (phase -π/2) to a specific qubit
@@ -231,7 +250,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "S†", local: SDaggerGate.matrix)
     }
 
     /// Apply T gate (phase π/4) to a specific qubit
@@ -241,7 +260,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        apply(full)
+        record(full, actingOn: [qubit], name: "T", local: TGate.matrix)
     }
 
     /// Apply T† gate (phase -π/4) to a specific qubit
@@ -251,7 +270,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "T†", local: TDaggerGate.matrix)
     }
 
     /// Apply phase gate P(θ) to a specific qubit
@@ -261,7 +280,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "P(\(formatted(theta)))", local: PhaseGate.matrix(theta: theta))
     }
 
     /// Apply rotation RX(θ) about the X axis to a specific qubit
@@ -271,7 +290,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "RX(\(formatted(theta)))", local: RXGate.matrix(theta: theta))
     }
 
     /// Apply rotation RY(θ) about the Y axis to a specific qubit
@@ -281,7 +300,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "RY(\(formatted(theta)))", local: RYGate.matrix(theta: theta))
     }
 
     /// Apply rotation RZ(θ) about the Z axis to a specific qubit
@@ -291,7 +310,7 @@ public extension QuantumCircuit {
             qubits: qubits,
             target: qubit
         )
-        record(full, actingOn: [qubit])
+        record(full, actingOn: [qubit], name: "RZ(\(formatted(theta)))", local: RZGate.matrix(theta: theta))
     }
 
     /// Apply the two-qubit rotation exp(-iθ·Z⊗Z/2) to any distinct pair of qubits.
@@ -484,6 +503,12 @@ public extension QuantumCircuit {
         }
     }
 
+    /// Three-decimal rendering of a rotation angle, for a gate's `TensorNetwork` label
+    /// (e.g. `RX(1.571)`).
+    private func formatted(_ theta: Double) -> String {
+        String(format: "%.3f", theta)
+    }
+
     /// Builds a `qubits`-length Pauli string with `pauli` at `q0` and `q1` and `I`
     /// elsewhere, for the `rzz`/`rxx`/`ryy` wrappers above.
     private func pauliString(q0: Int, q1: Int, pauli: Character) -> String {
@@ -512,7 +537,8 @@ public extension QuantumCircuit {
 
         guard !active.isEmpty else {
             let globalPhase = Complex(cos(theta / 2), -sin(theta / 2))
-            record(Matrix.identity(size: 1 << qubits) * globalPhase, actingOn: [])
+            record(Matrix.identity(size: 1 << qubits) * globalPhase, actingOn: [],
+                   name: "phase", local: Matrix([[globalPhase]]))
             return
         }
 

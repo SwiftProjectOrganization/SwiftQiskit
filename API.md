@@ -359,6 +359,60 @@ out-of-range qubit, or `control` is out of range or one of the `register` qubits
 | `runDensityMatrix(noise:)` | `(NoiseModel? = nil) -> DensityMatrix` | Replays every recorded operation on a `DensityMatrix` starting from \|0…0⟩⟨0…0\|, applying `noise`'s single-/multi-qubit `KrausChannel` (whichever matches the gate's qubit count) to every qubit that gate touched, right after it. `noise: nil` gives the exact result — mathematically identical to `DensityMatrix(run())`. |
 | `runTrajectories(noise:shots:)` | `(NoiseModel, Int) -> SimulationResult` | The Monte-Carlo "quantum trajectories" unraveling of `runDensityMatrix(noise:)`: runs `shots` independent pure-state simulations, each stochastically applying one Kraus operator (chosen with probability `‖Kᵢ\|ψ⟩‖²`) after every noisy gate, then measures once per shot. Converges to `runDensityMatrix(noise:)`'s probabilities as `shots` grows. Traps if `shots <= 0`. |
 
+Each recorded operation also carries a short gate label (`"H"`, `"CX"`, `"RX(1.571)"`, …) and
+its own small *local* tensor (2^k×2^k for the k qubits it touches, un-embedded), consumed by
+`TensorNetwork` below rather than by `run()`/the execution methods above.
+
+---
+
+## `TensorNetwork`
+
+`Sources/SwiftQiskit/Circuit/TensorNetwork.swift` — a tensor-network view of a
+`QuantumCircuit`'s currently recorded operations: one node per `|0⟩` input, one per recorded
+gate, one per open output leg, wired together by one edge per wire segment.
+
+```swift
+public struct TensorNetwork {
+    public enum Kind: Equatable {
+        case input
+        case gate(String)   // the gate's QuantumCircuit label, e.g. "CX", "RX(1.571)"
+        case output
+    }
+
+    public struct Node {
+        public let id: Int
+        public let kind: Kind
+        public let qubits: [Int]     // leg order; empty only for a leg-less global-phase node
+        public let column: Int       // ASAP-scheduled layout column
+        public let tensor: Matrix    // 2^qubits.count × 2^qubits.count (1×1 if qubits is empty)
+    }
+
+    public struct Edge {
+        public let id: Int
+        public let qubit: Int
+        public let from: Int         // node id
+        public let to: Int           // node id
+    }
+
+    public let qubits: Int
+    public let nodes: [Node]
+    public let edges: [Edge]
+    public let columns: Int
+
+    public init(_ circuit: QuantumCircuit)
+    public func contract() -> StateVector
+}
+```
+
+`init(_:)` places one `.input` node per qubit at column 0, one `.gate` node per recorded
+operation (ASAP-scheduled: a gate's column is one more than the latest column already reached
+on any qubit it touches, so gates on disjoint qubits can share a column), and one `.output`
+node per qubit at the final column — each gate wired to the most recent node on every qubit it
+touches. `contract()` evaluates the network from `|0…0⟩` through every `.gate` node in
+recorded order, applying **only** each node's own small `tensor` to the legs it names — never
+the full embedded matrices `run()` uses — so agreement between `contract()` and `run()` is an
+independent check of both.
+
 ---
 
 ## `SimulationResult`
@@ -692,6 +746,18 @@ public struct BlochVector: Equatable, Sendable {
 pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk` for correlation curves, energy landscapes, and
 distribution comparisons. See `PLAYGROUNDSUPPORT.md`/`90LIVEVIEWHELP.md` for usage snippets
 and the live-view recipe.
+
+`TensorNetworkView` — a stateless, circuit-aligned drawing of a `TensorNetwork` (above):
+qubit wires run left to right, `|0⟩` caps on the left, open output legs on the right, and
+every gate sits in its own time column as a labelled box on the wires it touches (a
+multi-qubit gate's box spans every row it touches, with a dashed overlay on any wire that
+merely crosses the box without being one of its legs). Used by page `23TensorNetwork`.
+
+```swift
+public struct TensorNetworkView: View {
+    public init(_ network: TensorNetwork, title: String = "Tensor Network", size: CGSize? = nil)
+}
+```
 
 ---
 

@@ -37,6 +37,23 @@ struct NoiseModelTests {
         #expect(abs(rho.probabilities[1] - (1 - p)) < tolerance)
     }
 
+    // MARK: - `t()` is recorded as touching only its own qubit (regression: it used to be
+    // recorded via `apply(_:)`, which tags every qubit in the register)
+
+    @Test func `single-qubit noise after t on one qubit leaves the other qubit untouched`() {
+        let p = 0.5
+        let circuit = QuantumCircuit(qubits: 2)
+        circuit.t(0) // qubit 1 stays |0⟩ and should see no noise at all
+
+        let noise = NoiseModel(singleQubitGate: KrausChannel.bitFlip(p))
+        let probabilities = circuit.runDensityMatrix(noise: noise).probabilities
+
+        // If noise were (wrongly) applied to qubit 1 as well, |01⟩ and |11⟩ would gain
+        // probability; instead every state stays within {|00⟩, |10⟩}.
+        #expect(abs(probabilities[1]) < tolerance)
+        #expect(abs(probabilities[3]) < tolerance)
+    }
+
     // MARK: - Multi-qubit noise lands on every qubit a multi-qubit gate touched
 
     @Test func `bit-flip noise on the multi-qubit channel hits both qubits a cx touches`() {

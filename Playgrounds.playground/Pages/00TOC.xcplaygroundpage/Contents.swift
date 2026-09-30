@@ -59,6 +59,11 @@
  - [22Walk](22Walk) — the discrete-time quantum walk: a hand-built shift permutation, ballistic
    (∝t) spreading against a classical diffusive (∝√t) comparison, and why the |0⟩-coin
    distribution is lopsided while |+i⟩'s is symmetric.
+ - [23TensorNetwork](23TensorNetwork) — building and drawing a tensor network from a circuit:
+   wires as bond-dimension-2 edges, a k-qubit gate as a rank-2k tensor, a Bell pair and a
+   non-adjacent-cx GHZ state, `rzz` unfolding into its `cx;rz;cx` identity, and a small QFT
+   ladder — each contracted from scratch and checked against `run()`, with a circuit-style
+   live view.
 
  Pages numbered `40` and up accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book
  rather than continuing the 01–22 sequence above.

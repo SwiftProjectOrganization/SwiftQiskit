@@ -70,11 +70,17 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   `exp(-iθ·P⊗P/2)` family, each checked against `Matrix.expm()` and, for `RZZGate`, against
   the `cx;rz;cx` identity.
 - `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices, each tagged
-  with the qubits it acts on (`private struct Operation { matrix; qubits }`, recorded via
-  the private `record(_:actingOn:)` rather than the public `apply(_:)`, which — since an
-  arbitrary caller-supplied matrix could touch any qubit — records all of them). This tag
-  is what `runDensityMatrix(noise:)`/`runTrajectories(noise:shots:)` below use to place
-  per-gate noise precisely. Single-qubit gates are embedded across the register via
+  with the qubits it acts on, a short gate label, and its own small un-embedded *local*
+  tensor (`struct Operation { matrix; qubits; name; local }`, recorded via the private
+  `record(_:actingOn:name:local:)` rather than the public `apply(_:)`, which — since an
+  arbitrary caller-supplied matrix could touch any qubit — records all of them, `name: "U"`,
+  `local` equal to the full matrix). The qubits tag is what
+  `runDensityMatrix(noise:)`/`runTrajectories(noise:shots:)` below use to place per-gate
+  noise precisely; the name/local tensor are consumed by `TensorNetwork` below, not by
+  execution. `t(_:)` records `actingOn: [qubit]` like every other single-qubit gate (it used
+  to go through `apply(_:)`, wrongly tagging every qubit for noise purposes — fixed).
+  `operationRecords` is an internal read-only accessor onto the operation list, for
+  `TensorNetwork.init(_:)`. Single-qubit gates are embedded across the register via
   `Matrix.tensor(_:)` (internal, not `private`, `embedSingleQubitGate` — also reused by
   `KrausChannel.apply(to:qubit:)`). API: `h/x/y/z/s/sdg/t/tdg/cx/ccx`, the general
   `mcx(_ controls: [Int], _ target:)` (via `MultiControlledXGate`), parameterized
@@ -108,6 +114,18 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   `runTrajectories(noise:shots:) -> SimulationResult` is the Monte-Carlo "quantum
   trajectories" unraveling of the same thing: `shots` independent pure-state runs, each
   stochastically applying one Kraus operator (probability `‖Kᵢ|ψ⟩‖²`) per noisy gate.
+- `Circuit/TensorNetwork.swift` — `TensorNetwork`: a tensor-network view of a
+  `QuantumCircuit`'s `operationRecords` above — one node per `|0⟩` input, one per recorded
+  gate (`Kind.gate(name)`, carrying that gate's own small `local` tensor and the qubits it
+  legs into), one per open output leg, wired by one edge per wire segment. `init(_:)`
+  ASAP-schedules each gate's layout `column` (one more than the latest column already
+  reached on any qubit it touches, so gates on disjoint qubits share a column).
+  `contract() -> StateVector` evaluates the whole diagram from `|0…0⟩` through every gate
+  node in recorded order, applying only that node's own small tensor to the legs it names —
+  never the full embedded matrices `run()` uses — so agreement between `contract()` and
+  `run()` is an independent check of both, not the same computation read twice. Drawn by
+  `SwiftQiskitViews.TensorNetworkView` (see "SwiftQiskitViews" below) on page
+  `23TensorNetwork`.
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string;
   `marginalCounts(over:)` (grouped counts, only observed keys) and `parityExpectation(qubits:)`
   (the ±1 parity-product average, e.g. for a shot-based ⟨Z⊗Z⟩) sum over a subset of qubits.
@@ -198,6 +216,12 @@ depends only on `SwiftQiskit`), holding presentational SwiftUI types shared by
 - `CHSHChartView.swift` — `CHSHChartView`: a minimal, stateless `Canvas`-based 2D
   line/scatter chart, used by pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk`. Moved here
   verbatim from `Playgrounds.playground/Sources/`.
+- `TensorNetworkView.swift` — `TensorNetworkView`: a stateless, circuit-aligned `Canvas`
+  drawing of a `TensorNetwork` (see `Circuit/TensorNetwork.swift` above) — qubit wires left
+  to right, `|0⟩` caps on the left, open output legs on the right, gates as labelled boxes
+  in time columns (a multi-qubit gate's box spans every row it touches, with a dashed
+  overlay on any wire merely crossing the box without being one of its legs). Used by page
+  `23TensorNetwork`.
 
 ## Xcode Playgrounds
 
@@ -358,6 +382,14 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   chart of both final distributions on the shared `CHSHChartView`, with cross-references to
   Grover (page 11) and Hamiltonian simulation (page 21)
   (plan in `PlaygroundDocs/22WALKPLAN.md`, user guide in `PlaygroundDocs/22WALKHELP.md`).
+- `23TensorNetwork` — building and drawing a tensor network from a `QuantumCircuit` (no Core
+  changes beyond `TensorNetwork` itself and the gate-name/local-tensor recording it consumes):
+  wires as bond-dimension-2 edges and a k-qubit gate as a rank-2k tensor explained up front; a
+  Bell pair, a GHZ state with a non-adjacent `cx` (page 07) whose box is drawn spanning the
+  skipped wire dashed, `rzz` unfolding into exactly the `cx;rz;cx` identity (page 21), and a
+  small 2-qubit QFT ladder (page 16) — each contracted from only its local tensors and wiring
+  and checked against `run()` to machine precision; live gallery of all four on the shared
+  `TensorNetworkView` (user guide in `PlaygroundDocs/23TENSORNETWORKHELP.md`).
 - `40ComplexAndMatrices` — first of the `40+` pages, numbered separately because they
   accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book rather than continuing the
   01–22 sequence above: every code fragment from that book's Chapter 2, in order —
@@ -377,8 +409,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
 
 Playground notes:
 
-- Pages `import SwiftQiskit` (and, on the twelve pages that use `BlochVector`/
-  `CHSHChartView`, `import SwiftQiskitViews`) and set `buildActiveScheme='true'`, so the
+- Pages `import SwiftQiskit` (and, on the thirteen pages that use `BlochVector`/
+  `CHSHChartView`/`TensorNetworkView`, `import SwiftQiskitViews`) and set
+  `buildActiveScheme='true'`, so the
   **active scheme must build both products** for pages to run — use the
   `SwiftQiskit-Package` scheme (or the autogenerated `SwiftQiskitViews` scheme), not the
   per-product `SwiftQiskit` scheme, so `SwiftQiskitViews` actually gets built; keep both
@@ -422,9 +455,9 @@ Playground notes:
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
-  `KrausChannelTests.swift`, `NoiseModelTests.swift`). `Tests/SwiftQiskitViewsTests/`
-  (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`) tests the `SwiftQiskitViews`
-  module above.
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`).
+  `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
+  `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.
 - **Scheme gotcha for Xcode test runs:** all schemes are autogenerated by Xcode for the
