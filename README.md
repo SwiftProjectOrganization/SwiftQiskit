@@ -13,8 +13,8 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
 5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package. SwiftQiskitGUI has been dropped.
 6. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application.
 7. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds
-   presentational SwiftUI types (`BlochVector`, `CHSHChartView`) shared by the playground and
-   by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
+   presentational SwiftUI types (`BlochVector`, `CHSHChartView`, `TensorNetworkView`) shared
+   by the playground and by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
 
 ---
 
