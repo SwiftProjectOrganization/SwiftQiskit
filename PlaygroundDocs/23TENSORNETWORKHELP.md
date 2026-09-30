@@ -1,6 +1,7 @@
 # Tensor networks — help & usage guide
 
-User-facing guide to the `23TensorNetwork` playground page.
+User-facing guide to the `23TensorNetwork` playground page. The implementation plan is in
+`23TENSORNETWORKPLAN.md`.
 
 ## What the page shows
 
