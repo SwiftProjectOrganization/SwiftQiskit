@@ -20,10 +20,9 @@ let ketZero = Ket("0")      // |0⟩ from a binary label (same as Ket.zero)
 let ketTen = Ket("10")      // |10⟩ — a two-qubit basis ket
 let plus = Ket.plus         // |+⟩ = (|0⟩ + |1⟩)/√2
 
-print("|+⟩ as a ket:")
-print(plus)
-print("\n⟨+| = |+⟩† as a bra:")
-print(plus†)
+print("|+⟩ as a ket:\n\(plus)")
+print("⟨+| = |+⟩† as a bra:\n\(plus†)")
+print("\n\(plus†)")
 
 // Dagger is an involution: (|ψ⟩†)† = |ψ⟩
 print("\n(|+⟩†)† == |+⟩ → \((plus†)† == plus)")
@@ -41,7 +40,6 @@ Bra("0") * Ket("0")
 Ket("0") * Bra("0")
 Bra("0") ⊗ Bra("0")
 Ket("0") ⊗ Bra("0")
-
 
 print("\n⟨0|0⟩ = \(Bra("0") * Ket("0"))")
 // Expected: 1.0 — basis states are normalized …
