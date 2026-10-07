@@ -49,7 +49,8 @@ print("⟨+|0⟩ = \(Ket.plus† * Ket.zero)")
 // Expected: 0.7071 = 1/√2
 
 // Any normalized state has ⟨φ|φ⟩ = 1
-let ketPhi = Ket([Complex(0.6), Complex(0.8)])
+let ketPhi = Ket([Complex(0.6, 0.1), Complex(0.8)])
+print(ketPhi†)
 
 print("⟨φ|φ⟩ = \(ketPhi† * ketPhi)")
 // Expected: 1.0
