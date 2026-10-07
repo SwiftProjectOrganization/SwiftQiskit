@@ -90,6 +90,8 @@ with a matching convenience method on `QuantumCircuit`:
 | RX/RY/RZ (θ) | `rx/ry/rz(theta, qubit)` | `RXGate` / `RYGate` / `RZGate` |
 | CNOT (CX) | `cx(control, target)` | `CNOTGate` |
 | Toffoli (CCX) | `ccx(control1, control2, target)` | `ToffoliGate` |
+| CZ / multi-controlled Z | `cz(a, b)` / `mcz(controls, target)` | `ControlledZGate` / `MultiControlledZGate` |
+| SWAP | `swap(a, b)` | `SwapGate` |
 | MCX | `mcx(controls, target)` | `MultiControlledXGate` |
 | RZZ/RXX/RYY (θ) | `rzz/rxx/ryy(theta, q0, q1)` | `RZZGate` / `RXXGate` / `RYYGate` |
 

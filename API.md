@@ -241,6 +241,9 @@ Follow this pattern when adding a new gate.
 | `ToffoliGate.matrix` | fixed, 3-qubit | `ccx(control1, control2, target)`* | The plain 8×8 Toffoli (controls = qubits 0/1, target = qubit 2). |
 | `ToffoliGate.matrix(qubits:control1:control2:target:)` | general, n-qubit | `ccx(control1, control2, target)` | The full 2ⁿ×2ⁿ Toffoli for any three distinct qubits, built via `Matrix.permutation`: flips `target` iff both controls are 1. Symmetric in its two controls. Traps if `qubits < 3`, if any index is out of range, or if the three indices aren't distinct. |
 | `MultiControlledXGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcx(controls, target)` | Flips `target` iff every qubit in `controls` is 1, built via `Matrix.permutation`. `controls` may be empty (an unconditional flip, equivalent to `x`); one control is equivalent to `cx`, two to `ccx`. Traps if `target` is out of range, any control is out of range or duplicated, or `controls` contains `target`. |
+| `ControlledZGate.matrix` / `matrix(qubits:control:target:)` | fixed 2-qubit / general | `cz(control, target)` | CZ, diag(1,1,1,−1); symmetric in its two qubits. Equals `h(t); cx(c,t); h(t)`. |
+| `MultiControlledZGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcz(controls, target)` | Negates every basis state where all controls and the target are 1. `controls` may be empty (equivalent to `z`); one control is `cz`, two is CCZ. |
+| `SwapGate.matrix` / `matrix(qubits:q0:q1:)` | fixed 2-qubit / general | `swap(q0, q1)` | Exchanges two qubits, built via `Matrix.permutation`. Equals three alternating `cx` gates. |
 
 \* `QuantumCircuit.cx`/`ccx` always call the general `CNOTGate.matrix(qubits:control:target:)`/
 `ToffoliGate.matrix(qubits:control1:control2:target:)` forms, not the fixed-size ones — the
@@ -291,6 +294,9 @@ func rz(_ theta: Double, _ qubit: Int)
 func cx(_ control: Int, _ target: Int)
 func ccx(_ control1: Int, _ control2: Int, _ target: Int)
 func mcx(_ controls: [Int], _ target: Int)
+func cz(_ control: Int, _ target: Int)
+func mcz(_ controls: [Int], _ target: Int)
+func swap(_ q0: Int, _ q1: Int)
 func rzz(_ theta: Double, _ q0: Int, _ q1: Int)
 func rxx(_ theta: Double, _ q0: Int, _ q1: Int)
 func ryy(_ theta: Double, _ q0: Int, _ q1: Int)

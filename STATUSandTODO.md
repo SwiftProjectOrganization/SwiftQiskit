@@ -706,6 +706,8 @@ gathered here so they can be sequenced against the Core work above rather than t
       0–2π only — every Trotter/VQE-style chapter since Chapter 20 has needed a `2π − x`
       workaround for a negative angle. No Core dependency; can be done independently of everything
       else in this file.
+- [x] CZ, multi-controlled Z, and SWAP — `cz`/`mcz`/`swap` with `ControlledZ.swift`,
+      `MultiControlledZ.swift`, `Swap.swift` and `ControlledZAndSwapTests`; the app's CZ/SWAP tiles use them.
 - [ ] A Toffoli tile in `GatePaletteView`/`GateKind` — `ccx` (above) is now implemented, so this
       is unblocked. The single highest cross-chapter-leverage app change on this list: Chapters
       14, 17 (Shor), and 25 all hit the same "no Toffoli" wall independently.

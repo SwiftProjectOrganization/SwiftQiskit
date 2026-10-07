@@ -194,6 +194,29 @@ public extension QuantumCircuit {
                actingOn: controls + [target], name: "MCX", local: local)
     }
 
+    /// Apply controlled-Z (symmetric in its two qubits); any distinct pair of qubits.
+    func cz(_ control: Int, _ target: Int) {
+        record(ControlledZGate.matrix(qubits: qubits, control: control, target: target),
+               actingOn: [control, target], name: "CZ", local: ControlledZGate.matrix)
+    }
+
+    /// Apply a multi-controlled Z (negates the amplitude where `target` and every qubit in
+    /// `controls` are 1) to any distinct set of qubits. `controls` may be empty (equivalent
+    /// to `z(target)`); one control is equivalent to `cz`, two to CCZ.
+    func mcz(_ controls: [Int], _ target: Int) {
+        let local = MultiControlledZGate.matrix(
+            qubits: controls.count + 1, controls: Array(0..<controls.count), target: controls.count
+        )
+        record(MultiControlledZGate.matrix(qubits: qubits, controls: controls, target: target),
+               actingOn: controls + [target], name: "MCZ", local: local)
+    }
+
+    /// Apply SWAP, exchanging the states of any two distinct qubits.
+    func swap(_ q0: Int, _ q1: Int) {
+        record(SwapGate.matrix(qubits: qubits, q0: q0, q1: q1),
+               actingOn: [q0, q1], name: "SWAP", local: SwapGate.matrix)
+    }
+
     /// Apply Hadamard gate to a specific qubit
     func h(_ qubit: Int) {
         let full = embedSingleQubitGate(
