@@ -243,6 +243,8 @@ Follow this pattern when adding a new gate.
 | `MultiControlledXGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcx(controls, target)` | Flips `target` iff every qubit in `controls` is 1, built via `Matrix.permutation`. `controls` may be empty (an unconditional flip, equivalent to `x`); one control is equivalent to `cx`, two to `ccx`. Traps if `target` is out of range, any control is out of range or duplicated, or `controls` contains `target`. |
 | `ControlledZGate.matrix` / `matrix(qubits:control:target:)` | fixed 2-qubit / general | `cz(control, target)` | CZ, diag(1,1,1,−1); symmetric in its two qubits. Equals `h(t); cx(c,t); h(t)`. |
 | `MultiControlledZGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcz(controls, target)` | Negates every basis state where all controls and the target are 1. `controls` may be empty (equivalent to `z`); one control is `cz`, two is CCZ. |
+| `ControlledYGate.matrix` / `matrix(qubits:control:target:)` | fixed 2-qubit / general | `cy(control, target)` | CY, applies Pauli-Y to the target when the control is 1. Equals `sdg(t); cx(c,t); s(t)`. |
+| `MultiControlledYGate.matrix(qubits:controls:target:)` | general, n-qubit | `mcy(controls, target)` | Applies Pauli-Y to `target` iff every qubit in `controls` is 1. `controls` may be empty (equivalent to `y`); one control is `cy`. |
 | `SwapGate.matrix` / `matrix(qubits:q0:q1:)` | fixed 2-qubit / general | `swap(q0, q1)` | Exchanges two qubits, built via `Matrix.permutation`. Equals three alternating `cx` gates. |
 
 \* `QuantumCircuit.cx`/`ccx` always call the general `CNOTGate.matrix(qubits:control:target:)`/
@@ -296,6 +298,8 @@ func ccx(_ control1: Int, _ control2: Int, _ target: Int)
 func mcx(_ controls: [Int], _ target: Int)
 func cz(_ control: Int, _ target: Int)
 func mcz(_ controls: [Int], _ target: Int)
+func cy(_ control: Int, _ target: Int)
+func mcy(_ controls: [Int], _ target: Int)
 func swap(_ q0: Int, _ q1: Int)
 func rzz(_ theta: Double, _ q0: Int, _ q1: Int)
 func rxx(_ theta: Double, _ q0: Int, _ q1: Int)

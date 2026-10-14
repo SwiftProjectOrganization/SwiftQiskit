@@ -250,6 +250,21 @@ public extension QuantumCircuit {
         record(actingOn: controls + [target], name: "MCZ", local: local)
     }
 
+    /// Apply controlled-Y (Pauli-Y on `target` iff `control` is 1); any distinct pair of qubits.
+    func cy(_ control: Int, _ target: Int) {
+        record(actingOn: [control, target], name: "CY", local: ControlledYGate.matrix)
+    }
+
+    /// Apply a multi-controlled Y (Pauli-Y on `target` iff every qubit in `controls` is 1) to
+    /// any distinct set of qubits. `controls` may be empty (equivalent to `y(target)`); one
+    /// control is equivalent to `cy`.
+    func mcy(_ controls: [Int], _ target: Int) {
+        let local = MultiControlledYGate.matrix(
+            qubits: controls.count + 1, controls: Array(0..<controls.count), target: controls.count
+        )
+        record(actingOn: controls + [target], name: "MCY", local: local)
+    }
+
     /// Apply SWAP, exchanging the states of any two distinct qubits.
     func swap(_ q0: Int, _ q1: Int) {
         record(actingOn: [q0, q1], name: "SWAP", local: SwapGate.matrix)

@@ -91,6 +91,7 @@ with a matching convenience method on `QuantumCircuit`:
 | CNOT (CX) | `cx(control, target)` | `CNOTGate` |
 | Toffoli (CCX) | `ccx(control1, control2, target)` | `ToffoliGate` |
 | CZ / multi-controlled Z | `cz(a, b)` / `mcz(controls, target)` | `ControlledZGate` / `MultiControlledZGate` |
+| CY / multi-controlled Y | `cy(control, target)` / `mcy(controls, target)` | `ControlledYGate` / `MultiControlledYGate` |
 | SWAP | `swap(a, b)` | `SwapGate` |
 | MCX | `mcx(controls, target)` | `MultiControlledXGate` |
 | RZZ/RXX/RYY (θ) | `rzz/rxx/ryy(theta, q0, q1)` | `RZZGate` / `RXXGate` / `RYYGate` |
@@ -349,7 +350,8 @@ SwiftQiskit/
 │       ├── 22Walk
 │       ├── 23TensorNetwork
 │       ├── 40ComplexAndMatrices
-│       └── 41BasisTransformations
+│       ├── 41BasisTransformations
+│       └── 42StateVectorCPU
 ├── Package.swift
 ├── API.md               (full public API reference for the core library)
 ├── CLAUDE.md             (guidance for Claude Code working in this repo)
@@ -855,6 +857,16 @@ complex {|+i⟩, |−i⟩} case needs the conjugate transpose (a plain transpose
 `h`/`sdg;h` before an ordinary `measure(shots:)`.
 
 User guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`.
+
+### 42StateVectorCPU
+
+Standalone (console only): gates applied directly to a state vector as independent amplitude
+pairs `(i0, i0 | 1<<t)` instead of 2ⁿ×2ⁿ Kronecker matrices, with controlled gates as an index
+mask. Serial and `concurrentPerform` versions of the same kernel (page-local code, an
+illustration of what Core's `applyLocal` does), the two ways of enumerating the pairs, the
+Qiskit-vs-Core bit-order gotcha (qubit 0 = LSB here, MSB in Core), an exact cross-check against
+`QuantumCircuit.run()` (~1e-17) including Toffoli and CZ, and the O(4ⁿ) vs. O(2ⁿ) memory cost.
+No timings (playground code is instrumented), no companion `PlaygroundDocs/` guide.
 
 The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`)
 are shared between these pages via the playground's `Sources/` folder (not part of Core).
