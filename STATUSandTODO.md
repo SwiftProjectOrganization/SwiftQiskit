@@ -9,7 +9,7 @@ plus this fork's working TODO list.
 
 - Core quantum simulation is implemented
 - API is subject to change
-- Performance is not yet optimized
+- Performance: gates apply in place to the amplitudes (O(2ⁿ) per gate); `runDensityMatrix` is still small-n only
 - GUI tools are available in separate projects or through the template system
 - An extensive set of playgrounds is included in /Playgounds and documented in /PlaygroundDocs
 
@@ -105,9 +105,13 @@ any item here.
       first, which caught a sign error before trusting the page code).
 
 **P4 — longer horizon**
-- [ ] General performance work: apply gates directly to state-vector amplitudes instead of
-      building full 2ⁿ×2ⁿ operation matrices (the permutation fast path above is the first slice
-      of this).
+- [x] General performance work: apply gates directly to state-vector amplitudes instead of
+      building full 2ⁿ×2ⁿ operation matrices — done. `StateVector.applyLocal(_:targets:)`
+      (`Quantum/StateVector+Kernels.swift`) applies each gate's small tensor in place, skipping
+      zero entries and running across cores for large states; `QuantumCircuit` no longer builds
+      a full matrix per gate. Tested in `StateVectorKernelTests.swift`. Still open: an opt-in
+      `SwiftQiskitMLX` GPU target (only if benchmarks show CPU is the limit, n ≳ 20) and
+      row/column-wise local application for `runDensityMatrix` (still builds full matrices).
 - [ ] Mid-circuit / partial measurement — pages `13Teleportation` and `14ErrorCorrection` both
       route around its absence today (deferred measurement, hand-built permutation corrections).
 - [ ] Stable public API (v1.0) — a deliberate breaking-change review pass, keeping `API.md` in
@@ -184,9 +188,10 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
       Tested in `MeasurementTests.swift`, including a regression check against the old
       replay-per-shot behavior. Pages 12 and 13's own local samplers (added to route around the
       old cost) are kept as see-through stand-ins and updated to say so.
-- [ ] Performance optimizations — first slice done: a permutation-aware fast path in
-      `StateVector.apply(_:)` (see "Proposed Core extensions — open systems" below); applying
-      gates directly to amplitudes instead of building full 2ⁿ×2ⁿ operation matrices remains open.
+- [x] Performance optimizations — permutation fast path in `StateVector.apply(_:)` (see
+      "Proposed Core extensions — open systems" below), plus in-place local gate kernels for
+      `run()`/`runTrajectories` (`StateVector+Kernels.swift`); circuits capped at 30 qubits.
+      MLX/GPU remains a later, benchmark-gated option.
 - [ ] Stable public API (v1.0)
 
 ## Bloch sphere playground pages (this fork)
@@ -772,8 +777,9 @@ picks this up next:
    package-level `BlochVector` is also **done**, as part of the `SwiftQiskitViews` module
    (P3 item 1 above) rather than folded into `SwiftQiskit` itself.
 7. Performance: the permutation-aware fast path in `apply` is **done** (`Matrix.permutationImage`,
-   `Math/Matrix.swift`; tested in `PermutationFastPathTests.swift`); general optimizations
-   (applying gates directly to amplitudes instead of full 2ⁿ×2ⁿ operation matrices) remain open.
+   `Math/Matrix.swift`; tested in `PermutationFastPathTests.swift`) and the general in-place
+   gate kernels (`StateVector.applyLocal`, `Quantum/StateVector+Kernels.swift`; tested in
+   `StateVectorKernelTests.swift`) are **done**; only an optional MLX target remains.
 
 Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` onto
 `Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`

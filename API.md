@@ -268,7 +268,7 @@ matrices and replays them on demand.
 ```swift
 public final class QuantumCircuit {
     public let qubits: Int
-    public init(qubits: Int)                    // traps if qubits <= 0
+    public init(qubits: Int)                    // traps if qubits <= 0 or > 30 (16 B × 2ⁿ of amplitudes)
     public func apply(_ matrix: Matrix)          // full-dimension gate; traps on dimension mismatch
 }
 ```
@@ -356,7 +356,7 @@ out-of-range qubit, or `control` is out of range or one of the `register` qubits
 
 | Method | Signature | Notes |
 |---|---|---|
-| `run()` | `() -> StateVector` | Builds a fresh `StateVector(qubits: qubits)` (i.e. \|0…0⟩) and replays every recorded operation. Gates are recorded when called and only *applied* here — calling `run()` twice gives the same result each time. |
+| `run()` | `() -> StateVector` | Builds a fresh `StateVector(qubits: qubits)` (i.e. \|0…0⟩) and replays every recorded operation. Gates are recorded when called (no 2ⁿ×2ⁿ matrix is built) and only *applied* here, each in place on the amplitudes in O(2ⁿ) time (parallel across cores for ≥ 2¹⁴ amplitudes) — calling `run()` twice gives the same result each time. A matrix passed to `apply(_:)` still takes the dense/permutation path. |
 | `runAndMeasure()` | `() -> Int` | `run()` then a single `measure()` on the result — collapses that local copy, not any circuit state (the circuit itself has no persistent state to collapse). |
 | `measure(shots:)` | `(Int) -> SimulationResult` | Traps if `shots <= 0`. Runs the circuit **once** to get the final probability distribution, then draws `shots` independent samples from it — it does *not* replay the whole circuit per shot, since a full measurement of a pure state never changes the probabilities of the underlying state that produced it. |
 | `measure(shots:basis:)` | `(Int, [PauliBasis]) -> SimulationResult` | Traps if `basis.count != qubits`. Appends each qubit's `rotateToZ` rotation to a **copy** of the recorded operations and measures that copy — the receiver's own operation list is untouched, so the same circuit can be measured in different bases without rebuilding it. |

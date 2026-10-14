@@ -13,7 +13,7 @@ import Foundation
 public struct StateVector: Equatable {
 
     /// Amplitudes of the quantum state
-    public private(set) var amplitudes: [Complex]
+    public internal(set) var amplitudes: [Complex]
 
     // MARK: - Initializers
 
@@ -78,6 +78,25 @@ public struct StateVector: Equatable {
 
         // Fallback (numerical safety)
         return probabilities.count - 1
+    }
+
+    /// Draw `count` basis-state indices from one fixed distribution: builds the cumulative
+    /// sums once and binary-searches them per draw (O(2ⁿ + count·n) instead of O(count·2ⁿ)).
+    static func sampleIndices(from probabilities: [Double], count: Int) -> [Int] {
+        var cumulative = [Double](repeating: 0, count: probabilities.count)
+        var running = 0.0
+        for (i, p) in probabilities.enumerated() { running += p; cumulative[i] = running }
+
+        return (0..<count).map { _ in
+            let r = Double.random(in: 0..<1)
+            // First index whose cumulative sum exceeds r (same rule as `sampleIndex`).
+            var lo = 0, hi = cumulative.count
+            while lo < hi {
+                let mid = (lo + hi) / 2
+                if cumulative[mid] > r { hi = mid } else { lo = mid + 1 }
+            }
+            return min(lo, cumulative.count - 1)
+        }
     }
 
     /// Measure the quantum state and collapse it.
@@ -157,20 +176,20 @@ public extension StateVector {
         precondition(Set(qubits).count == qubits.count, "Qubit indices must be distinct")
         precondition(qubits.allSatisfy { $0 >= 0 && $0 < n }, "Qubit index out of range")
 
-        var marginal: [String: Double] = [:]
-        for key in 0..<(1 << qubits.count) {
-            let binary = String(key, radix: 2).leftPadding(toLength: qubits.count, withPad: "0")
-            marginal[binary] = 0.0
-        }
-
+        // Accumulate by integer key (first listed qubit = most-significant key bit), and
+        // build strings only for the 2^k results.
+        var sums = [Double](repeating: 0.0, count: 1 << qubits.count)
+        let shifts = qubits.map { n - 1 - $0 }
         let probs = probabilities
         for index in 0..<dimension {
-            var bits = ""
-            for qubit in qubits {
-                let bit = (index >> (n - 1 - qubit)) & 1
-                bits.append(bit == 1 ? "1" : "0")
-            }
-            marginal[bits]! += probs[index]
+            var key = 0
+            for shift in shifts { key = (key << 1) | ((index >> shift) & 1) }
+            sums[key] += probs[index]
+        }
+
+        var marginal: [String: Double] = [:]
+        for (key, p) in sums.enumerated() {
+            marginal[String(key, radix: 2).leftPadding(toLength: qubits.count, withPad: "0")] = p
         }
 
         return marginal

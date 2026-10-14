@@ -49,6 +49,13 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   unless `image` is a bijection — the bijection check doubles as the unitarity check),
   `expm(terms:)` (matrix exponential via scaling-and-squaring Taylor series; no implicit
   `-i` — scale by `Complex(0, -theta)` yourself for e^(-iθH)).
+- `Quantum/StateVector+Kernels.swift` — internal `applyLocal(_:targets:parallel:)`: applies a
+  gate's small 2ᵏ×2ᵏ tensor to `targets` in place (qubit 0 = MSB), gathering each of the 2ⁿ⁻ᵏ
+  spectator groups, multiplying by the tensor's non-zero entries only (so permutation, diagonal
+  and controlled gates are cheap), and scattering back; runs via `concurrentPerform` when the
+  state has ≥ `parallelThreshold` (2¹⁴) amplitudes. No renormalization (callers pass unitaries).
+  `QuantumCircuit.run()`/`runTrajectories` use it; `amplitudes` is `internal(set)` for it.
+  `StateVector.sampleIndices(from:count:)` draws many samples from one cumulative sum.
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
   `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
   combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention);
@@ -69,7 +76,10 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   `RZZGate`/`RXXGate`/`RYYGate` (`TwoQubitRotation.swift`) are the fixed-2-qubit
   `exp(-iθ·P⊗P/2)` family, each checked against `Matrix.expm()` and, for `RZZGate`, against
   the `cx;rz;cx` identity.
-- `Circuit/QuantumCircuit.swift` — records operations as full 2ⁿ×2ⁿ matrices, each tagged
+- `Circuit/QuantumCircuit.swift` — records operations (**no full matrix is built at record
+  time**; `Operation.matrix` is computed on demand from `local` + `qubits`, used only by
+  `runDensityMatrix`; `dense` is set only for a caller's `apply(_:)` matrix; circuits are capped
+  at 30 qubits). Historically it stored full 2ⁿ×2ⁿ matrices, each tagged
   with the qubits it acts on, a short gate label, and its own small un-embedded *local*
   tensor (`struct Operation { matrix; qubits; name; local }`, recorded via the private
   `record(_:actingOn:name:local:)` rather than the public `apply(_:)`, which — since an
@@ -455,7 +465,7 @@ Playground notes:
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
-  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`).
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`).
   `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
   `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
