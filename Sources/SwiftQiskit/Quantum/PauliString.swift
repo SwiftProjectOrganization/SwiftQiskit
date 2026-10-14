@@ -72,11 +72,33 @@ public struct PauliString: Equatable, Hashable {
     }
 
     /// Expectation value `coefficient · ⟨ψ|P₀⊗P₁⊗…|ψ⟩` of this term against `state`, via
-    /// `StateVector.expectation(_:)`. Traps if `state`'s dimension doesn't match `qubits`.
+    /// `StateVector.expectation(_:)`, but computed directly in O(2ⁿ) without building the
+    /// dense matrix: P maps |i⟩ to phase(i)·|i⊕flip⟩ (X/Y flip a bit; Y contributes i·(-1)^bit,
+    /// Z contributes (-1)^bit), so ⟨ψ|P|ψ⟩ = Σᵢ conj(ψ[i⊕flip])·phase(i)·ψ[i].
+    /// Traps if `state`'s dimension doesn't match `qubits`.
     public func expectation(_ state: StateVector) -> Double {
         precondition(state.dimension == 1 << qubits,
                      "State dimension must match the Pauli string's qubit count")
-        return state.expectation(matrix)
+        var flip = 0, signMask = 0, yCount = 0
+        for (q, label) in labels.enumerated() {
+            let bit = 1 << (qubits - 1 - q)
+            switch label {
+            case nil: break
+            case .x: flip |= bit
+            case .y: flip |= bit; signMask |= bit; yCount += 1
+            case .z: signMask |= bit
+            }
+        }
+        // i^yCount
+        let global: Complex = [Complex.one, .i, Complex(-1, 0), Complex(0, -1)][yCount % 4]
+        var sum = Complex.zero
+        state.amplitudes.withUnsafeBufferPointer { amps in
+            for i in 0..<amps.count {
+                let term = amps[i ^ flip].conjugate * amps[i]
+                sum = (signMask & i).nonzeroBitCount & 1 == 0 ? sum + term : sum - term
+            }
+        }
+        return coefficient * (global * sum).real
     }
 
     /// Whether `self` and `other` are *qubit-wise commuting* (QWC): on every qubit, their

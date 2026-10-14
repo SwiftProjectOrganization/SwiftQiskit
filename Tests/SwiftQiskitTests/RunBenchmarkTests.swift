@@ -30,4 +30,27 @@ struct RunBenchmarkTests {
         print(report)
         #expect(abs(last.probabilities.reduce(0, +) - 1) < 1e-9)
     }
+
+    @Test func timeDensityMatrixAndExpectation() {
+        let clock = ContinuousClock()
+        func ms(_ d: Duration) -> String {
+            String(format: "%.2f", Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) / 1e15)
+        }
+        var report = "runDensityMatrix(noise:) / Hamiltonian.expectation benchmark\n"
+        for n in [4, 6, 8] {
+            let c = layered(n)
+            let noise = NoiseModel.uniform(KrausChannel.depolarizing(0.01))
+            let t = clock.measure { _ = c.runDensityMatrix(noise: noise) }
+            report += "  density n=\(n): \(ms(t)) ms\n"
+        }
+        for n in [8, 12] {
+            let state = layered(n).run()
+            let h = Hamiltonian((0..<n).map { q in
+                PauliString(String((0..<n).map { $0 == q ? "Z" : "I" }), coefficient: 1) })
+            var value = 0.0
+            let t = clock.measure { value = h.expectation(state) }
+            report += "  expectation n=\(n): \(ms(t)) ms (\(value))\n"
+        }
+        print(report)
+    }
 }

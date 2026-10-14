@@ -67,12 +67,47 @@ extension StateVector {
             rowStart[r + 1] = columns.count
         }
 
+        // Diagonal tensors (z/s/t/p/rz/cz/mcz) just scale each amplitude in place.
+        var diagonal: [Complex]? = (0..<size).map { tensor[$0, $0] }
+        for r in 0..<size where diagonal != nil {
+            for c in 0..<size where c != r && tensor[r, c] != .zero { diagonal = nil; break }
+        }
+        let (u00, u01, u10, u11) = size == 2
+            ? (tensor[0, 0], tensor[0, 1], tensor[1, 0], tensor[1, 1]) : (.zero, .zero, .zero, .zero)
+
         // Bit positions (ascending) at which a group number gets a 0 bit inserted.
         let insertAt = targets.map { n - 1 - $0 }.sorted()
         let groupCount = 1 << (n - k)
 
         // Handles groups [lo, hi) with its own scratch buffer.
         func process(_ base: UnsafeMutablePointer<Complex>, _ lo: Int, _ hi: Int) {
+            // Group number -> index of its first amplitude (zero bits inserted at the targets).
+            @inline(__always) func start(_ group: Int) -> Int {
+                var index = group
+                for position in insertAt {
+                    index = ((index >> position) << (position + 1)) | (index & ((1 << position) - 1))
+                }
+                return index
+            }
+            if let diagonal = diagonal {
+                for group in lo..<hi {
+                    let index = start(group)
+                    for s in 0..<size where diagonal[s] != .one {
+                        base[index + offsets[s]] = diagonal[s] * base[index + offsets[s]]
+                    }
+                }
+                return
+            }
+            if size == 2 {
+                let off = offsets[1]
+                for group in lo..<hi {
+                    let i0 = start(group)
+                    let a = base[i0], b = base[i0 + off]
+                    base[i0] = u00 * a + u01 * b
+                    base[i0 + off] = u10 * a + u11 * b
+                }
+                return
+            }
             var gathered = [Complex](repeating: .zero, count: size)
             for group in lo..<hi {
                 var index = group

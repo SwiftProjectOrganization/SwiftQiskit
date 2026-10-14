@@ -5,11 +5,11 @@ plus this fork's working TODO list.
 
 ## Project Status
 
-**SwiftQiskit is currently in an early experimental stage (v0.2).**
+**SwiftQiskit is currently in an early experimental stage (v0.5).**
 
 - Core quantum simulation is implemented
 - API is subject to change
-- Performance: gates apply in place to the amplitudes (O(2ⁿ) per gate); `runDensityMatrix` is still small-n only
+- Performance: gates apply in place to the amplitudes (O(2ⁿ) per gate); `runDensityMatrix` now uses the same kernel on vectorized ρ (O(4ⁿ) per gate) but is still small-n (≲10 qubits)
 - GUI tools are available in separate projects or through the template system
 - An extensive set of playgrounds is included in /Playgounds and documented in /PlaygroundDocs
 
@@ -125,7 +125,7 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
 (done — see P3 item 1 above; the app's package dependency now pins `0.2.0` and its own
 `BlochVector.swift` is gone).
 
-## What Works (v0.2)
+## What Works (v0.5)
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and

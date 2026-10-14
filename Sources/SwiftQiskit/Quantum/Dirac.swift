@@ -70,13 +70,11 @@ public extension Matrix {
 
     /// Conjugate transpose (adjoint) A†.
     var adjoint: Matrix {
-        var result = Matrix(rows: cols, cols: rows)
+        var out = [Complex](repeating: .zero, count: rows * cols)
         for i in 0..<rows {
-            for j in 0..<cols {
-                result[j, i] = self[i, j].conjugate
-            }
+            for j in 0..<cols { out[j * rows + i] = grid[i * cols + j].conjugate }
         }
-        return result
+        return Matrix(rows: cols, cols: rows, elements: out)
     }
 }
 

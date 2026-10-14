@@ -83,7 +83,8 @@ public extension DensityMatrix {
 
     /// Tr(ρ²) — 1 for a pure state, 1/2ⁿ for the maximally mixed state on n qubits.
     var purity: Double {
-        (matrix * matrix).trace.real
+        // Tr(ρ²) = Σᵢⱼ ρᵢⱼρⱼᵢ = Σ|ρᵢⱼ|² for Hermitian ρ — O(4ⁿ), no matrix product.
+        matrix.grid.reduce(0.0) { $0 + $1.magnitudeSquared }
     }
 
     /// The diagonal of ρ (real parts): the probability of each basis state.
@@ -95,7 +96,15 @@ public extension DensityMatrix {
     /// `StateVector.expectation(_:)`, only the real part is returned — exact for a
     /// Hermitian `A`.
     func expectation(_ observable: Matrix) -> Double {
-        (matrix * observable).trace.real
+        // Tr(ρA) = Σᵢⱼ ρᵢⱼAⱼᵢ — O(4ⁿ), no matrix product.
+        precondition(observable.rows == matrix.rows && observable.cols == matrix.rows,
+                     "Observable dimension must match density matrix dimension")
+        let n = matrix.rows
+        var sum = Complex.zero
+        for i in 0..<n {
+            for j in 0..<n { sum = sum + matrix.grid[i * n + j] * observable.grid[j * n + i] }
+        }
+        return sum.real
     }
 
     /// Fidelity ⟨ψ|ρ|ψ⟩ of this mixed state against a pure state `state`.
@@ -115,6 +124,52 @@ public extension DensityMatrix {
         precondition(unitary.cols == matrix.rows,
                      "Unitary dimension must match density matrix dimension")
         return DensityMatrix(matrix: unitary * matrix * unitary.adjoint)
+    }
+}
+
+// MARK: - Kernel application (internal)
+
+extension DensityMatrix {
+
+    /// Unvalidated init for results that are physical by construction (unitary or
+    /// trace-preserving evolution of a valid ρ).
+    init(unchecked matrix: Matrix) {
+        self.matrix = matrix
+    }
+
+    /// ρ viewed as a 2n-qubit vector (row index = high n bits, column index = low n bits).
+    private func vectorized() -> StateVector {
+        var v = StateVector(qubits: 2 * qubits)
+        v.amplitudes = matrix.grid
+        return v
+    }
+
+    /// UρU† for a `tensor` acting on `targets` only, via the in-place kernel on the
+    /// vectorized ρ: `U` on the row bits, conj(U) on the column bits. O(4ⁿ·nnz) instead of
+    /// the dense O(8ⁿ) product, and no 2ⁿ×2ⁿ embedding.
+    func applyingLocal(_ tensor: Matrix, targets: [Int]) -> DensityMatrix {
+        var v = vectorized()
+        applyLocalPair(tensor, targets: targets, to: &v)
+        return DensityMatrix(unchecked: Matrix(rows: matrix.rows, cols: matrix.rows, elements: v.amplitudes))
+    }
+
+    private func applyLocalPair(_ tensor: Matrix, targets: [Int], to v: inout StateVector) {
+        let n = qubits
+        v.applyLocal(tensor, targets: targets)
+        let conj = Matrix(rows: tensor.rows, cols: tensor.cols, elements: tensor.grid.map { $0.conjugate })
+        v.applyLocal(conj, targets: targets.map { $0 + n })
+    }
+
+    /// Σᵢ KᵢρKᵢ† for single-qubit Kraus operators on `qubit`.
+    func applyingKraus(_ operators: [Matrix], qubit: Int) -> DensityMatrix {
+        let base = vectorized()
+        var total = [Complex](repeating: .zero, count: base.dimension)
+        for k in operators {
+            var v = base
+            applyLocalPair(k, targets: [qubit], to: &v)
+            for i in 0..<total.count { total[i] = total[i] + v.amplitudes[i] }
+        }
+        return DensityMatrix(unchecked: Matrix(rows: matrix.rows, cols: matrix.rows, elements: total))
     }
 }
 

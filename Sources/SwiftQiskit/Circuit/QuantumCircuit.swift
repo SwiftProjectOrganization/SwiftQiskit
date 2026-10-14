@@ -100,17 +100,26 @@ public final class QuantumCircuit {
     public func measure(shots: Int) -> SimulationResult {
         precondition(shots > 0, "Number of shots must be positive")
 
-        let probs = run().probabilities
-        var counts: [String: Int] = [:]
+        return sample(run(), shots: shots)
+    }
 
-        for index in StateVector.sampleIndices(from: probs, count: shots) {
-            let binary = String(index, radix: 2)
-                .leftPadding(toLength: qubits, withPad: "0")
-
-            counts[binary, default: 0] += 1
+    /// Draws `shots` samples from `state`'s distribution. Counts by integer index and builds
+    /// each distinct outcome's bit string once, not once per shot.
+    func sample(_ state: StateVector, shots: Int) -> SimulationResult {
+        var tally: [Int: Int] = [:]
+        for index in StateVector.sampleIndices(from: state.probabilities, count: shots) {
+            tally[index, default: 0] += 1
         }
+        return SimulationResult(shots: shots, counts: binaryCounts(tally))
+    }
 
-        return SimulationResult(shots: shots, counts: counts)
+    /// Integer-keyed tallies -> zero-padded binary-string counts.
+    func binaryCounts(_ tally: [Int: Int]) -> [String: Int] {
+        var counts: [String: Int] = [:]
+        for (index, n) in tally {
+            counts[String(index, radix: 2).leftPadding(toLength: qubits, withPad: "0")] = n
+        }
+        return counts
     }
 
     /// Run the circuit and return the final state
@@ -133,11 +142,15 @@ public final class QuantumCircuit {
     public func runDensityMatrix(noise: NoiseModel? = nil) -> DensityMatrix {
         var rho = DensityMatrix(StateVector(qubits: qubits))
         for op in operations {
-            rho = rho.apply(op.matrix)
+            if let dense = op.dense {
+                rho = rho.apply(dense)
+            } else {
+                rho = rho.applyingLocal(op.local, targets: op.qubits)
+            }
             guard let noise = noise, !op.qubits.isEmpty else { continue }
             guard let channel = op.qubits.count == 1 ? noise.singleQubitGate : noise.multiQubitGate else { continue }
             for qubit in op.qubits {
-                rho = channel.apply(to: rho, qubit: qubit)
+                rho = rho.applyingKraus(channel.operators, qubit: qubit)
             }
         }
         return rho
@@ -151,7 +164,7 @@ public final class QuantumCircuit {
     public func runTrajectories(noise: NoiseModel, shots: Int) -> SimulationResult {
         precondition(shots > 0, "Number of shots must be positive")
 
-        var counts: [String: Int] = [:]
+        var tally: [Int: Int] = [:]
         for _ in 0..<shots {
             var state = StateVector(qubits: qubits)
             for op in operations {
@@ -162,11 +175,9 @@ public final class QuantumCircuit {
                     state = applyChannelTrajectory(channel, to: state, qubit: qubit)
                 }
             }
-            let index = state.measure()
-            let binary = String(index, radix: 2).leftPadding(toLength: qubits, withPad: "0")
-            counts[binary, default: 0] += 1
+            tally[state.measure(), default: 0] += 1
         }
-        return SimulationResult(shots: shots, counts: counts)
+        return SimulationResult(shots: shots, counts: binaryCounts(tally))
     }
 }
 
@@ -176,19 +187,26 @@ private extension QuantumCircuit {
     /// `state` — chosen with probability ‖Kᵢ|ψ⟩‖², the Monte-Carlo unraveling of the
     /// channel. Used by `runTrajectories(noise:shots:)`.
     func applyChannelTrajectory(_ channel: KrausChannel, to state: StateVector, qubit: Int) -> StateVector {
-        // Each Kraus operator applied to a copy of the state, via the kernel (no embedding).
-        let candidates: [StateVector] = channel.operators.map { op in
-            var copy = state
-            copy.applyLocal(op, targets: [qubit], parallel: true)
-            return copy
+        // ‖Kᵢψ‖² = Tr(Kᵢ†Kᵢ ρ_q) from the qubit's 2×2 reduced density matrix, computed in
+        // one pass — so only the chosen operator is ever applied to the state.
+        let bit = 1 << (state.dimension.trailingZeroBitCount - 1 - qubit)
+        var r00 = 0.0, r11 = 0.0, r01 = Complex.zero   // ρ₀₁ = Σ ψ₀·conj(ψ₁)
+        for i in 0..<state.dimension where i & bit == 0 {
+            let a = state.amplitudes[i], b = state.amplitudes[i | bit]
+            r00 += a.magnitudeSquared
+            r11 += b.magnitudeSquared
+            r01 = r01 + a * b.conjugate
         }
-        let weights = candidates.map { $0.amplitudes.reduce(0.0) { $0 + $1.magnitudeSquared } }
+        let weights = channel.operators.map { k -> Double in
+            let m = k.adjoint * k
+            return m[0, 0].real * r00 + m[1, 1].real * r11 + 2 * (m[0, 1] * r01.conjugate).real
+        }
         let totalWeight = weights.reduce(0.0, +)
         precondition(totalWeight > 1e-12, "Kraus channel annihilated the state (not trace-preserving?)")
-        let normalizedWeights = weights.map { $0 / totalWeight }
 
-        let choice = StateVector.sampleIndex(from: normalizedWeights)
-        var result = candidates[choice]
+        let choice = StateVector.sampleIndex(from: weights.map { $0 / totalWeight })
+        var result = state
+        result.applyLocal(channel.operators[choice], targets: [qubit], parallel: true)
         result.normalize()
         return result
     }
@@ -341,12 +359,24 @@ public extension QuantumCircuit {
     func measure(shots: Int, basis: [PauliBasis]) -> SimulationResult {
         precondition(basis.count == qubits, "Must supply one basis per qubit")
 
-        let copy = QuantumCircuit(qubits: qubits)
-        copy.operations = operations
+        return measure(shots: shots, basis: basis, from: run())
+    }
+
+    /// `measure(shots:basis:)` against an already-run `state`: only the per-qubit basis
+    /// rotations are applied (to a copy), so callers measuring several bases of the same
+    /// circuit run it once.
+    internal func measure(shots: Int, basis: [PauliBasis], from state: StateVector) -> SimulationResult {
+        var rotated = state
         for (qubit, b) in basis.enumerated() {
-            copy.rotateToZ(b, qubit)
+            switch b {
+            case .x: rotated.applyLocal(HadamardGate.matrix, targets: [qubit])
+            case .y:
+                rotated.applyLocal(SDaggerGate.matrix, targets: [qubit])
+                rotated.applyLocal(HadamardGate.matrix, targets: [qubit])
+            case .z: break
+            }
         }
-        return copy.measure(shots: shots)
+        return sample(rotated, shots: shots)
     }
 
     /// Shot-based estimate of a single `PauliString`'s expectation value: rotates every
@@ -384,6 +414,7 @@ public extension QuantumCircuit {
         precondition(hamiltonian.qubits == qubits, "Hamiltonian must act on this circuit's qubit count")
 
         var total = 0.0
+        let finalState = run()
         for group in hamiltonian.commutingGroups() {
             let (active, identity) = (group.filter { !$0.activeQubits.isEmpty },
                                        group.filter { $0.activeQubits.isEmpty })
@@ -394,7 +425,7 @@ public extension QuantumCircuit {
             for term in active {
                 for qubit in term.activeQubits { basis[qubit] = term.labels[qubit]! }
             }
-            let result = measure(shots: shots, basis: basis)
+            let result = measure(shots: shots, basis: basis, from: finalState)
             total += active.reduce(0.0) { $0 + $1.coefficient * result.parityExpectation(qubits: $1.activeQubits) }
         }
         return total

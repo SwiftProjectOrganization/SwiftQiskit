@@ -66,15 +66,9 @@ public extension KrausChannel {
     func apply(to rho: DensityMatrix, qubit: Int) -> DensityMatrix {
         precondition(operators[0].rows == 2,
                      "Per-qubit application requires a single-qubit (2×2) channel")
-        let n = rho.qubits
-        precondition(qubit >= 0 && qubit < n, "Qubit index out of range")
+        precondition(qubit >= 0 && qubit < rho.qubits, "Qubit index out of range")
 
-        var accumulated = Matrix(rows: rho.matrix.rows, cols: rho.matrix.rows)
-        for k in operators {
-            let embedded = embedSingleQubitGate(k, qubits: n, target: qubit)
-            accumulated = accumulated + (embedded * rho.matrix * embedded.adjoint)
-        }
-        return DensityMatrix(matrix: accumulated)
+        return rho.applyingKraus(operators, qubit: qubit)
     }
 }
 

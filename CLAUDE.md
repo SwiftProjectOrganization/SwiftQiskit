@@ -56,6 +56,16 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   state has ≥ `parallelThreshold` (2¹⁴) amplitudes. No renormalization (callers pass unitaries).
   `QuantumCircuit.run()`/`runTrajectories` use it; `amplitudes` is `internal(set)` for it.
   `StateVector.sampleIndices(from:count:)` draws many samples from one cumulative sum.
+- Performance notes: `Matrix` arithmetic runs on raw row-major buffers (internal `grid`/
+  `init(rows:cols:elements:)`, zero-skipping i-k-j multiply). `applyLocal` has dedicated
+  diagonal and 1-qubit paths. `PauliString.expectation` is a direct O(2ⁿ) flip-mask/phase sum
+  (no dense matrix). `DensityMatrix.applyingLocal`/`applyingKraus` (internal) run the gate
+  kernel on ρ as a 2n-qubit vector (U on row bits, conj(U) on column bits), used by
+  `runDensityMatrix` and `KrausChannel.apply(to:qubit:)`; `purity`/`expectation` are O(4ⁿ).
+  `measure(shots:basis:from:)` (internal) rotates an already-run state, so
+  `measureExpectation(of: Hamiltonian)` runs the circuit once for all groups;
+  `runTrajectories` takes Kraus weights from the qubit's reduced 2×2 ρ and tallies shots by
+  integer index. `Operation.matrix` is now only a test reference.
 - `Quantum/StateVector.swift` — amplitudes; auto-normalizes on init and `apply(_:)`;
   `measure()` is probabilistic and **collapses (mutates) the state**; `tensor(_:)` / `⊗`
   combines registers (`self` in the high-order bits, per the qubit-0-is-MSB convention);

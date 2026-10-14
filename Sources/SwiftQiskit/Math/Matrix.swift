@@ -14,7 +14,8 @@ public struct Matrix: Equatable, Hashable {
 
     public let rows: Int
     public let cols: Int
-    private var grid: [Complex]
+    /// Row-major entries. Internal so hot paths in this module can use raw buffers.
+    var grid: [Complex]
 
     // MARK: - Initializers
 
@@ -50,6 +51,14 @@ public struct Matrix: Equatable, Hashable {
         }
     }
 
+    /// Wraps already-laid-out row-major entries without per-entry copying.
+    init(rows: Int, cols: Int, elements: [Complex]) {
+        precondition(rows > 0 && cols > 0 && elements.count == rows * cols, "Bad matrix element count")
+        self.rows = rows
+        self.cols = cols
+        self.grid = elements
+    }
+
     private func isValidIndex(_ row: Int, _ col: Int) -> Bool {
         row >= 0 && row < rows && col >= 0 && col < cols
     }
@@ -62,19 +71,24 @@ public extension Matrix {
     static func * (lhs: Matrix, rhs: Matrix) -> Matrix {
         precondition(lhs.cols == rhs.rows, "Matrix dimensions not compatible for multiplication")
 
-        var result = Matrix(rows: lhs.rows, cols: rhs.cols)
-
-        for i in 0..<lhs.rows {
-            for j in 0..<rhs.cols {
-                var sum = Complex.zero
-                for k in 0..<lhs.cols {
-                    sum = sum + lhs[i, k] * rhs[k, j]
+        let n = lhs.rows, m = lhs.cols, p = rhs.cols
+        var out = [Complex](repeating: .zero, count: n * p)
+        // i-k-j order streams both operands row-wise; zero lhs entries (most gate
+        // matrices are sparse) are skipped.
+        lhs.grid.withUnsafeBufferPointer { a in
+            rhs.grid.withUnsafeBufferPointer { b in
+                out.withUnsafeMutableBufferPointer { c in
+                    for i in 0..<n {
+                        for k in 0..<m {
+                            let aik = a[i * m + k]
+                            if aik == .zero { continue }
+                            for j in 0..<p { c[i * p + j] = c[i * p + j] + aik * b[k * p + j] }
+                        }
+                    }
                 }
-                result[i, j] = sum
             }
         }
-
-        return result
+        return Matrix(rows: n, cols: p, elements: out)
     }
 
     /// Matrix × Vector (StateVector)
@@ -82,15 +96,13 @@ public extension Matrix {
         precondition(cols == vector.count, "Matrix and vector dimensions not compatible")
 
         var result = Array(repeating: Complex.zero, count: rows)
-
-        for i in 0..<rows {
-            var sum = Complex.zero
-            for j in 0..<cols {
-                sum = sum + self[i, j] * vector[j]
+        grid.withUnsafeBufferPointer { g in
+            for i in 0..<rows {
+                var sum = Complex.zero
+                for j in 0..<cols { sum = sum + g[i * cols + j] * vector[j] }
+                result[i] = sum
             }
-            result[i] = sum
         }
-
         return result
     }
 }
@@ -103,13 +115,7 @@ public extension Matrix {
         precondition(lhs.rows == rhs.rows && lhs.cols == rhs.cols,
                      "Matrix dimensions must match for addition")
 
-        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
-        for i in 0..<lhs.rows {
-            for j in 0..<lhs.cols {
-                result[i, j] = lhs[i, j] + rhs[i, j]
-            }
-        }
-        return result
+        return Matrix(rows: lhs.rows, cols: lhs.cols, elements: zip(lhs.grid, rhs.grid).map { $0 + $1 })
     }
 
     /// Entrywise difference A − B; dimensions must match.
@@ -117,13 +123,7 @@ public extension Matrix {
         precondition(lhs.rows == rhs.rows && lhs.cols == rhs.cols,
                      "Matrix dimensions must match for subtraction")
 
-        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
-        for i in 0..<lhs.rows {
-            for j in 0..<lhs.cols {
-                result[i, j] = lhs[i, j] - rhs[i, j]
-            }
-        }
-        return result
+        return Matrix(rows: lhs.rows, cols: lhs.cols, elements: zip(lhs.grid, rhs.grid).map { $0 - $1 })
     }
 }
 
@@ -132,13 +132,7 @@ public extension Matrix {
 
     /// Scalar multiple c·M
     static func * (lhs: Matrix, rhs: Complex) -> Matrix {
-        var result = Matrix(rows: lhs.rows, cols: lhs.cols)
-        for i in 0..<lhs.rows {
-            for j in 0..<lhs.cols {
-                result[i, j] = lhs[i, j] * rhs
-            }
-        }
-        return result
+        return Matrix(rows: lhs.rows, cols: lhs.cols, elements: lhs.grid.map { $0 * rhs })
     }
 
     /// Scalar multiple c·M
@@ -332,17 +326,19 @@ public extension Matrix {
     /// Kronecker (tensor) product A ⊗ B.
     /// Result is (rows·other.rows) × (cols·other.cols); any dimensions are valid.
     func tensor(_ other: Matrix) -> Matrix {
-        var result = Matrix(rows: rows * other.rows, cols: cols * other.cols)
+        let outCols = cols * other.cols
+        var out = [Complex](repeating: .zero, count: rows * other.rows * outCols)
         for i in 0..<rows {
             for j in 0..<cols {
+                let a = grid[i * cols + j]
+                if a == .zero { continue }
                 for k in 0..<other.rows {
-                    for l in 0..<other.cols {
-                        result[i * other.rows + k, j * other.cols + l] = self[i, j] * other[k, l]
-                    }
+                    let rowBase = (i * other.rows + k) * outCols + j * other.cols
+                    for l in 0..<other.cols { out[rowBase + l] = a * other.grid[k * other.cols + l] }
                 }
             }
         }
-        return result
+        return Matrix(rows: rows * other.rows, cols: outCols, elements: out)
     }
 
     /// Kronecker (tensor) product: `lhs ⊗ rhs`
