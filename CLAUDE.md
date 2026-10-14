@@ -426,6 +426,13 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   transpose silently swaps `|+i⟩`'s probabilities and fails the unitarity check), and
   measuring in the new basis via `h`/`sdg;h` before an ordinary `measure(shots:)`
   (user guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`).
+- `42StateVectorCPU` — standalone (console only): the direct pair-update gate kernel, with
+  the struct defined on the page (a teaching copy of what `applyLocal` does; Qiskit
+  qubit-0-is-LSB, unlike Core). Serial `apply` and `concurrentPerform` `applyParallel`
+  (page-local `@unchecked Sendable` pointer box), controls as an index mask, the two pair
+  enumerations, the bit-order gotcha, an exact cross-check against `QuantumCircuit.run()` via
+  qubit relabeling `q → n-1-q` (no index reversal needed after relabeling), and the O(4ⁿ) vs.
+  O(2ⁿ) memory table (no timings, no companion `PlaygroundDocs/` guide).
 
 Playground notes:
 

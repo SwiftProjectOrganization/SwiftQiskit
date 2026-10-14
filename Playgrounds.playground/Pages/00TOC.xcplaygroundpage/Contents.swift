@@ -81,6 +81,12 @@
    why the complex {|+i⟩, |−i⟩} case needs the *conjugate* transpose and not a plain one,
    and measuring in the new basis via `h`/`sdg;h` before an ordinary `measure(shots:)`
    (user guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`).
+ - [42StateVectorCPU](42StateVectorCPU) — standalone (console only): applying 1-qubit
+   gates, optionally controlled, directly to a state vector as independent amplitude pairs
+   instead of building 2ⁿ×2ⁿ Kronecker matrices — serial and `concurrentPerform` versions,
+   the two ways of enumerating the pairs, the Qiskit (qubit 0 = LSB) vs. Core (qubit 0 = MSB)
+   bit-order gotcha, an exact cross-check against `QuantumCircuit.run()`, and the O(4ⁿ) vs.
+   O(2ⁿ) memory cost.
 
  ## User guides
 
