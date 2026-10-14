@@ -5,7 +5,7 @@ plus this fork's working TODO list.
 
 ## Project Status
 
-**SwiftQiskit is currently in an early experimental stage (v0.6.1).**
+**SwiftQiskit is currently in an early experimental stage (v0.7.1).**
 
 - Core quantum simulation is implemented
 - API is subject to change

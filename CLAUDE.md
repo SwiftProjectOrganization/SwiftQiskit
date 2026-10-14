@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Overview
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
-offering a Qiskit-like API. It is experimental (v0.6.1): the API is unstable and correctness is
+offering a Qiskit-like API. It is experimental (v0.7.1): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
 `API.md` at the repo root is the full API reference for the core library (every public type and
@@ -498,5 +498,5 @@ Playground notes:
 
 ## Status & Roadmap
 
-v0.6.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
+v0.7.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
 (circuit visualization, noise models, performance work), and the fork's working TODO list.
