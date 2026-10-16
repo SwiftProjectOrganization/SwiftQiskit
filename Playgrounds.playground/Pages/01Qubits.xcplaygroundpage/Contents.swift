@@ -84,7 +84,11 @@ ket0 ⊗ ket0
 ket0 * ket0†
 ket0† * Matrix.identity(size: 2)
 
-let ket1 = Ket([Complex(0.8660254037844387), Complex(0.35355339059327373, 0.3535533905932737)])
+HadamardGate.matrix
+Matrix.identity(size: 2) * HadamardGate.matrix
+Matrix.identity(size: 2) ⊗ HadamardGate.matrix
+
+let ket1 = Ket([Complex(0.8), Complex(0.4243, 0.4243)])
 let bra1 = ket1†
 bra1 * ket1
 ket1.dimension.magnitude
@@ -93,6 +97,7 @@ ket1.probabilities
 ket1†
 ket1† * ket1
 ket1 ⊗ ket1
+bra1 ⊗ ket1
 (ket1†)†
 ket1 * ket1†
 ket1† * Matrix.identity(size: 2)

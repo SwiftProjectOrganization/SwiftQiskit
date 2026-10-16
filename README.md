@@ -861,10 +861,10 @@ User guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`.
 ### 42StateVectorCPU
 
 Standalone (console only): gates applied directly to a state vector as independent amplitude
-pairs `(i0, i0 | 1<<t)` instead of 2ⁿ×2ⁿ Kronecker matrices, with controlled gates as an index
+pairs `(i0, i0 | 1<<b)` instead of 2ⁿ×2ⁿ Kronecker matrices, with controlled gates as an index
 mask. Serial and `concurrentPerform` versions of the same kernel (page-local code, an
 illustration of what Core's `applyLocal` does), the two ways of enumerating the pairs, the
-Qiskit-vs-Core bit-order gotcha (qubit 0 = LSB here, MSB in Core), an exact cross-check against
+bit order (Core's qubit 0 = MSB, qubit q at bit n-1-q; Qiskit's is the reverse), an exact cross-check against
 `QuantumCircuit.run()` (~1e-17) including Toffoli and CZ, and the O(4ⁿ) vs. O(2ⁿ) memory cost.
 No timings (playground code is instrumented), no companion `PlaygroundDocs/` guide.
 
