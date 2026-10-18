@@ -71,8 +71,9 @@
  - [40ComplexAndMatrices](40ComplexAndMatrices) — the code from INTRODUCTION Chapter 2, in
    order: `Complex` construction, `*`/`/`, conjugate and magnitude, the Born rule, phase via
    Euler's formula, plain `[Complex]` vectors, inner products and normalization, `Matrix` as
-   a transformation (and why order matters), unitarity and why exact `==` lies on `H`, and
-   the tensor product `⊗`.
+   a transformation (and why order matters), unitarity and why exact `==` lies on `H`, why
+   Hermitian matrices matter (real eigenvalues → observables), and the tensor product `⊗`
+   (user guide in `PlaygroundDocs/40COMPLEXANDMATRICESHELP.md`).
  - [41BasisTransformations](41BasisTransformations) — standalone (not tied to a book
    chapter): expressing |ψ⟩ in a different basis by building the change-of-basis matrix `T`
    from the new basis kets as columns, constructing its conjugate transpose `T†` by hand

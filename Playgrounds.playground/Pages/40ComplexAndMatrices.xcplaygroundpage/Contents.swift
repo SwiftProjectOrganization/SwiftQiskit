@@ -19,11 +19,11 @@ import SwiftQiskit
 
 let a = Complex(3, 4)
 let b = Complex(1, -2)
-print(a * b, a / b)
+print("\((a * b, a / b))\n")
 // (3+4i)(1-2i) = 11 - 2i; (3+4i)/(1-2i) = -1+2i
 
-let z = Complex(1, -2)
-print(z * z.conjugate, z.magnitudeSquared)
+let z = Complex(3, 2)
+print("\((z * z.conjugate, z.magnitudeSquared))\n")
 // z · z̄ is always real — exactly why it can serve as a probability (§2.3)
 
 // ------------------------------------------------------------
@@ -31,17 +31,19 @@ print(z * z.conjugate, z.magnitudeSquared)
 // ------------------------------------------------------------
 
 let amp = Complex(1.0 / sqrt(2.0), 0)
-print(amp.magnitudeSquared)
+print("\(amp.magnitudeSquared)\n")
 // ≈ 0.5, not exactly 0.5 — ordinary floating-point rounding on 1/√2
 
 // ------------------------------------------------------------
 // §2.4 — The complex plane: magnitude and phase
 // ------------------------------------------------------------
 
-let theta = 0.7
+let theta = Double.pi/3
+print("rad2deg(theta) = \(rad2deg(theta))")
 let phase = Complex(cos(theta), sin(theta))
 print(phase, phase.magnitude)
-print(PhaseGate.matrix(theta: theta)[1, 1])
+
+print("PhaseGate.matrix(theta: theta)[1, 1] = \(PhaseGate.matrix(theta: theta)[1, 1])\n")
 // the hand-built e^{iθ} matches PhaseGate.matrix(theta:)[1, 1] bit for bit;
 // |e^{iθ}| == 1 always — a pure phase changes direction, never size
 
@@ -129,6 +131,7 @@ for (name, g) in [("H", HadamardGate.matrix), ("X", PauliXGate.matrix),
                    ("S", SGate.matrix), ("T", TGate.matrix)] {
     print(name, g.adjoint * g == I2)
 }
+
 // H is exactly as unitary as the others, but its ±1/√2 entries only approximate as a Double,
 // so U†U misses I by ~2.22e-16 and exact == reports false — the fix is a tolerance
 // comparison, not ==
@@ -144,12 +147,27 @@ print(maxDiff(H.adjoint * H, I2))
 // ≈ 2.22e-16 — well under the 1e-10 tolerance this book uses from here on whenever two
 // matrices need to be compared "close enough"
 
+// Hermitian matrices are the unitaries' close cousins: a square matrix A is Hermitian when it
+// equals its own conjugate transpose, A† == A. They are central in quantum computing because
+// their eigenvalues are always real, which makes them the natural representation of
+// measurable physical quantities (observables) such as energy, spin, and momentum — a
+// measurement outcome has to be a real number. Quantum gates, by contrast, are unitary
+// (U†U = I); the two are linked through the same conjugate transpose, and every unitary can
+// be written as U = e^{-iθA} for some Hermitian A (page 21Trotter builds gates exactly this
+// way with Matrix.expm()). X, Y, Z and H are both Hermitian and unitary.
+
 // ------------------------------------------------------------
 // §2.10 — The tensor product ⊗
 // ------------------------------------------------------------
 
+let mat1 = Matrix([[Complex(1), Complex(2)],
+                   [Complex(3), Complex(4)]])
+
+mat1 ⊗ HadamardGate.matrix
+
 let a23 = Matrix([[Complex(1), Complex(2), Complex(3)], [Complex(4), Complex(5), Complex(6)]])
 print(a23.tensor(I2).rows, a23.tensor(I2).cols)
+
 print(H.tensor(I2))
 // each ±1/√2 entry of H became a ±1/√2 · I2 block — the block rule directly; ⊗ places no
 // constraint on shapes (an m×n tensored with a p×q always gives mp×nq) and is not commutative
@@ -160,5 +178,6 @@ print(qc.run().amplitudes)
 print((H ⊗ I2).multiply(by: [Complex.one, .zero, .zero, .zero]))
 // identical — h(qubit:) builds exactly H ⊗ I internally and applies that to the full state;
 // there is no separate code path for "apply a gate to one qubit of several"
+
 
 //: [Next](@next)

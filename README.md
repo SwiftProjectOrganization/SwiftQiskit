@@ -320,6 +320,7 @@ SwiftQiskit/
 │   ├── 22WALKHELP.md
 │   ├── 23TENSORNETWORKPLAN.md
 │   ├── 23TENSORNETWORKHELP.md
+│   ├── 40COMPLEXANDMATRICESHELP.md
 │   ├── 41BASISTRANSFORMATIONSHELP.md
 │   └── 90LIVEVIEWHELP.md   (not page-numbered — sorts last on purpose; the shared-code/live-view guide)
 ├── Playgrounds.playground/
@@ -843,8 +844,11 @@ of the `SwiftQiskitApp` `INTRODUCTION.md` book rather than continuing that seque
 fragment from the book's Chapter 2, in order — `Complex` construction/`*`/`/`/conjugate/
 magnitude, the Born rule, phase via Euler's formula, plain `[Complex]` vector helpers, inner
 products and normalization, `Matrix` as a transformation and why multiplication order matters,
-unitarity and why exact `==` lies on `H`, and the tensor product `⊗` (console only, no live
-view, no companion `PlaygroundDocs/` guide).
+unitarity and why exact `==` lies on `H`, a closing note on why Hermitian matrices matter
+(real eigenvalues → observables; their link to unitary gates), and the tensor product `⊗`
+(console only, no live view).
+
+User guide in `PlaygroundDocs/40COMPLEXANDMATRICESHELP.md`.
 
 ### 41BasisTransformations
 

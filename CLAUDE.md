@@ -418,7 +418,9 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   `Complex` construction/`*`/`/`/conjugate/magnitude, the Born rule, phase via Euler's
   formula, plain `[Complex]` vector helpers, inner products and normalization, `Matrix` as a
   transformation and why multiplication order matters, unitarity and why exact `==` lies on
-  `H`, and the tensor product `⊗` (no live view, no companion `PlaygroundDocs/` guide).
+  `H`, a closing note on why Hermitian matrices matter (real eigenvalues → observables; their
+  link to unitary gates), and the tensor product `⊗` (no live view; user guide in
+  `PlaygroundDocs/40COMPLEXANDMATRICESHELP.md`).
 - `41BasisTransformations` — standalone, not tied to a book chapter (console only):
   expressing |ψ⟩ in a different basis by building the change-of-basis matrix `T` from the
   new basis kets as columns, constructing `T†` by hand as the stack of the new bras
