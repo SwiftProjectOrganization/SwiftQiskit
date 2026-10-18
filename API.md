@@ -6,7 +6,7 @@ product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
 it does not cover the remaining playground helper module (`Playgrounds.playground/Sources/`),
 see `PLAYGROUNDSUPPORT.md` for that.
 
-SwiftQiskit is v0.7.1 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.7.3 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions
@@ -16,7 +16,8 @@ Keep this document in sync with the source when the public API changes.
   product — the left-hand operand occupies the high-order bits), and binary state labels
   like `Ket("01")`.
 - **Angles are in radians**, and — following Qiskit — appear as the *first* argument on
-  parameterized circuit methods: `p(theta, qubit)`, `rx(theta, qubit)`, etc.
+  parameterized circuit methods: `p(theta, qubit)`, `rx(theta, qubit)`, etc. Use
+  `deg2rad(_:)` / `rad2deg(_:)` (see Utilities) to convert from/to degrees.
 - **Invariants are enforced with `precondition`**, not thrown errors: passing a mismatched
   matrix dimension, an out-of-range qubit index, or an empty state traps at runtime rather
   than failing gracefully. Check preconditions before calling.
@@ -710,6 +711,16 @@ both gate classes.
 ---
 
 ## Utilities
+
+`Sources/SwiftQiskit/Utils/Angles.swift`:
+
+```swift
+public func deg2rad(_ degrees: Double) -> Double
+public func rad2deg(_ radians: Double) -> Double
+```
+
+Degree/radian conversion for any angle argument (all library angles are radians), e.g.
+`circuit.rx(deg2rad(45), 0)`.
 
 `Sources/SwiftQiskit/Utils/String+Padding.swift`:
 

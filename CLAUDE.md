@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Overview
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
-offering a Qiskit-like API. It is experimental (v0.7.1): the API is unstable and correctness is
+offering a Qiskit-like API. It is experimental (v0.7.3): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
 `API.md` at the repo root is the full API reference for the core library (every public type and
@@ -49,6 +49,8 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   unless `image` is a bijection — the bijection check doubles as the unitarity check),
   `expm(terms:)` (matrix exponential via scaling-and-squaring Taylor series; no implicit
   `-i` — scale by `Complex(0, -theta)` yourself for e^(-iθH)).
+- `Utils/Angles.swift` — public free functions `deg2rad(_:)` / `rad2deg(_:)` (`Double`);
+  all library angles are radians.
 - `Quantum/StateVector+Kernels.swift` — internal `applyLocal(_:targets:parallel:)`: applies a
   gate's small 2ᵏ×2ᵏ tensor to `targets` in place (qubit 0 = MSB), gathering each of the 2ⁿ⁻ᵏ
   spectator groups, multiplying by the tensor's non-zero entries only (so permutation, diagonal
@@ -482,7 +484,7 @@ Playground notes:
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
-  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`).
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`).
   `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
   `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
@@ -498,5 +500,5 @@ Playground notes:
 
 ## Status & Roadmap
 
-v0.7.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
+v0.7.3 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
 (circuit visualization, noise models, performance work), and the fork's working TODO list.
