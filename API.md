@@ -6,7 +6,7 @@ product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
 it does not cover the remaining playground helper module (`Playgrounds.playground/Sources/`),
 see `PLAYGROUNDSUPPORT.md` for that.
 
-SwiftQiskit is v0.7.3 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.8.0 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions
@@ -77,11 +77,11 @@ gate files do it).
 
 ## `Matrix`
 
-`Sources/SwiftQiskit/Math/Matrix.swift` (plus `adjoint`, added in `Dirac.swift`) — a
+`Sources/SwiftQiskit/Math/Matrix.swift` — `GenericMatrix<Element: MatrixScalar>` (`MatrixScalar.swift`; `Complex` and `Double` conform), with `public typealias Matrix = GenericMatrix<Complex>`. Everything below is generic over `Element` except the `Double` scalar overloads and `expm`, which are `Complex`-only (`adjoint` is the plain transpose for `Double`). A
 row-major, dense complex matrix.
 
 ```swift
-public struct Matrix: Equatable, Hashable {
+public struct GenericMatrix<Element: MatrixScalar>: Equatable, Hashable {  // Matrix = GenericMatrix<Complex>
     public let rows: Int
     public let cols: Int
     public init(rows: Int, cols: Int, repeating value: Complex = .zero)

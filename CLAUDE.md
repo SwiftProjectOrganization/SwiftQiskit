@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Overview
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
-offering a Qiskit-like API. It is experimental (v0.7.3): the API is unstable and correctness is
+offering a Qiskit-like API. It is experimental (v0.8.0): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
 `API.md` at the repo root is the full API reference for the core library (every public type and
@@ -41,7 +41,7 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
 ## Architecture (bottom-up)
 
 - `Math/Complex.swift` — value-type complex numbers (`+ - * /`, scalar mul, `.zero/.one/.i`).
-- `Math/Matrix.swift` — row-major complex matrix; `* + -`, scalar mul (`Double`/`Complex`,
+- `Math/Matrix.swift` — row-major `GenericMatrix<Element: MatrixScalar>` (`Math/MatrixScalar.swift`; `Complex` and `Double` conform), with `Matrix = GenericMatrix<Complex>` as the alias all quantum code uses; `Double` scalar `*`, `expm` are Complex-only, `adjoint` lives here now; `* + -`, scalar mul (`Double`/`Complex`,
   either operand order), `multiply(by:)` (matrix × vector), `identity(size:)`, Kronecker
   product `tensor(_:)` / `⊗` (the `⊗` operator is declared here), `isUnitary(tolerance:)`
   (entrywise `U†U ≈ I`, since `==` compares exactly), `trace` (traps if non-square),
@@ -486,7 +486,7 @@ Playground notes:
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
-  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`).
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`, `GenericMatrixTests.swift`).
   `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
   `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
@@ -502,5 +502,5 @@ Playground notes:
 
 ## Status & Roadmap
 
-v0.7.3 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
+v0.8.0 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
 (circuit visualization, noise models, performance work), and the fork's working TODO list.

@@ -66,18 +66,6 @@ public postfix func † (matrix: Matrix) -> Matrix {
     matrix.adjoint
 }
 
-public extension Matrix {
-
-    /// Conjugate transpose (adjoint) A†.
-    var adjoint: Matrix {
-        var out = [Complex](repeating: .zero, count: rows * cols)
-        for i in 0..<rows {
-            for j in 0..<cols { out[j * rows + i] = grid[i * cols + j].conjugate }
-        }
-        return Matrix(rows: cols, cols: rows, elements: out)
-    }
-}
-
 // MARK: - Inner & Outer Products
 
 public extension Bra {
