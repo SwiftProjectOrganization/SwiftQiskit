@@ -6,13 +6,12 @@ Although SwiftQiskit contains a large set of playgrounds and associated document
 
 Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
 1. The usage of Xcode playgrounds.
-2. Playgrounds 10 to 23 contain many different quantum computing examples; pages 40+ walk
-   through the SwiftQiskitApp `INTRODUCTION.md` book chapter by chapter.
+2. Playgrounds 10 to 23 contain many different quantum computing examples.   
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
 5. A separate App, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI "drag and drop" front-end for this package. SwiftQiskitGUI has been dropped.
 6. Another project, [SwiftQiskitPlaygrounds](https://github.com/SwiftProjectOrganization/SwiftQiskitPlaygrounds) picks up where the App can't go and enables experimentation using Swift.
-7. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application. Playgrounds are heavily instrumented and performance measurements should be done using Swift code.
+7. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application. Playgrounds are heavily instrumented and performance measurements should be done using Swift code not in playgrounds.
 8. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds
    presentational SwiftUI types (`BlochVector`, `CHSHChartView`, `TensorNetworkView`) shared
    by the playgrounds and by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
