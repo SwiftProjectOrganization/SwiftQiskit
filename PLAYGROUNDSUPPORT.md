@@ -4,6 +4,9 @@ How code is shared between the pages of `Playgrounds.playground`. This is the te
 implementation reference; the user-facing guide (usage snippets, the live-view recipe,
 and troubleshooting) is `PlaygroundDocs/90LIVEVIEWHELP.md`.
 
+Note: this is the proof-of-concept playground of the SwiftQiskit repo. The learner-facing playground set is the
+sibling SwiftQiskitPlaygrounds repo (SwiftQiskit and SwiftQiskitViews as a remote package), alongside SwiftQiskitApp.
+
 ## How sharing works
 
 Xcode playgrounds have a built-in mechanism for shared code: a `Sources/` folder at the

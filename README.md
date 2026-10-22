@@ -1,8 +1,8 @@
 # SwiftQiskit 
 
-**SwiftQiskit** is a lightweight **quantum computing simulator** written entirely in **Swift**. It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong focus on **clarity**, **correctness**, and **GUI integration**.
+**SwiftQiskit** is a lightweight **quantum computing simulator** written entirely in **Swift**. It brings a **Qiskit-like experience** to the Apple ecosystem, with a strong focus on **clarity**, **correctness**, and **GUI and Xcode playgrounds integration**. 
 
->  This project is **experimental and educational**, but grounded in real quantum mechanics principles
+Although SwiftQiskit contains a large set of playgrounds and associated documentation, these have been prepared as a "proof of concept", not as educational material. To get familiar with SwiftQiskit, it is strongly suggested to start with the introductory documentation in [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp) and [SwiftQiskitPlaygrounds](https://github.com/SwiftProjectOrganization/SwiftQiskitPlaygrounds), the two primary educational components, both built on SwiftQiskit.
 
 Differences between this forked repository ("**fork**") and its [parent](https://github.com/a360n/SwiftQiskit):
 1. The usage of Xcode playgrounds.
@@ -10,11 +10,12 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
    through the SwiftQiskitApp `INTRODUCTION.md` book chapter by chapter.
 3. Showing of Bloch spheres (in live playgrounds).
 4. Using Swift Testing.
-5. A separate app, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI front-end for this package. SwiftQiskitGUI has been dropped.
-6. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application.
-7. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds
+5. A separate App, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI "drag and drop" front-end for this package. SwiftQiskitGUI has been dropped.
+6. Another project, [SwiftQiskitPlaygrounds](https://github.com/SwiftProjectOrganization/SwiftQiskitPlaygrounds) picks up where the App can't go and enables experimentation using Swift.
+7. A template system is available to generate Swift apps, e.g. see the SwiftQiskitWalkDemo application. Playgrounds are heavily instrumented and performance measurements should be done using Swift code.
+8. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds
    presentational SwiftUI types (`BlochVector`, `CHSHChartView`, `TensorNetworkView`) shared
-   by the playground and by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
+   by the playgrounds and by `SwiftQiskitApp`, keeping the core `SwiftQiskit` module UI-free.
 
 ---
 
@@ -33,6 +34,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
   - Phase gates: S, S†, T, T†, and the general P(θ)
   - Rotations: RX(θ), RY(θ), RZ(θ)
   - CNOT (Controlled-NOT), Toffoli (CCX), and general multi-controlled X (MCX)
+  - CZ, CY, SWAP, and multi-controlled Z/Y (MCZ, MCY)
   - Two-qubit rotations RZZ(θ), RXX(θ), RYY(θ), and the general `pauliRotation`
 - ✅ Single-qubit gate embedding  
 - ✅ Quantum circuit abstraction  
@@ -48,7 +50,7 @@ Differences between this forked repository ("**fork**") and its [parent](https:/
   (`DensityMatrix`, `KrausChannel`, `NoiseModel`, `runDensityMatrix`/`runTrajectories`)
 - ✅ Register arithmetic (`increment`/`decrement`) and marginal/parity readout helpers
 - ✅ `SwiftQiskitViews` — a small, UI-only companion library (Bloch-vector math, a 2D chart
-  view) shared by the playground and by `SwiftQiskitApp`
+  view) shared by the playgrounds and by `SwiftQiskitApp`
 
 ---
 
@@ -190,7 +192,7 @@ and is not listed here — it acts on numbers, not on qubit states or gates.
 
 * No hidden magic — everything is **explicit and readable**
 * Mathematical correctness over shortcuts
-* Modular architecture (**Core / Examples / GUI-ready**)
+* Modular architecture (**Core / Views / Examples**, with the front-ends — `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` — in sibling repos)
 * Designed for **learning**, **experimentation**, and **extension**
 
 ---
@@ -216,7 +218,8 @@ SwiftQiskit/
 │   ├── SwiftQiskit/
 │   │   ├── Math/
 │   │   │   ├── Complex.swift
-│   │   │   └── Matrix.swift
+│   │   │   ├── Matrix.swift
+│   │   │   └── MatrixScalar.swift
 │   │   ├── Quantum/
 │   │   │   ├── StateVector.swift
 │   │   │   ├── Dirac.swift
@@ -228,7 +231,8 @@ SwiftQiskit/
 │   │   │   ├── StateTomography.swift
 │   │   │   ├── DensityMatrix.swift
 │   │   │   ├── KrausChannel.swift
-│   │   │   └── NoiseModel.swift
+│   │   │   ├── NoiseModel.swift
+│   │   │   └── StateVector+Kernels.swift
 │   │   ├── Gates/
 │   │   │   ├── Hadamard.swift
 │   │   │   ├── PauliX.swift
@@ -239,11 +243,17 @@ SwiftQiskit/
 │   │   │   ├── CNOT.swift
 │   │   │   ├── Toffoli.swift
 │   │   │   ├── MultiControlledX.swift
+│   │   │   ├── ControlledY.swift
+│   │   │   ├── ControlledZ.swift
+│   │   │   ├── Swap.swift
+│   │   │   ├── MultiControlledY.swift
+│   │   │   ├── MultiControlledZ.swift
 │   │   │   └── TwoQubitRotation.swift
 │   │   ├── Circuit/
 │   │   │   ├── QuantumCircuit.swift
 │   │   │   └── TensorNetwork.swift
 │   │   └── Utils/
+│   │       ├── Angles.swift
 │   │       └── String+Padding.swift
 │   └── SwiftQiskitViews/
 │       ├── BlochVector.swift
@@ -275,6 +285,13 @@ SwiftQiskit/
 │   │   ├── KrausChannelTests.swift
 │   │   ├── NoiseModelTests.swift
 │   │   ├── CommutingGroupsTests.swift
+│   │   ├── AngleConversionTests.swift
+│   │   ├── GenericMatrixTests.swift
+│   │   ├── StateVectorKernelTests.swift
+│   │   ├── ControlledYTests.swift
+│   │   ├── ControlledZAndSwapTests.swift
+│   │   ├── PerformancePathTests.swift
+│   │   ├── RunBenchmarkTests.swift
 │   │   ├── PermutationFastPathTests.swift
 │   │   └── TensorNetworkTests.swift
 │   └── SwiftQiskitViewsTests/
@@ -434,8 +451,10 @@ for (state, count) in result.sortedCounts {
 
 ##  Playgrounds
 
-`Playgrounds.playground` (at the repo root, macOS target) contains interactive, lecture-style
-explorations of the library. Open it in Xcode — pages `import SwiftQiskit` and, on the pages
+`Playgrounds.playground` (at the repo root, macOS target) contains interactive explorations of
+the library. These are a proof of concept and development testbed, not the recommended way to
+learn: start with [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp) and
+[SwiftQiskitPlaygrounds](https://github.com/SwiftProjectOrganization/SwiftQiskitPlaygrounds) instead. Open it in Xcode — pages `import SwiftQiskit` and, on the pages
 that use `BlochVector`/`CHSHChartView`, `import SwiftQiskitViews` too, so the active scheme
 must build **both** products: use the `SwiftQiskit-Package` scheme (or the autogenerated
 `SwiftQiskitViews` scheme), not the per-product `SwiftQiskit` scheme, which won't build
@@ -839,7 +858,7 @@ Design notes in `PlaygroundDocs/23TENSORNETWORKPLAN.md`; user guide in
 
 ### 40ComplexAndMatrices
 
-The first of the `40+` pages, numbered separately from 01–22 because they accompany chapters
+The first of the `40+` pages, numbered separately from 01–23 because they accompany chapters
 of the `SwiftQiskitApp` `INTRODUCTION.md` book rather than continuing that sequence: every code
 fragment from the book's Chapter 2, in order — `Complex` construction/`*`/`/`/conjugate/
 magnitude, the Born rule, phase via Euler's formula, plain `[Complex]` vector helpers, inner
@@ -894,7 +913,7 @@ This project is built **step by step** and open for exploration.
 ---
 ##  Status & Roadmap
 
-Project status, what works in v0.2, and the roadmap live in
+Project status, what works in v0.8.0, and the roadmap live in
 [STATUSandTODO.md](STATUSandTODO.md), together with this fork's working TODO list.
 
 ---

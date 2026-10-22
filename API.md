@@ -6,6 +6,9 @@ product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
 it does not cover the remaining playground helper module (`Playgrounds.playground/Sources/`),
 see `PLAYGROUNDSUPPORT.md` for that.
 
+Learners should start with SwiftQiskitApp and SwiftQiskitPlaygrounds, the primary educational
+components; this document is the library reference both build on.
+
 SwiftQiskit is v0.8.0 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 

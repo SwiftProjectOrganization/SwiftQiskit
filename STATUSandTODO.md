@@ -10,8 +10,8 @@ plus this fork's working TODO list.
 - Core quantum simulation is implemented
 - API is subject to change
 - Performance: gates apply in place to the amplitudes (O(2ⁿ) per gate); `runDensityMatrix` now uses the same kernel on vectorized ρ (O(4ⁿ) per gate) but is still small-n (≲10 qubits)
-- GUI tools are available in separate projects or through the template system
-- An extensive set of playgrounds is included in /Playgounds and documented in /PlaygroundDocs
+- The primary educational components are separate projects built on SwiftQiskit: SwiftQiskitApp (drag-and-drop app + `INTRODUCTION.md` book) and SwiftQiskitPlaygrounds (Swift-code playgrounds); a template system generates further apps
+- An extensive set of playgrounds is included in `Playgrounds.playground` and documented in `PlaygroundDocs/` as a proof of concept
 
 The project is actively evolving, and major features are planned.
 
@@ -125,7 +125,7 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
 (done — see P3 item 1 above; the app's package dependency now pins `0.2.0` and its own
 `BlochVector.swift` is gone).
 
-## What Works (v0.5)
+## What Works (v0.8.0)
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and
@@ -143,6 +143,8 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
   (`Quantum/Dirac.swift`, demonstrated in playground page `08Dirac`;
   user guide `PlaygroundDocs/08DIRACHELP.md`)
 - Bell State example
+- CZ, CY, SWAP and multi-controlled Z/Y gates (`cz/cy/swap/mcz/mcy`); generic `Matrix` over `MatrixScalar`;
+  `deg2rad`/`rad2deg`; in-place gate kernel (`StateVector+Kernels.swift`)
 - Unit tests for correctness
 - `SwiftQiskitViews`: a shared, UI-free-Core-preserving SwiftUI library (`BlochVector`,
   `CHSHChartView`) used by both `Playgrounds.playground` and `SwiftQiskitApp`

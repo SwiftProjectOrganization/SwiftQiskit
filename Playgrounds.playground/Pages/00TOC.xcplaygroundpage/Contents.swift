@@ -1,10 +1,11 @@
 /*:
  # SwiftQiskit Playgrounds
 
- Interactive, lecture-style explorations of the SwiftQiskit library — a lightweight,
- educational quantum-computing simulator in pure Swift.
+ Interactive explorations of the SwiftQiskit library — a lightweight quantum-computing
+ simulator in pure Swift. These pages are a proof of concept; the primary educational
+ components, both built on SwiftQiskit, are SwiftQiskitApp and SwiftQiskitPlaygrounds.
 
- Before running any page, make sure the **SwiftQiskit** scheme is active and builds:
+ Before running any page, make sure the **SwiftQiskit-Package** scheme is active and builds:
  pages set `buildActiveScheme` and won't run otherwise.
 
  ## Pages
@@ -66,7 +67,7 @@
    live view.
 
  Pages numbered `40` and up accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book
- rather than continuing the 01–22 sequence above.
+ rather than continuing the 01–23 sequence above.
 
  - [40ComplexAndMatrices](40ComplexAndMatrices) — the code from INTRODUCTION Chapter 2, in
    order: `Complex` construction, `*`/`/`, conjugate and magnitude, the Born rule, phase via

@@ -8,6 +8,12 @@ SwiftQiskit is a lightweight, educational quantum-computing simulator written in
 offering a Qiskit-like API. It is experimental (v0.8.0): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
+SwiftQiskit is the simulation library. The primary educational components are built on it: the
+sibling `SwiftQiskitApp` repo (a drag-and-drop "get familiar" app plus the `INTRODUCTION.md` book)
+and the sibling `SwiftQiskitPlaygrounds` repo (Xcode playgrounds that pick up where the app stops,
+using SwiftQiskit as a remote package). This repo's own `Playgrounds.playground` and
+`PlaygroundDocs/` are proof-of-concept/development explorations, not the place for learners to start.
+
 `API.md` at the repo root is the full API reference for the core library (every public type and
 member, with signatures and gotchas). Keep it in sync whenever the public API changes.
 
@@ -32,7 +38,8 @@ swift run SwiftQiskitExamples     # Bell-state CLI demo
 | `SwiftQiskitExamples` | `Examples/` | CLI Bell-state demo |
 
 The library *product* and the *module* are both named `SwiftQiskit` — `import SwiftQiskit`.
-The SwiftUI front-end lives in the sibling `SwiftQiskitApp` repo, not in this package; there is
+The SwiftUI front-end lives in the sibling `SwiftQiskitApp` repo (and the learner-facing playgrounds in
+`SwiftQiskitPlaygrounds`), not in this package; there is
 no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of the app).
 `SwiftQiskitViews` is a second, small library product (`import SwiftQiskitViews`) depending
 only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground` and by
@@ -247,8 +254,8 @@ depends only on `SwiftQiskit`), holding presentational SwiftUI types shared by
 
 ## Xcode Playgrounds
 
-`Playgrounds.playground` at the repo root (macOS target) is this fork's main addition: interactive,
-lecture-style explorations of the library. Pages live in `Playgrounds.playground/Pages/`:
+`Playgrounds.playground` at the repo root (macOS target) is this fork's proof-of-concept playground (the
+learner-facing set is the sibling `SwiftQiskitPlaygrounds` repo): interactive explorations of the library. Pages live in `Playgrounds.playground/Pages/`:
 
 - `00TOC` — clickable table of contents (markdown only): links to every page with a
   one-line description, plus pointers to the `PlaygroundDocs/` guides. Pages are numbered with an
@@ -414,7 +421,7 @@ lecture-style explorations of the library. Pages live in `Playgrounds.playground
   `TensorNetworkView` (user guide in `PlaygroundDocs/23TENSORNETWORKHELP.md`).
 - `40ComplexAndMatrices` — first of the `40+` pages, numbered separately because they
   accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book rather than continuing the
-  01–22 sequence above: every code fragment from that book's Chapter 2, in order —
+  01–23 sequence above: every code fragment from that book's Chapter 2, in order —
   `Complex` construction/`*`/`/`/conjugate/magnitude, the Born rule, phase via Euler's
   formula, plain `[Complex]` vector helpers, inner products and normalization, `Matrix` as a
   transformation and why multiplication order matters, unitarity and why exact `==` lies on
@@ -473,6 +480,9 @@ Playground notes:
   `mcx(controls, target)` work for any distinct qubits on an n-qubit circuit, via
   `CNOTGate.matrix(qubits:control:target:)`/`ToffoliGate.matrix(qubits:control1:control2:target:)`/
   `MultiControlledXGate.matrix(qubits:controls:target:)` (all permutation-matrix construction).
+- **Other controlled gates:** `cz`/`cy`/`swap`/`mcz`/`mcy` (`ControlledZGate`, `ControlledYGate`,
+  `SwapGate`, `MultiControlledZGate`, `MultiControlledYGate`, in `Gates/`) likewise work for any distinct
+  qubits, each with a `matrix(qubits:…)` builder.
 - Invariants are guarded with `precondition(...)` throughout; keep doing this when extending.
 - Measurement result strings are zero-padded binary via `String.leftPadding` (`Utils/String+Padding.swift`).
 - Style: 4-space indent, PascalCase types, camelCase members, no force unwrapping.
@@ -486,7 +496,9 @@ Playground notes:
   `ReadoutTests.swift`, `PauliBasisTests.swift`, `PauliStringTests.swift`,
   `MeasureExpectationTests.swift`, `StateTomographyTests.swift`, `TrotterTests.swift`,
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
-  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`, `GenericMatrixTests.swift`).
+  `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`, `GenericMatrixTests.swift`, `CommutingGroupsTests.swift`, `ControlledYTests.swift`,
+  `ControlledZAndSwapTests.swift`, `PerformancePathTests.swift`, `PermutationFastPathTests.swift`,
+  `RunBenchmarkTests.swift`).
   `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
   `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,

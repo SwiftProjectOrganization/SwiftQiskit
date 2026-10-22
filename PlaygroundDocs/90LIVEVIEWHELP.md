@@ -5,6 +5,9 @@ live view on any page. Unlike the other `PlaygroundDocs/*HELP.md` files this one
 it documents a mechanism used by several pages, not one page — so read it alongside
 whichever page guide sent you here.
 
+Note: this is the proof-of-concept playground of the SwiftQiskit repo. The learner-facing playground set is the
+sibling SwiftQiskitPlaygrounds repo (SwiftQiskit and SwiftQiskitViews as a remote package), alongside SwiftQiskitApp.
+
 **Scope.** The file name leads with "live views" because that's what most people arrive
 looking for, but the guide also covers `BlochVector` — plain math (`import Foundation` +
 `import SwiftQiskit`, no SwiftUI), used by pages 01/02/03 to print values to the console
