@@ -5,7 +5,7 @@ plus this fork's working TODO list.
 
 ## Project Status
 
-**SwiftQiskit is currently in an early experimental stage (v0.8.0).**
+**SwiftQiskit is currently in an early experimental stage (v0.8.1).**
 
 - Core quantum simulation is implemented
 - API is subject to change
@@ -125,7 +125,7 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
 (done — see P3 item 1 above; the app's package dependency now pins `0.2.0` and its own
 `BlochVector.swift` is gone).
 
-## What Works (v0.8.0)
+## What Works (v0.8.1)
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and

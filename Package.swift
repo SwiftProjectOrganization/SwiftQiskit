@@ -14,7 +14,7 @@ let package = Package(
             targets: ["SwiftQiskit"]
         ),
 
-        // Shared, UI-free-Core-preserving SwiftUI views (BlochVector, CHSHChartView)
+        // Shared, UI-free-Core-preserving SwiftUI views (BlochVector, Bloch sphere views, CHSHChartView, TensorNetworkView)
         .library(
             name: "SwiftQiskitViews",
             targets: ["SwiftQiskitViews"]
@@ -36,7 +36,7 @@ let package = Package(
         ),
 
         // =========================
-        // Shared SwiftUI views (BlochVector, CHSHChartView)
+        // Shared SwiftUI views (BlochVector, Bloch sphere views, CHSHChartView, TensorNetworkView)
         // =========================
         .target(
             name: "SwiftQiskitViews",

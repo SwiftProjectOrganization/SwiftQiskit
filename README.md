@@ -459,9 +459,8 @@ must build **both** products: use the `SwiftQiskit-Package` scheme (or the autog
 `SwiftQiskitViews` scheme), not the per-product `SwiftQiskit` scheme, which won't build
 `SwiftQiskitViews`. Pages are linked sequentially with Previous/Next markers.
 
-Code shared by multiple pages (the Bloch-sphere views) lives in the playground's
-`Sources/` folder — `BlochVector` and `CHSHChartView` themselves live in the `SwiftQiskitViews`
-package product instead, so Core stays UI-free. See
+The Bloch-sphere views, `BlochVector` and `CHSHChartView` all live in the `SwiftQiskitViews`
+package product, so Core stays UI-free. See
 [PlaygroundDocs/90LIVEVIEWHELP.md](PlaygroundDocs/90LIVEVIEWHELP.md) for a user-facing
 guide to that shared code and to putting a live view on a page, and
 [PLAYGROUNDSUPPORT.md](PLAYGROUNDSUPPORT.md) for the terse implementation reference.
@@ -890,8 +889,7 @@ bit order (Core's qubit 0 = MSB, qubit q at bit n-1-q; Qiskit's is the reverse),
 `QuantumCircuit.run()` (~1e-17) including Toffoli and CZ, and the O(4ⁿ) vs. O(2ⁿ) memory cost.
 No timings (playground code is instrumented), no companion `PlaygroundDocs/` guide.
 
-The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`)
-are shared between these pages via the playground's `Sources/` folder (not part of Core).
+The Bloch views (`BlochSphereView`, `BlochProjectionView`, `Bloch3DView`, `BlochExplorerView`),
 `BlochVector`, the shared 2D chart (`CHSHChartView`, used by pages 15, 18, 21, and 22), and the
 circuit-aligned `TensorNetworkView` (page 23) live instead in the `SwiftQiskitViews` package
 product — a small SwiftUI library depending only on `SwiftQiskit`, also used by the sibling
@@ -912,7 +910,7 @@ This project is built **step by step** and open for exploration.
 ---
 ##  Status & Roadmap
 
-Project status, what works in v0.8.0, and the roadmap live in
+Project status, what works in v0.8.1, and the roadmap live in
 [STATUSandTODO.md](STATUSandTODO.md), together with this fork's working TODO list.
 
 ---

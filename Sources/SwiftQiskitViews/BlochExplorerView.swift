@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftQiskit
-import SwiftQiskitViews
 
 /// Interactive Bloch-sphere explorer: a `Bloch3DView` driven by live
 /// sliders for the spherical angles θ ∈ [0, π] and φ ∈ [0, 2π).
@@ -11,11 +10,6 @@ import SwiftQiskitViews
 ///
 /// satisfies |α|² + |β|² = 1 identically — every slider position is a
 /// valid normalized state.
-///
-/// This view lives in the shared Sources folder (rather than inline in
-/// page 04) because the Xcode 27 beta playground evaluator cannot expand
-/// the SDK 27 `@State` macro in page code; Sources is compiled by the
-/// regular build system, where the macro works.
 public struct BlochExplorerView: View {
 
     @State private var theta: Double

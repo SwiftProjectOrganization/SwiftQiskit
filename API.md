@@ -9,7 +9,7 @@ see `PLAYGROUNDSUPPORT.md` for that.
 Learners should start with SwiftQiskitApp and SwiftQiskitPlaygrounds, the primary educational
 components; this document is the library reference both build on.
 
-SwiftQiskit is v0.8.0 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.8.1 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions
@@ -747,6 +747,12 @@ and by the sibling `SwiftQiskitApp` repo, so Core itself stays UI-free. Delibera
 folded into `SwiftQiskit`/namespaced there: a Core type named `BlochVector` would collide
 with call sites that want the bare name (see `StateTomography` above, which returns a plain
 tuple for the same reason).
+
+Also in this module: `BlochSphereView(label:bloch:size:)` (2D oblique projection),
+`Bloch3DView(label:bloch:size:)` (rotatable 3D, drag to orbit),
+`BlochProjectionView(label:horizontal:vertical:verticalPointsDown:)` (orthographic projection onto
+a coordinate plane), `BlochExplorerView()` (a `Bloch3DView` with θ/φ sliders),
+`CHSHChartView`, and `TensorNetworkView`.
 
 ```swift
 public struct BlochVector: Equatable, Sendable {

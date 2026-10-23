@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftQiskitViews
 
 /// Bloch sphere rendered as a rotatable 3D wireframe with perspective
 /// projection. Drag the canvas to orbit the camera around the sphere.

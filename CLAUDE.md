@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Overview
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
-offering a Qiskit-like API. It is experimental (v0.8.0): the API is unstable and correctness is
+offering a Qiskit-like API. It is experimental (v0.8.1): the API is unstable and correctness is
 prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
 
 SwiftQiskit is the simulation library. The primary educational components are built on it: the
@@ -242,6 +242,10 @@ depends only on `SwiftQiskit`), holding presentational SwiftUI types shared by
   `magnitude`/`theta`/`phi`. Replaces the three previously hand-vendored copies
   (`Playgrounds.playground/Sources/BlochVector.swift`, `SwiftQiskitApp/BlochVector.swift`,
   and the app's `blochOf(_:Matrix)`).
+- `BlochSphereView.swift`, `BlochProjectionView.swift`, `Bloch3DView.swift`,
+  `BlochExplorerView.swift` — the Bloch-sphere views (2D oblique, plane projection, rotatable 3D,
+  and a 3D view with θ/φ sliders), moved here from `Playgrounds.playground/Sources/` in 0.8.1 so
+  `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` can import them.
 - `CHSHChartView.swift` — `CHSHChartView`: a minimal, stateless `Canvas`-based 2D
   line/scatter chart, used by pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk`. Moved here
   verbatim from `Playgrounds.playground/Sources/`.
@@ -514,5 +518,5 @@ Playground notes:
 
 ## Status & Roadmap
 
-v0.8.0 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
+v0.8.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
 (circuit visualization, noise models, performance work), and the fork's working TODO list.
