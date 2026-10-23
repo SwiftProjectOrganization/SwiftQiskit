@@ -11,7 +11,8 @@ plus this fork's working TODO list.
 - API is subject to change
 - Performance: gates apply in place to the amplitudes (O(2ⁿ) per gate); `runDensityMatrix` now uses the same kernel on vectorized ρ (O(4ⁿ) per gate) but is still small-n (≲10 qubits)
 - The primary educational components are separate projects built on SwiftQiskit: SwiftQiskitApp (drag-and-drop app + `INTRODUCTION.md` book) and SwiftQiskitPlaygrounds (Swift-code playgrounds); a template system generates further apps
-- An extensive set of playgrounds is included in `Playgrounds.playground` and documented in `PlaygroundDocs/` as a proof of concept
+- The proof-of-concept `Playgrounds.playground`, `PlaygroundDocs/` and `PLAYGROUNDSUPPORT.md` were removed from this repo (recoverable at the `pre-playground-removal` git tag). Entries below that mention them are historical.
+- [x] Remove playgrounds from this repo: Bloch views moved into `SwiftQiskitViews` first (0.8.1); then the playground, its docs and `PLAYGROUNDSUPPORT.md` deleted, docs and source comments updated. Pages 02–04, 06, 14–23, 40–42 have no counterpart in `SwiftQiskitPlaygrounds` yet and live only in the tag.
 
 The project is actively evolving, and major features are planned.
 

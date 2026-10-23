@@ -2,9 +2,7 @@
 
 This is the API reference for the `SwiftQiskit` **core library** (`Sources/SwiftQiskit/`) — the
 product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
-`SwiftQiskitViews` module (`Sources/SwiftQiskitViews/`) is covered in its own section below;
-it does not cover the remaining playground helper module (`Playgrounds.playground/Sources/`),
-see `PLAYGROUNDSUPPORT.md` for that.
+`SwiftQiskitViews` module (`Sources/SwiftQiskitViews/`) is covered in its own section below.
 
 Learners should start with SwiftQiskitApp and SwiftQiskitPlaygrounds, the primary educational
 components; this document is the library reference both build on.
@@ -261,8 +259,7 @@ Rotation gates satisfy `RA(2π) = -I` (a full turn is minus identity) and
 `RA(π) = -i·A` up to that same global phase, for the corresponding Pauli matrix `A`.
 
 **Note:** the library has no built-in CZ or SWAP gate. Build these with `apply(_:)` and a
-hand-constructed permutation or product of existing gates (several playground pages — e.g.
-`11GroverExample`, `13Teleportation` — show the pattern).
+hand-constructed permutation or product of existing gates.
 
 ---
 
@@ -522,7 +519,7 @@ public struct Hamiltonian: Equatable {
 ```
 
 Replaces the entrywise "build a matrix, then add `coefficient·term` to it index by index"
-idiom page `18VQE` (and the app's VQE/Trotter chapters) hand-roll for an H₂-style
+idiom the app's VQE/Trotter chapters hand-roll for an H₂-style
 Hamiltonian. `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
 `QuantumCircuit.evolve(_:time:steps:order:)` (see above) — a fresh circuit implementing
 Trotterized time evolution `exp(-i·self·time)`.
@@ -575,8 +572,7 @@ cost(θ − shift·eₖ)] / (2·sin(shift))`. This is **exact**, not a finite-di
 approximation, whenever every parameter enters `cost` as the angle of a single
 `exp(-iθP/2)` rotation — the shape of every parameterized `QuantumCircuit` gate
 (`rx`/`ry`/`rz`/`rzz`/`rxx`/`ryy`/`pauliRotation`). The default `shift = π/2` makes the
-divisor `1`, matching the textbook rule `[cost(θ+π/2) − cost(θ−π/2)] / 2` (page `18VQE`'s
-own one-parameter derivation). `cost` may be exact (`Hamiltonian.expectation`) or shot-based
+divisor `1`, matching the textbook rule `[cost(θ+π/2) − cost(θ−π/2)] / 2` (the one-parameter derivation). `cost` may be exact (`Hamiltonian.expectation`) or shot-based
 (`QuantumCircuit.measureExpectation`) — the rule doesn't care which. Traps if `parameters`
 is empty or `shift` is a multiple of `π` (zero divisor). The `of hamiltonian:`/`ansatz:`
 overload is a convenience for the common VQE shape, using
@@ -589,7 +585,7 @@ search, momentum, or COBYLA/Nelder-Mead — sufficient for the small, smooth lan
 VQE-style ansatz produces. Traps if `initial` is empty, `learningRate <= 0`, or
 `maxIterations <= 0`. `parameterHistory[i]` is the parameter vector `history[i]` was
 evaluated at, so zipping the two gives the full optimization trajectory (e.g. for a
-landscape/descent-path chart, as page `18VQE`'s live view does).
+landscape/descent-path chart, as a live chart would).
 
 ---
 
@@ -618,8 +614,7 @@ public enum StateTomography {
 | `clampToPhysical(_:)` | Rescales an out-of-ball vector onto the unit sphere (`r → r/\|r\|`); leaves an already-physical vector unchanged. A named rescale, not a maximum-likelihood or linear-inversion estimator. |
 
 Returns plain `(x:, y:, z:)` tuples rather than a package-level `BlochVector` type, since
-every playground page auto-imports its own `BlochVector` from
-`Playgrounds.playground/Sources/`, which a same-named Core type would collide with.
+a same-named Core type would collide with `SwiftQiskitViews.BlochVector`.
 
 ---
 
@@ -742,8 +737,8 @@ that happens to be `public`; don't build new API around it.
 ## `SwiftQiskitViews`
 
 `Sources/SwiftQiskitViews/` — a small SwiftUI library product, `import SwiftQiskitViews`,
-depending only on `SwiftQiskit`. It holds the presentational types shared by the playground
-and by the sibling `SwiftQiskitApp` repo, so Core itself stays UI-free. Deliberately not
+depending only on `SwiftQiskit`. It holds the presentational types shared by the sibling
+`SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repos, so Core itself stays UI-free. Deliberately not
 folded into `SwiftQiskit`/namespaced there: a Core type named `BlochVector` would collide
 with call sites that want the bare name (see `StateTomography` above, which returns a plain
 tuple for the same reason).
@@ -772,16 +767,14 @@ public struct BlochVector: Equatable, Sendable {
 }
 ```
 
-`CHSHChartView` — a minimal, stateless 2D line/scatter `View` (`Canvas`-based), used by
-pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk` for correlation curves, energy landscapes, and
-distribution comparisons. See `PLAYGROUNDSUPPORT.md`/`90LIVEVIEWHELP.md` for usage snippets
-and the live-view recipe.
+`CHSHChartView` — a minimal, stateless 2D line/scatter `View` (`Canvas`-based), for
+correlation curves, energy landscapes, and distribution comparisons.
 
 `TensorNetworkView` — a stateless, circuit-aligned drawing of a `TensorNetwork` (above):
 qubit wires run left to right, `|0⟩` caps on the left, open output legs on the right, and
 every gate sits in its own time column as a labelled box on the wires it touches (a
 multi-qubit gate's box spans every row it touches, with a dashed overlay on any wire that
-merely crosses the box without being one of its legs). Used by page `23TensorNetwork`.
+merely crosses the box without being one of its legs).
 
 ```swift
 public struct TensorNetworkView: View {
@@ -793,12 +786,9 @@ public struct TensorNetworkView: View {
 
 ## Not Yet in Core
 
-A few capabilities that later playground pages need are still implemented *inside
-individual playground pages* rather than in `Sources/SwiftQiskit` (see each page's plan doc
-under `PlaygroundDocs/`):
+A few capabilities are not implemented in `Sources/SwiftQiskit`:
 
-- Mid-circuit or partial measurement — page `13Teleportation` routes around this with
-  deferred-measurement-principle gates instead.
+- Mid-circuit or partial measurement — deferred-measurement-principle gates are the workaround.
 - A real maximum-likelihood or linear-inversion state-tomography reconstruction
   (`StateTomography` above is a rescale, not this).
 

@@ -1,10 +1,9 @@
 import SwiftUI
 
-/// A minimal, general-purpose 2D line/scatter chart — used for the CHSH
-/// correlation curves (page 15) and the VQE energy landscape and
-/// optimizer trajectory (page 18). Stateless (no `@State`), so it can
-/// be declared and instantiated directly in page code — see
-/// PLAYGROUNDSUPPORT.md.
+/// A minimal, general-purpose 2D line/scatter chart — used for CHSH
+/// correlation curves and VQE energy landscapes and optimizer
+/// trajectories. Stateless (no `@State`), so it can be declared and
+/// instantiated directly.
 public struct CHSHChartView: View {
 
     /// One plotted series: either a connected curve (`isLine: true`,

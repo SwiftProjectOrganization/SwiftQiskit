@@ -12,8 +12,7 @@ import Foundation
 /// app's Tomography chapter) hand-rolls today.
 ///
 /// Returns plain `(x:, y:, z:)` tuples rather than a package-level `BlochVector` type:
-/// every playground page already auto-imports its own `BlochVector` from
-/// `Playgrounds.playground/Sources/`, and a same-named Core type would collide with it. A
+/// a same-named Core type would collide with `SwiftQiskitViews.BlochVector`. A
 /// single package-level `BlochVector` remains a separate open-systems TODO
 /// (`STATUSandTODO.md`, "Proposed Core extensions — open systems").
 ///
@@ -49,7 +48,7 @@ public enum StateTomography {
     /// Packages a three-axis estimate as a Bloch vector, with `isPhysical` reporting
     /// whether its magnitude is within `tolerance` of the unit ball (`|r| ≤ 1`). A *pure*
     /// state's per-axis shot estimate lands outside the ball about half the time at any
-    /// shot count — see `PlaygroundDocs/20TOMOGRAPHYHELP.md` — so `isPhysical == false`
+    /// shot count, so `isPhysical == false`
     /// here is expected, not a bug.
     public static func reconstructSingleQubit(
         x: Double,

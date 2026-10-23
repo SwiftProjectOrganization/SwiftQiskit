@@ -6,13 +6,13 @@ Guidance for Claude Code when working in this repository.
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
 offering a Qiskit-like API. It is experimental (v0.8.1): the API is unstable and correctness is
-prioritized over performance. This fork adds Xcode playground usage (`Playgrounds.playground`).
+prioritized over performance. The fork's former `Playgrounds.playground`/`PlaygroundDocs/` were removed (recoverable at the
+`pre-playground-removal` git tag).
 
 SwiftQiskit is the simulation library. The primary educational components are built on it: the
 sibling `SwiftQiskitApp` repo (a drag-and-drop "get familiar" app plus the `INTRODUCTION.md` book)
 and the sibling `SwiftQiskitPlaygrounds` repo (Xcode playgrounds that pick up where the app stops,
-using SwiftQiskit as a remote package). This repo's own `Playgrounds.playground` and
-`PlaygroundDocs/` are proof-of-concept/development explorations, not the place for learners to start.
+using SwiftQiskit as a remote package).
 
 `API.md` at the repo root is the full API reference for the core library (every public type and
 member, with signatures and gotchas). Keep it in sync whenever the public API changes.
@@ -42,8 +42,8 @@ The SwiftUI front-end lives in the sibling `SwiftQiskitApp` repo (and the learne
 `SwiftQiskitPlaygrounds`), not in this package; there is
 no `SwiftQiskitGUI` target here anymore (it was a duplicate, removed in favor of the app).
 `SwiftQiskitViews` is a second, small library product (`import SwiftQiskitViews`) depending
-only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground` and by
-`SwiftQiskitApp`, kept out of `SwiftQiskit` itself so Core stays UI-free.
+only on `SwiftQiskit` — presentational types shared by `SwiftQiskitApp` and
+`SwiftQiskitPlaygrounds`, kept out of `SwiftQiskit` itself so Core stays UI-free.
 
 ## Architecture (bottom-up)
 
@@ -153,8 +153,7 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   node in recorded order, applying only that node's own small tensor to the legs it names —
   never the full embedded matrices `run()` uses — so agreement between `contract()` and
   `run()` is an independent check of both, not the same computation read twice. Drawn by
-  `SwiftQiskitViews.TensorNetworkView` (see "SwiftQiskitViews" below) on page
-  `23TensorNetwork`.
+  `SwiftQiskitViews.TensorNetworkView` (see "SwiftQiskitViews" below).
 - `Quantum/SimulationResult.swift` — shot counts keyed by binary state string;
   `marginalCounts(over:)` (grouped counts, only observed keys) and `parityExpectation(qubits:)`
   (the ±1 parity-product average, e.g. for a shot-based ⟨Z⊗Z⟩) sum over a subset of qubits.
@@ -171,7 +170,7 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   (two QWC-compatible terms share one well-defined per-qubit measurement basis).
 - `Quantum/Hamiltonian.swift` — `Hamiltonian`: a plain (unmerged, ungrouped) sum of
   `PauliString` terms, with `matrix` (Σ term matrices) and `expectation(_ state:)` (Σ term
-  expectations). Replaces the entrywise Pauli-term accumulation page `18VQE` hand-rolls.
+  expectations). Replaces entrywise Pauli-term accumulation done by hand.
   `trotterCircuit(time:steps:order:)` is `QuantumCircuit(qubits:)` +
   `QuantumCircuit.evolve(_:time:steps:order:)` above. `commutingGroups() -> [[PauliString]]`
   partitions `terms` into qubit-wise-commuting groups via a greedy heuristic (Qiskit's
@@ -181,14 +180,13 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
 - `Quantum/ParameterShift.swift` — `ParameterShift.gradient(at:shift:_:)`: the
   parameter-shift rule generalized to any number of parameters and any `[Double] ->
   Double` cost closure (exact whenever every parameter is a single `exp(-iθP/2)` rotation's
-  angle; default `shift: .pi/2` matches page `18VQE`'s one-parameter derivation), plus a
+  angle; default `shift: .pi/2` matches the one-parameter derivation), plus a
   `Hamiltonian`/`ansatz`-closure convenience overload. `GradientDescent.minimize(initial:
   learningRate:maxIterations:tolerance:cost:gradient:)` is a minimal fixed-step optimizer
   (no line search/momentum) defaulting its `gradient` to `ParameterShift.gradient`,
   returning a `Result` (`parameters`, `value`, `history`, `parameterHistory`, `iterations`,
   `converged`) — `parameterHistory[i]` is the parameter vector `history[i]` was evaluated
-  at, so zipping the two gives the full optimization trajectory (e.g. page `15CHSH`'s and
-  `18VQE`'s live charts).
+  at, so zipping the two gives the full optimization trajectory (e.g. for live charts).
 - `Quantum/StateTomography.swift` — `StateTomography`: a caseless namespace turning
   `measure(shots:basis:)` results into a reconstructed single-qubit Bloch vector —
   `estimate(qubit:result:)` (a single-qubit `parityExpectation` wrapper),
@@ -219,8 +217,8 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
   `Matrix.isUnitary`'s style); `apply(to: DensityMatrix)` on the whole register;
   `apply(to:qubit:)` embeds a 2×2 channel onto one qubit via the same
   `embedSingleQubitGate` idiom `CNOTGate.matrix(qubits:control:target:)` uses for a 2×2
-  gate. Factories `bitFlip`/`phaseFlip`/`depolarizing`/`amplitudeDamping` (page `19Noise`'s
-  four channels, same formulas) plus `phaseDamping` (new: pure T2 dephasing, no energy
+  gate. Factories `bitFlip`/`phaseFlip`/`depolarizing`/`amplitudeDamping` (the four standard
+  channels) plus `phaseDamping` (new: pure T2 dephasing, no energy
   loss, unlike `amplitudeDamping`).
 - `Quantum/NoiseModel.swift` — `NoiseModel`: `singleQubitGate`/`multiQubitGate`, each an
   optional single-qubit (2×2), trace-preserving `KrausChannel` applied independently to
@@ -232,7 +230,7 @@ only on `SwiftQiskit` — presentational types shared by `Playgrounds.playground
 
 `Sources/SwiftQiskitViews/` — a separate library product/module (`import SwiftQiskitViews`,
 depends only on `SwiftQiskit`), holding presentational SwiftUI types shared by
-`Playgrounds.playground` and by the sibling `SwiftQiskitApp` repo:
+the sibling `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repos:
 
 - `BlochVector.swift` — `BlochVector`: a single-qubit Bloch-sphere coordinate `(x, y, z)`,
   with `init(_:StateVector)` (pure state), `init(_:StateVector, qubit:)` (reduced/
@@ -240,242 +238,19 @@ depends only on `SwiftQiskit`), holding presentational SwiftUI types shared by
   2×2 — via `DensityMatrix.blochVector`), `init(_:DensityMatrix, qubit:)` (reduced qubit via
   `partialTrace(keeping:)`), and `init(x:y:z:)` (raw coordinates, for `|r| < 1`); plus
   `magnitude`/`theta`/`phi`. Replaces the three previously hand-vendored copies
-  (`Playgrounds.playground/Sources/BlochVector.swift`, `SwiftQiskitApp/BlochVector.swift`,
+  (the playground's `BlochVector.swift`, `SwiftQiskitApp/BlochVector.swift`,
   and the app's `blochOf(_:Matrix)`).
 - `BlochSphereView.swift`, `BlochProjectionView.swift`, `Bloch3DView.swift`,
   `BlochExplorerView.swift` — the Bloch-sphere views (2D oblique, plane projection, rotatable 3D,
-  and a 3D view with θ/φ sliders), moved here from `Playgrounds.playground/Sources/` in 0.8.1 so
+  and a 3D view with θ/φ sliders), moved here from the former playground's `Sources/` in 0.8.1 so
   `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` can import them.
 - `CHSHChartView.swift` — `CHSHChartView`: a minimal, stateless `Canvas`-based 2D
-  line/scatter chart, used by pages `15CHSH`/`18VQE`/`21Trotter`/`22Walk`. Moved here
-  verbatim from `Playgrounds.playground/Sources/`.
+  line/scatter chart, for correlation curves, energy landscapes and distribution comparisons.
 - `TensorNetworkView.swift` — `TensorNetworkView`: a stateless, circuit-aligned `Canvas`
   drawing of a `TensorNetwork` (see `Circuit/TensorNetwork.swift` above) — qubit wires left
   to right, `|0⟩` caps on the left, open output legs on the right, gates as labelled boxes
   in time columns (a multi-qubit gate's box spans every row it touches, with a dashed
-  overlay on any wire merely crossing the box without being one of its legs). Used by page
-  `23TensorNetwork`.
-
-## Xcode Playgrounds
-
-`Playgrounds.playground` at the repo root (macOS target) is this fork's proof-of-concept playground (the
-learner-facing set is the sibling `SwiftQiskitPlaygrounds` repo): interactive explorations of the library. Pages live in `Playgrounds.playground/Pages/`:
-
-- `00TOC` — clickable table of contents (markdown only): links to every page with a
-  one-line description, plus pointers to the `PlaygroundDocs/` guides. Pages are numbered with an
-  ordering prefix (page order is alphabetical); follow this `NNName` naming when adding pages.
-- `01Qubits` — first look at qubit states via the Dirac API, results-sidebar style
-  (no prints): amplitudes, probabilities, `†`, inner/outer products, `⊗`; a live view
-  showing `circuit1` (|0⟩ → H → P(π/2) → P(π)) and `circuit2` (|0⟩ → H → Z → H)
-  stages on 2D Bloch spheres; plus a §7 basis-transformation preview of page
-  `41BasisTransformations` §1–4 (the new basis kets as `T`'s columns via the column
-  mapping, `T†` — the library's adjoint, not a hand-built row-of-bras — for the new
-  amplitudes) (content provisional; formerly `02Lecture_01`)
-  (user guide in `PlaygroundDocs/01QUBITSHELP.md`).
-- `02Bloch2d`, `03Bloch2dProjection` — Bloch-sphere visualizations of single-qubit states
-  via SwiftUI Canvas live views, built on the shared types in
-  `Playgrounds.playground/Sources/`. Bloch math stays out of Core.
-  (User guide for page 02 in `PlaygroundDocs/02BLOCH2DHELP.md`; user guide for page 03 — a general
-  tilted state plus its x–y/z–y plane projections — in `PlaygroundDocs/03BLOCH2DPROJECTIONHELP.md`.
-  The general live-view recipe and the shared `Sources/` module are documented in
-  `PlaygroundDocs/90LIVEVIEWHELP.md`, not page-numbered since it isn't tied to one page.)
-- `04Bloch3d` — rotatable 3D Bloch sphere (perspective-projected SwiftUI Canvas,
-  no SceneKit/RealityKit) with live θ/φ sliders, via the shared `Bloch3DView` /
-  `BlochExplorerView` (user guide in `PlaygroundDocs/04BLOCH3DHELP.md`).
-- `05Gates` — a gentle, gate-by-gate tour of the built-in gate set in the results sidebar
-  (no live view): `x/h/z/y/s/sdg/t/p/rx/ry/rz` each shown individually on a 1-qubit
-  `QuantumCircuit`, plus a one-line `h`+`cx` Bell-state teaser pointing to
-  `07Entanglement` (formerly `03Lecture_02`; user guide in `PlaygroundDocs/05GATESHELP.md`).
-- `06Superposition` — a 4-qubit console walkthrough: every qubit put into superposition
-  via `h`, inspecting the resulting 16-state amplitudes/probabilities and shot counts,
-  plus a partial-superposition (2-qubit) contrast
-  (user guide in `PlaygroundDocs/06SUPERPOSITIONHELP.md`).
-- `07Entanglement` — annotated Bell-state walkthrough (circuit, state vector, probabilities,
-  shots), plus a 3-qubit GHZ section showcasing the general `cx` across non-adjacent qubits
-  (user guide in `PlaygroundDocs/07ENTANGLEMENTHELP.md`).
-- `08Dirac` — Dirac-notation walkthrough (`Quantum/Dirac.swift`): inner/outer products,
-  projectors, adjoints, and the page-04 initial qubit's Bloch coordinates as Pauli
-  expectation values ⟨ψ|X|ψ⟩, ⟨ψ|Y|ψ⟩, ⟨ψ|Z|ψ⟩, shown on a static `Bloch3DView`
-  (user guide in `PlaygroundDocs/08DIRACHELP.md`).
-- `09Tensor` — tensor-product walkthrough (console only) mirroring
-  `Tests/SwiftQiskitTests/TensorProductTests.swift` section by section: `Matrix`/
-  `StateVector` `⊗`, the mixed-product identity, gate embedding vs. circuit `h(0)`, and
-  why the Bell state does not factor (entanglement)
-  (design notes in `PlaygroundDocs/09TENSORPLAN.md`, user guide in `PlaygroundDocs/09TENSORHELP.md`).
-- `10DeutschExample` — Deutsch's algorithm (console only): the four 1-bit oracles from
-  `x(1)`/`cx(0,1)`, a stage-by-stage phase-kickback walkthrough, a factorization check
-  (page 09's `α₀₀·α₁₁ = α₀₁·α₁₀` criterion) confirming the register never entangles despite
-  the `cx`, unlike page 07's Bell state, deterministic constant-vs-balanced verdicts from a
-  single query, and shot statistics
-  (plan in `PlaygroundDocs/10DEUTSCHPLAN.md`, user guide in `PlaygroundDocs/10DEUTSCHHELP.md`).
-- `11GroverExample` — Grover's search (console only): CZ built as `h(1);cx(0,1);h(1)`,
-  X-conjugated phase oracles, an inversion-about-the-mean walkthrough, exact 1-iteration
-  success on 2 qubits, over-rotation, the diffusion operator as 2|s⟩⟨s|−I via the Dirac
-  outer product, and a 3-qubit finale using a hand-built CCZ through `apply(_:)`
-  (plan in `PlaygroundDocs/11GROVERPLAN.md`, user guide in `PlaygroundDocs/11GROVERHELP.md`).
-- `12ShorExample` — compiled Shor factoring of 15 (console only): modular multiplication
-  and its controlled powers as hand-built permutation matrices via `apply(_:)`, an
-  entrywise 8×8 QFT† embedded with `⊗`, 3-qubit phase estimation of the order r,
-  classical gcd post-processing, shots sampled from one `run()` (a see-through stand-in
-  for what `measure(shots:)` now does internally, kept because it also gives the
-  marginal-over-y summary the section wants), and a base sweep including the
-  a = 14 failure case (plan in `PlaygroundDocs/12SHORPLAN.md`, user guide in `PlaygroundDocs/12SHORHELP.md`).
-- `13Teleportation` — quantum teleportation and superdense coding: the payload prepared with
-  `ry`/`rz`, Alice's Bell-basis rotation `cx(0,1); h(0)`, the four measurement branches
-  recovered with Dirac projectors `(Ket("ab") * Bra("ab")) ⊗ I₂` (Core has no mid-circuit or
-  partial measurement), the corrections applied by *deferred measurement* as `cx(1,2)` +
-  CZ(0,2) so the register factors exactly as `|+⟩⊗|+⟩⊗|ψ⟩`, no-cloning read off the
-  marginals, and superdense coding with the Bell basis's Gram matrix; live view of |ψ⟩, the
-  four uncorrected branches and Bob's corrected state on the shared `BlochSphereView`
-  (plan in `PlaygroundDocs/13TELEPORTATIONPLAN.md`, user guide in `PlaygroundDocs/13TELEPORTATIONHELP.md`).
-- `14ErrorCorrection` — the 3-qubit bit-flip/phase-flip repetition code: `cx`-based encode
-  and syndrome extraction onto two ancillas, a 32×32 permutation correction built from
-  `ToffoliGate.matrix`/`MultiControlledXGate.matrix` (three X-conjugated Toffolis, one per
-  syndrome branch, since the syndrome→qubit mapping is a 3-way conditional rather than a
-  single Toffoli) and applied as one combined `Matrix` via `apply(_:)` — kept as a single
-  operation rather than separate gate calls so a `NoiseModel` still sees it as one
-  multi-qubit gate — an `rx(θ)` sweep showing a continuous error digitized
-  to exact fidelity 1.0000 at every θ, the distance-3 failure mode (two errors alias to a
-  wrong syndrome, giving a silent logical X) with the enumerated logical error rate
-  p_L = 3p² − 2p³ — reproduced a second way, exactly (`runDensityMatrix`) and by Monte Carlo
-  (`runTrajectories`), by driving the page's own circuit through a `KrausChannel.bitFlip`
-  `NoiseModel` — and phase-flip protection via Hadamard conjugation (H Z H = X); Bloch
-  live view of corrected vs. uncorrected q0
-  (plan in `PlaygroundDocs/14ERRORCORRECTIONPLAN.md`, user guide in `PlaygroundDocs/14ERRORCORRECTIONHELP.md`).
-- `15CHSH` — the CHSH inequality: all 16 deterministic local-hidden-variable strategies
-  enumerated exhaustively (max |S| = 2), plus a shared-direction hidden-variable model that
-  saturates the bound and doubles as the classical comparison curve; the tilted observable
-  A(θ) = cos θ·Z + sin θ·X built with `Matrix`'s scalar `*`/`+` operators and measured via
-  `ry(-θ)` with its sign pinned against the exact expectation value; correlators computed
-  both exactly (`state† * (A(a) ⊗ A(b)) * state`) and via `measure(shots:)`; a Bell pair's
-  S = 2√2 against a product-state control; and a genuine multi-angle search over all four
-  CHSH settings via `ParameterShift.gradient`/`GradientDescent.minimize` — E(x,y) = cos(x−y)
-  for this Bell state fits the parameter-shift rule's exactness condition exactly, and three
-  fixed starting points all converge to S = 2.8284…, matching 2√2 (Tsirelson's bound); a
-  `CHSHChartView`
-  live chart of the violation (plan in `PlaygroundDocs/15CHSHPLAN.md`, user guide in
-  `PlaygroundDocs/15CHSHHELP.md`).
-- `16QFT` — the quantum Fourier transform as a gate circuit (console only): a controlled
-  phase CP(θ) derived from `p`+`cx` (`p(θ/2,c); cx(c,t); p(-θ/2,t); cx(c,t); p(θ/2,t)`), the
-  QFT ladder checked against page 12's entrywise DFT to ~1e-15, a no-swap bit-reversal
-  demonstration, the inverse QFT with a unitarity check, and standalone phase estimation —
-  exact for dyadic phases, spread otherwise, with a precision comparison at 3 vs. 6 counting
-  qubits (plan in `PlaygroundDocs/16QFTPLAN.md`, user guide in `PlaygroundDocs/16QFTHELP.md`).
-- `17DeutschJozsa` — Deutsch–Jozsa and Bernstein–Vazirani (console only): page 10's circuit
-  generalized to n input qubits, `cx`-built constant/balanced oracles, a deterministic
-  all-zero-vs-not verdict from one query, a `measure(shots:)` gotcha (the ancilla's bit is
-  random; only the input bits are deterministic), Bernstein–Vazirani recovering a hidden
-  n-bit string from the identical circuit, and a query-count table showing the classical
-  cost growing exponentially (DJ) or linearly (BV) while the quantum cost stays at 1 (plan in
-  `PlaygroundDocs/17DEUTSCHJOZSAPLAN.md`, user guide in `PlaygroundDocs/17DEUTSCHJOZSAHELP.md`).
-- `18VQE` — the variational quantum eigensolver: an H₂ qubit Hamiltonian (Jordan–Wigner,
-  minimal basis) built from six Pauli terms combined with `Matrix`'s `+`/scalar `*`, a
-  one-parameter ansatz
-  `x(0); ry(θ,1); cx(1,0)` provably confined to the `{|01⟩,|10⟩}` subspace, the energy via
-  `psi† * H * psi`, a closed-form 2×2 eigenvalue for grading, *exact* parameter-shift
-  gradients pinned against a finite difference, gradient descent converging to error
-  0.00e+00, and a live chart of the E(θ) landscape with the optimizer's own path, on the
-  shared `CHSHChartView` (plan in `PlaygroundDocs/18VQEPLAN.md`, user guide in `PlaygroundDocs/18VQEHELP.md`).
-- `19Noise` — open systems, built on Core's `DensityMatrix`/`KrausChannel` (originally
-  hand-rolled entrywise; retrofitted once those Core types landed): the density matrix
-  ρ = |ψ⟩⟨ψ| via `DensityMatrix(_:)` (itself the existing `Ket * Bra` outer product); a
-  classical mixture vs. a superposition at identical Z-statistics; the four `KrausChannel`
-  channels (bit-flip, phase-flip, depolarizing, amplitude damping) checked for trace
-  preservation via `isTracePreserving()`; coherence decaying exactly as `(1-2p)ⁿ`; amplitude
-  damping pulling the Bloch vector *inside* the sphere; a Monte-Carlo unraveling reproducing
-  the exact channel from pure-state code alone; and a Bell pair's reduced state
-  (`DensityMatrix.partialTrace(keeping:)`) giving entropy exactly 1 bit
-  (`.vonNeumannEntropy`) against a product state's 0; live Bloch gallery shrinking from pure
-  to fully depolarized, via the additive `BlochVector.init(x:y:z:)`
-  (plan in `PlaygroundDocs/19NOISEPLAN.md`, user guide in `PlaygroundDocs/19NOISEHELP.md`).
-- `20Tomography` — reconstructing a state from `measure(shots:)` alone: basis rotations
-  (`h` for X, `sdg;h` for Y) pinned against a known Y-eigenstate rather than assumed; the
-  estimator's 1/√N error scaling; the sharper-than-expected result that a *pure* state's
-  per-axis reconstruction lands outside the Bloch ball about half the time at *any* N (only a
-  genuinely mixed state's frequency, page 19's territory, shrinks toward zero); a Bell pair's
-  marginal reconstructed from shots alone; and the 3ⁿ-settings cost table motivating page 18's
-  per-term Pauli measurements; live view of the true vs. reconstructed Bloch point
-  (plan in `PlaygroundDocs/20TOMOGRAPHYPLAN.md`, user guide in `PlaygroundDocs/20TOMOGRAPHYHELP.md`).
-- `21Trotter` — Hamiltonian simulation of a transverse-field Ising chain: `Matrix.expm()`
-  self-checked against `RXGate`; the exact gate identity
-  `exp(-iθ·Z⊗Z/2) = cx(0,1); rz(θ,1); cx(0,1)` derived from `RZGate` and checked against
-  `expm()`; first- and second-order Trotter error shrinking at the textbook
-  O(1/n)/O(1/n²) rates, both at the operator level and the observable level (⟨Z₀⟩(t)); and the
-  non-zero commutator `[Z⊗Z, X⊗I]` identified as the error's source (a commuting-only
-  Hamiltonian is exact at n=1); live chart of the exact curve against Trotterized samples on
-  the shared `CHSHChartView` (plan in `PlaygroundDocs/21TROTTERPLAN.md`, user guide in
-  `PlaygroundDocs/21TROTTERHELP.md`).
-- `22Walk` — the discrete-time coined quantum walk on a 16-site cycle (no Core changes): a
-  conditional-shift permutation built from `increment`/`decrement` on the position register
-  (cross-checked for exact equality against the earlier hand-built version) and confirmed
-  unitary; ballistic (∝t) spreading
-  against an exactly diffusive (∝√t) classical random walk; a caught-and-documented
-  cyclic-coordinate variance bug (raw site indices vs. signed offsets from the start); and the
-  `|0⟩`-vs-`|+i⟩` coin contrast showing the walk's asymmetry is interference, not a flaw; live
-  chart of both final distributions on the shared `CHSHChartView`, with cross-references to
-  Grover (page 11) and Hamiltonian simulation (page 21)
-  (plan in `PlaygroundDocs/22WALKPLAN.md`, user guide in `PlaygroundDocs/22WALKHELP.md`).
-- `23TensorNetwork` — building and drawing a tensor network from a `QuantumCircuit` (no Core
-  changes beyond `TensorNetwork` itself and the gate-name/local-tensor recording it consumes):
-  wires as bond-dimension-2 edges and a k-qubit gate as a rank-2k tensor explained up front; a
-  Bell pair, a GHZ state with a non-adjacent `cx` (page 07) whose box is drawn spanning the
-  skipped wire dashed, `rzz` unfolding into exactly the `cx;rz;cx` identity (page 21), and a
-  small 2-qubit QFT ladder (page 16) — each contracted from only its local tensors and wiring
-  and checked against `run()` to machine precision; live gallery of all four on the shared
-  `TensorNetworkView` (user guide in `PlaygroundDocs/23TENSORNETWORKHELP.md`).
-- `40ComplexAndMatrices` — first of the `40+` pages, numbered separately because they
-  accompany chapters of the SwiftQiskitApp `INTRODUCTION.md` book rather than continuing the
-  01–23 sequence above: every code fragment from that book's Chapter 2, in order —
-  `Complex` construction/`*`/`/`/conjugate/magnitude, the Born rule, phase via Euler's
-  formula, plain `[Complex]` vector helpers, inner products and normalization, `Matrix` as a
-  transformation and why multiplication order matters, unitarity and why exact `==` lies on
-  `H`, a closing note on why Hermitian matrices matter (real eigenvalues → observables; their
-  link to unitary gates), and the tensor product `⊗` (no live view; user guide in
-  `PlaygroundDocs/40COMPLEXANDMATRICESHELP.md`).
-- `41BasisTransformations` — standalone, not tied to a book chapter (console only):
-  expressing |ψ⟩ in a different basis by building the change-of-basis matrix `T` from the
-  new basis kets as columns, constructing `T†` by hand as the stack of the new bras
-  (`Bra(_:).amplitudes`) and checking it against `Matrix.adjoint`, reading off the new
-  amplitudes as inner products `⟨bⱼ|ψ⟩`, the {|+⟩, |−⟩} case reducing exactly to `H`, why
-  the complex {|+i⟩, |−i⟩} case needs the conjugate transpose and not a plain one (a plain
-  transpose silently swaps `|+i⟩`'s probabilities and fails the unitarity check), and
-  measuring in the new basis via `h`/`sdg;h` before an ordinary `measure(shots:)`
-  (user guide in `PlaygroundDocs/41BASISTRANSFORMATIONSHELP.md`).
-- `42StateVectorCPU` — standalone (console only): the direct pair-update gate kernel, with
-  the struct defined on the page (a teaching copy of what `applyLocal` does; same
-  qubit-0-is-MSB convention as Core, qubit q at bit n-1-q). Serial `apply` and `concurrentPerform` `applyParallel`
-  (page-local `@unchecked Sendable` pointer box), controls as an index mask, the two pair
-  enumerations, a bit-order note (Qiskit numbers qubit 0 as LSB), a direct gate-for-gate
-  cross-check against `QuantumCircuit.run()`, and the O(4ⁿ) vs.
-  O(2ⁿ) memory table (no timings, no companion `PlaygroundDocs/` guide).
-
-Playground notes:
-
-- Pages `import SwiftQiskit` (and, on the thirteen pages that use `BlochVector`/
-  `CHSHChartView`/`TensorNetworkView`, `import SwiftQiskitViews`) and set
-  `buildActiveScheme='true'`, so the
-  **active scheme must build both products** for pages to run — use the
-  `SwiftQiskit-Package` scheme (or the autogenerated `SwiftQiskitViews` scheme), not the
-  per-product `SwiftQiskit` scheme, so `SwiftQiskitViews` actually gets built; keep both
-  targets compiling at all times.
-- Pages are linked sequentially with `//: [Previous](@previous)` / `//: [Next](@next)` markers.
-- Code shared by multiple pages lives in `Playgrounds.playground/Sources/` — an auxiliary
-  module auto-imported by every page; declarations there must be `public` (including
-  explicit `public init`s). `BlochVector`/`CHSHChartView` moved out of here into the
-  `SwiftQiskitViews` package target (see "SwiftQiskitViews" above) — the `Sources/` files
-  that use them (`Bloch3DView`, `BlochExplorerView`, `BlochSphereView`) now
-  `import SwiftQiskitViews` explicitly. See `PLAYGROUNDSUPPORT.md` for the conventions and
-  current API, and `PlaygroundDocs/90LIVEVIEWHELP.md` for the user-facing guide (usage
-  snippets, the live-view recipe, troubleshooting).
-- Playground code is not covered by tests or `swift build`; it only runs inside Xcode.
-- **Xcode 27 beta (confirmed present through beta 5, 27A5237l, 2026-08-23):**
-  two evaluator bugs break SwiftUI pages — a missing `libcups.dylib` (needs a shim in
-  DerivedData, wiped by ordinary run/build activity on beta 5, not just Clean Build
-  Folder — re-copy immediately before each run) and `@State` macro expansion failing in
-  page code (stateful views must live in `Sources/`). A page that looks fixed after an
-  untouched rerun may just be reusing a stale build — only a freshly recompiled page run
-  is a valid test. Workarounds and the shim recipe are in `PLAYGROUNDSUPPORT.md`
-  § "Xcode 27 beta workarounds".
+  overlay on any wire merely crossing the box without being one of its legs).
 
 ## Conventions & Gotchas
 

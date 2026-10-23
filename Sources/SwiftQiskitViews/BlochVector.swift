@@ -8,8 +8,8 @@ import SwiftQiskit
 ///   y = 2·Im(ᾱβ)
 ///   z = |α|² − |β|²
 ///
-/// with spherical angles θ = acos(z), φ = atan2(y, x). Shared by the
-/// playground and by `SwiftQiskitApp` — see `STATUSandTODO.md`'s
+/// with spherical angles θ = acos(z), φ = atan2(y, x). Shared by
+/// `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` — see `STATUSandTODO.md`'s
 /// "SwiftQiskitViews" entry for why this lives in its own UI-free-Core-
 /// preserving module rather than in `SwiftQiskit` itself.
 public struct BlochVector: Equatable, Sendable {

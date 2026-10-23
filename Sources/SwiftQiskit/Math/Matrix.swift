@@ -166,7 +166,7 @@ public extension GenericMatrix {
 
     /// Whether this matrix is (approximately) unitary: U†U ≈ I, entrywise within `tolerance`.
     /// Always `false` for a non-square matrix. Replaces the hand-rolled `U†U ≈ I` check
-    /// repeated across playground pages and tests — `Matrix.==` compares entries exactly,
+    /// repeated across tests — `Matrix.==` compares entries exactly,
     /// so it lies on real unitary matrices whose entries carry floating-point rounding.
     func isUnitary(tolerance: Double = 1e-10) -> Bool {
         guard rows == cols else { return false }
