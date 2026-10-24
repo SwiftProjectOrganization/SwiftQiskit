@@ -111,7 +111,7 @@ any item here.
       (`Quantum/StateVector+Kernels.swift`) applies each gate's small tensor in place, skipping
       zero entries and running across cores for large states; `QuantumCircuit` no longer builds
       a full matrix per gate. Tested in `StateVectorKernelTests.swift`. Still open: an opt-in
-      `SwiftQiskitMLX` GPU target (only if benchmarks show CPU is the limit, n ≳ 20) and
+      Metal/MLX/Accelerate options (see "Performance with Apple frameworks" below) and
       row/column-wise local application for `runDensityMatrix` (still builds full matrices).
 - [ ] Mid-circuit / partial measurement — pages `13Teleportation` and `14ErrorCorrection` both
       route around its absence today (deferred measurement, hand-built permutation corrections).
@@ -125,6 +125,12 @@ by `Hamiltonian`/`measureExpectation`) → density-matrix/noise views (unblocked
 `DensityMatrix`/`KrausChannel`/`NoiseModel`) → adopt the shared `SwiftQiskitViews` module
 (done — see P3 item 1 above; the app's package dependency now pins `0.2.0` and its own
 `BlochVector.swift` is gone).
+
+**SwiftQiskitPlaygrounds (separate repo — tracked here only for sequencing against Core work above)**
+Pages 01–26 and 50 run on the landed Core APIs (package pinned at 0.8.1). Open items that wait on
+Core: mid-circuit measurement (P4) → `18Teleportation`/`19ErrorCorrection`; real MLE/linear-inversion
+tomography (P3) → `22Tomography`; the v1.0 API review (P4) → re-verify every page. Every public-API
+change needs a tag plus a version bump (and `Documentation/` update) in that repo.
 
 ## What Works (v0.8.1)
 
@@ -742,6 +748,82 @@ gathered here so they can be sequenced against the Core work above rather than t
       `NoiseModel` (under "Proposed Core extensions — open systems" above) are now
       implemented, so this is unblocked.
 
+## SwiftQiskitPlaygrounds follow-ups (tracked here for sequencing)
+
+Items for the sibling `SwiftQiskitPlaygrounds` repo (pages `01`–`26` plus `50StateVectorCPU`,
+using SwiftQiskit as a remote package) that depend on, or must be coordinated with, Core work.
+Page content itself is tracked in that repo, not here. Note that page numbers there differ from
+the removed in-repo playground's numbering used in the older sections of this file (e.g. old
+`15CHSH` is now `20CHSH`).
+
+- [x] Consume the Bloch views from `SwiftQiskitViews` (moved there in 0.8.1; package resolves 0.8.1).
+- [ ] Retrofit `18Teleportation`/`19ErrorCorrection` onto mid-circuit measurement once it lands
+      (P4) — both route around its absence today.
+- [ ] Retrofit `22Tomography` onto a real MLE/linear-inversion reconstruction once it lands (P3).
+- [ ] Re-verify every page during the v1.0 API review (P4).
+- [ ] Decide which pages that exist only in the `pre-playground-removal` tag (see Project Status)
+      still deserve a counterpart; many are covered by the new 03–26 pages, so list only what is
+      truly missing (e.g. old 40–42).
+- [ ] Standing rule: every public-API change or move → tag SwiftQiskit → bump the playgrounds'
+      package pin → update its `Documentation/` API docs and README (which still says 0.8.0).
+
+## Performance with Apple frameworks (Metal, MLX, Accelerate) — investigation
+
+What could go faster on Apple Silicon, what it would cost, and in what order to try it.
+Nothing here is implemented; every item is gated on measurements.
+
+**Where time goes today**
+- `StateVector.applyLocal` (`Quantum/StateVector+Kernels.swift`) makes one O(2ⁿ) pass per gate,
+  with diagonal, 1-qubit and sparse paths, parallel via `concurrentPerform` at ≥ 2¹⁴ amplitudes.
+  `Complex` is two `Double`s (16 bytes/amplitude); the 30-qubit cap is a 16 GiB state.
+- A single gate does only a few flops per amplitude, so it is **memory-bandwidth bound**.
+- `runDensityMatrix` runs the same kernel on a 2n-qubit vector (O(4ⁿ)); dense `Matrix` multiply,
+  `expm` and the Jacobi eigensolver in `DensityMatrix` are hand-written loops.
+- `runTrajectories`, `ParameterShift.gradient` and `measureExpectation` run many independent
+  small circuits — easy to batch.
+- `Tests/SwiftQiskitTests/RunBenchmarkTests.swift` is the existing harness (8–20 qubits).
+
+**Constraints**
+- CPU and GPU share memory and bandwidth on Apple Silicon, so a GPU port of "one gate = one pass"
+  gains only what the CPU cores can't already saturate. The bigger wins are **gate fusion**
+  (merging consecutive gates on the same few qubits into one local tensor) and smaller elements.
+- Metal has no FP64, and MLX's GPU path has no float64 either. A GPU backend means complex
+  Float32 (8 bytes/amplitude, ~1e-7 precision); tests with 1e-9/1e-12 tolerances would need
+  per-backend tolerances. Correctness comes first, so FP64 on the CPU stays the reference.
+- Core stays dependency-free and UI-free: any GPU backend lives in a separate opt-in target.
+
+**Options**
+- [ ] **Measure first:** extend `RunBenchmarkTests` to 22–26 qubits, add a trajectories benchmark
+      and `runDensityMatrix` at n = 10–12, profile with Instruments/`xctrace`, and record the
+      numbers here. They decide which items below are worth doing.
+- [ ] **CPU gate fusion** (no new framework): merge runs of gates on the same ≤ 2–3 qubits at
+      `run()` time into one local tensor. Fewer passes over memory; helps every backend, and is
+      a prerequisite for a GPU backend to pay off.
+- [ ] **Accelerate (FP64, CPU, lowest risk):** BLAS `zgemm`/vDSP for the dense `Matrix` multiply
+      and `expm`; LAPACK `zheev` in place of the Jacobi solver behind `eigenvalues`/
+      `vonNeumannEntropy`; possibly vDSP for `probabilities`/normalization. Verify `Complex`'s
+      memory layout (interleaved real/imag) before passing buffers as `__LAPACK_double_complex`.
+- [ ] **Metal compute backend** (opt-in `SwiftQiskitMetal` target): one kernel per gate class
+      (1-qubit, diagonal, permutation, general 2ᵏ), one thread per spectator group, mirroring
+      `applyLocal`; state in a `.storageModeShared` `MTLBuffer` (no copies); whole circuit in one
+      command buffer; shaders compiled at runtime via `makeLibrary(source:)` so `swift build`
+      keeps working. Needs an internal backend seam (e.g. a protocol over `applyLocal`) so
+      `run()` can dispatch. Likely worthwhile for n ≳ 22 and batched density-matrix/trajectory work.
+- [ ] **MLX Swift** (`mlx-swift`, opt-in `SwiftQiskitMLX` target): `complex64` arrays; apply a
+      gate by reshaping the state to `[2]*n` and contracting the target axes. Its lazy graph
+      gives some fusion for free and `MLXFast.metalKernel` allows custom kernels. Best fit is
+      **batched** work (many trajectories or parameter-shift evaluations as one array); also
+      check whether MLX autodiff could replace parameter-shift for simulated gradients (complex
+      gradient support unverified). Costs: a heavy third-party dependency, and mlx-swift's Metal
+      shaders need an Xcode/`xcodebuild` build (plain `swift build` may not compile them) — verify.
+- [ ] (Lower priority) **MPSGraph** for the dense / density-matrix paths (supports complex matmul).
+- [ ] **Backend test strategy:** run the existing suites against each backend through a shared
+      helper with backend-specific tolerances, pinning GPU results to the FP64 CPU reference.
+
+**Recommended order:** measure → CPU gate fusion → Accelerate → Metal state-vector backend (if
+benchmarks justify it) → MLX only for batched/variational workloads. Each step is independently
+useful, the riskier and dependency-adding ones come last, and FP64 CPU remains the reference.
+
 ## Suggested implementation sequence
 
 A dependency-ordered path through all the proposed Core extensions above, for whichever project
@@ -782,7 +864,8 @@ picks this up next:
 7. Performance: the permutation-aware fast path in `apply` is **done** (`Matrix.permutationImage`,
    `Math/Matrix.swift`; tested in `PermutationFastPathTests.swift`) and the general in-place
    gate kernels (`StateVector.applyLocal`, `Quantum/StateVector+Kernels.swift`; tested in
-   `StateVectorKernelTests.swift`) are **done**; only an optional MLX target remains.
+   `StateVectorKernelTests.swift`) are **done**; only the optional Apple-framework backends remain
+   (see "Performance with Apple frameworks" above).
 
 Page retrofits (`21Trotter`/`18VQE` onto the `Matrix` operators; `12`/`14`/`22` onto
 `Matrix.permutation`) can follow immediately after the step that lands each helper. `21Trotter`
@@ -892,3 +975,11 @@ Now that step 6's open-systems track has landed, its own retrofit is open too:
 6. The shared views module (`CHSHChartView`/`BlochVector`) — purely presentational. **Done**
    (`SwiftQiskitViews`, tag `0.2.0`; the app's package dependency and `import`s updated).
 7. Density-matrix / noise views — after Core step 6.
+
+**`SwiftQiskitPlaygrounds`:**
+
+1. Fix the README's stale "resolved to 0.8.0" (the pin is 0.8.1) — no Core dependency.
+2. Triage the tag-only pages from the removed in-repo playground — no Core dependency.
+3. `22Tomography` MLE retrofit — after the P3 reconstruction item.
+4. `18Teleportation`/`19ErrorCorrection` — after mid-circuit measurement (P4).
+5. Full page re-verification — after the v1.0 API review (P4).
