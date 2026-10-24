@@ -291,6 +291,22 @@ the sibling `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repos:
 - Measurement tests are statistical (e.g. 40–60% tolerance over 1000 shots) — expect
   probabilistic assertions, not exact counts.
 
+## Tool hints
+
+When working in Claude Code with Sonnet tools, read-only permission is always granted for
+the `SwiftQiskit`, `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repositories
+(`/Users/rob/Projects/Swift/<name>`). Reading and searching them needs no confirmation:
+
+- Read, Grep and Glob, and the `xcode-tools` read tools (`XcodeRead`, `XcodeGrep`,
+  `XcodeGlob`, `XcodeLS`).
+- Read-only shell commands such as `ls`, `cat`, `git status`, `git log`, `git diff` and
+  `git show`.
+
+Edits, state-changing builds, commits and pushes still follow the normal confirmation rules.
+Use the siblings freely for reference: `../SwiftQiskitApp` for how the library is consumed by
+the app and the `INTRODUCTION.md` book, `../SwiftQiskitPlaygrounds` for the playground pages
+that build on it.
+
 ## Status & Roadmap
 
 v0.8.1 — see `STATUSandTODO.md` for project status, what works, the core-library roadmap
