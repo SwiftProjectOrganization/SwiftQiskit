@@ -47,7 +47,12 @@ only on `SwiftQiskit` — presentational types shared by `SwiftQiskitApp` and
 
 ## Architecture (bottom-up)
 
-- `Math/Complex.swift` — value-type complex numbers (`+ - * /`, scalar mul, `.zero/.one/.i`).
+- `Math/Complex.swift` — value-type complex numbers (`+ - * /`, negation, scalar mul and `/ Double`,
+  `.zero/.one/.i`) plus the polar form: `argument`, `init(magnitude:argument:)`, `Complex.exp`,
+  `Complex.pow` (`Int` by repeated squaring, `Double` on the principal branch).
+- `Math/ComplexVector.swift` — arithmetic on raw `[Complex]` (`adding`, `subtracting`,
+  `scaled(by:)`, `inner`, `norm`, `normalized()`), as named methods rather than operators so
+  `Array`'s `+` keeps concatenating; unlike `StateVector` it never normalizes on its own.
 - `Math/Matrix.swift` — row-major `GenericMatrix<Element: MatrixScalar>` (`Math/MatrixScalar.swift`; `Complex` and `Double` conform), with `Matrix = GenericMatrix<Complex>` as the alias all quantum code uses; `Double` scalar `*`, `expm` are Complex-only, `adjoint` lives here now; `* + -`, scalar mul (`Double`/`Complex`,
   either operand order), `multiply(by:)` (matrix × vector), `identity(size:)`, Kronecker
   product `tensor(_:)` / `⊗` (the `⊗` operator is declared here), `isUnitary(tolerance:)`
@@ -277,8 +282,8 @@ the sibling `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repos:
   `ParameterShiftTests.swift`, `RegisterArithmeticTests.swift`, `DensityMatrixTests.swift`,
   `KrausChannelTests.swift`, `NoiseModelTests.swift`, `TensorNetworkTests.swift`, `StateVectorKernelTests.swift`, `AngleConversionTests.swift`, `GenericMatrixTests.swift`, `CommutingGroupsTests.swift`, `ControlledYTests.swift`,
   `ControlledZAndSwapTests.swift`, `PerformancePathTests.swift`, `PermutationFastPathTests.swift`,
-  `RunBenchmarkTests.swift`).
-  `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `CHSHChartViewTests.swift`,
+  `RunBenchmarkTests.swift`, `ComplexPolarTests.swift`, `ComplexVectorTests.swift`).
+  `Tests/SwiftQiskitViewsTests/` (`BlochVectorTests.swift`, `BlochViewsTests.swift`, `CHSHChartViewTests.swift`,
   `TensorNetworkViewTests.swift`) tests the `SwiftQiskitViews` module above.
 - Tests use the Swift **`Testing`** framework (`import Testing`, `@Test`, `#expect`,
   struct suites) — not XCTest.

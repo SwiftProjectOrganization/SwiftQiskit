@@ -67,12 +67,39 @@ public struct Complex: Equatable, Hashable {
 | `magnitudeSquared` | `\|z\|²` — used internally to avoid a `sqrt` where only the square is needed (e.g. probabilities). |
 | `conjugate` | `z̄`. |
 | `+`, `-`, `*`, `/` | Standard complex arithmetic. `/` traps via `precondition` on division by zero. |
+| prefix `-` | Negation. |
 | `*(Complex, Double)`, `*(Double, Complex)` | Scalar multiplication, either operand order. |
+| `/(Complex, Double)` | Division by a real scalar. Traps on zero. |
+| `argument` | arg(z) = `atan2(imag, real)`, in (-π, π]; 0 for z == 0. |
+| `init(magnitude: Double = 1.0, argument: Double)` | The number r·e^{iθ}. `Complex(argument: θ)` is the unit phase e^{iθ}. |
+| `static func exp(_ z: Complex) -> Complex` | e^z = e^{re}·(cos im + i·sin im). |
+| `static func pow(_ z: Complex, _ n: Int) -> Complex` | zⁿ by repeated squaring, so small Gaussian integers stay exact (`pow(.i, 4) == .one`). A negative `n` gives 1 / z^\|n\|. |
+| `static func pow(_ z: Complex, _ x: Double) -> Complex` | zˣ on the principal branch: \|z\|ˣ·e^{i·x·arg z}. Zero for z == 0 and x > 0; traps for zero raised to a non-positive power. |
 | `description` | Formats as `"a"`, `"bi"`, or `"a + bi"` / `"a - bi"`. |
 
-**Gaps to know about:** there is no unary `-` and no `exp`/polar constructor — write
-`Complex(-1)` for negation and `Complex(cos(theta), sin(theta))` for `e^{iθ}` (see how the
-gate files do it).
+The gate files still write e^{iθ} as `Complex(cos(theta), sin(theta))`; that is equivalent to
+`Complex(argument: theta)`.
+
+---
+
+## `[Complex]` vectors
+
+`Sources/SwiftQiskit/Math/ComplexVector.swift` — arithmetic on plain `[Complex]` arrays, as an
+`extension Array where Element == Complex`. Unlike `StateVector`, which normalizes its input,
+these hold raw amplitudes such as |0⟩ + |1⟩ before normalization.
+
+| Member | Notes |
+|---|---|
+| `adding(_ other: [Complex]) -> [Complex]` | Element-wise sum. Traps if the lengths differ. |
+| `subtracting(_ other: [Complex]) -> [Complex]` | Element-wise difference. Traps if the lengths differ. |
+| `scaled(by c: Complex)`, `scaled(by x: Double)` | Every element multiplied by the scalar. |
+| `inner(_ other: [Complex]) -> Complex` | ⟨self\|other⟩ = Σ conj(selfᵢ)·otherᵢ — conjugates the **receiver**. Traps if the lengths differ. |
+| `normSquared`, `norm` | Σ \|aᵢ\|² and its square root. |
+| `normalized() -> [Complex]` | The vector divided by its norm. Traps on a zero vector. |
+
+**Gotcha:** these are named methods, not operators, because `Array` already defines `+` as
+concatenation — a more specific `+` for `[Complex]` would silently change what `a + b` means.
+For normalized quantum states use `StateVector` (and `Bra * Ket` for the inner product).
 
 ---
 

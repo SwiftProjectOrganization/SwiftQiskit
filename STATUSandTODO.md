@@ -146,6 +146,9 @@ change needs a tag plus a version bump (and `Documentation/` update) in that rep
   (see `PlaygroundDocs/09TENSORPLAN.md` and the user guide `PlaygroundDocs/09TENSORHELP.md`)
 - Matrix arithmetic: `+ -` and scalar multiply (`Double`/`Complex`, either operand order) on
   `Matrix` (`Math/Matrix.swift`, tested in `MatrixArithmeticTests.swift`)
+- Complex polar form (`argument`, `init(magnitude:argument:)`, `exp`, `pow`) and `[Complex]` vector
+  arithmetic (`Math/Complex.swift`, `Math/ComplexVector.swift`; tested in `ComplexPolarTests.swift`,
+  `ComplexVectorTests.swift`)
 - Dirac notation: `Ket`/`Bra`, postfix `†`, inner/outer products
   (`Quantum/Dirac.swift`, demonstrated in playground page `08Dirac`;
   user guide `PlaygroundDocs/08DIRACHELP.md`)
