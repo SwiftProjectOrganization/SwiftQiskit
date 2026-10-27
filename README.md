@@ -126,8 +126,11 @@ declared in `Sources/SwiftQiskit/Quantum/Dirac.swift`, and the infix tensor prod
 | `*` | `Matrix * Double` / `Double * Matrix` | `Matrix` | scalar multiple c·M | `Math/Matrix.swift` |
 | `*` | `Matrix * Complex` / `Complex * Matrix` | `Matrix` | scalar multiple c·M | `Math/Matrix.swift` |
 
-Scalar `Complex` arithmetic (`+ - * /` and `Double` scaling) lives in `Math/Complex.swift`
-and is not listed here — it acts on numbers, not on qubit states or gates.
+Scalar `Complex` arithmetic (`+ - * /`, negation, `Double` scaling) and the polar form
+(`argument`, `Complex(magnitude:argument:)`, `Complex.exp`, `Complex.pow`) live in
+`Math/Complex.swift`. Arithmetic on plain `[Complex]` vectors (`adding`, `subtracting`,
+`scaled(by:)`, `inner`, `norm`, `normalized()`) lives in `Math/ComplexVector.swift`. Neither is
+listed in the table — they act on numbers and raw vectors, not on qubit states or gates.
 
 ---
 
@@ -161,6 +164,7 @@ SwiftQiskit/
 │   ├── SwiftQiskit/
 │   │   ├── Math/
 │   │   │   ├── Complex.swift
+│   │   │   ├── ComplexVector.swift
 │   │   │   ├── Matrix.swift
 │   │   │   └── MatrixScalar.swift
 │   │   ├── Quantum/

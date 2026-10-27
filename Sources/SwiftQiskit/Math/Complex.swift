@@ -80,6 +80,61 @@ public extension Complex {
     }
 }
 
+public extension Complex {
+
+    static func / (lhs: Complex, rhs: Double) -> Complex {
+        precondition(rhs != 0, "Division by zero")
+        return Complex(lhs.real / rhs, lhs.imag / rhs)
+    }
+
+    static prefix func - (value: Complex) -> Complex {
+        Complex(-value.real, -value.imag)
+    }
+}
+
+// MARK: - Polar Form
+public extension Complex {
+
+    /// The argument (phase angle) arg(z) = atan2(imag, real), in (-π, π]. Zero for z == 0.
+    var argument: Double {
+        atan2(imag, real)
+    }
+
+    /// The number r·e^{iθ}. With the default magnitude, `Complex(argument: θ)` is the
+    /// unit phase e^{iθ}.
+    init(magnitude: Double = 1.0, argument: Double) {
+        self.init(magnitude * cos(argument), magnitude * sin(argument))
+    }
+
+    /// e^z = e^{re}·(cos im + i·sin im).
+    static func exp(_ z: Complex) -> Complex {
+        Complex(magnitude: Foundation.exp(z.real), argument: z.imag)
+    }
+
+    /// zⁿ by repeated squaring, so small Gaussian integers stay exact (i⁴ == 1).
+    /// A negative `n` gives 1 / z^|n|.
+    static func pow(_ z: Complex, _ n: Int) -> Complex {
+        var result = Complex.one
+        var base = z
+        var remaining = n.magnitude
+        while remaining > 0 {
+            if remaining & 1 == 1 { result = result * base }
+            base = base * base
+            remaining >>= 1
+        }
+        return n < 0 ? Complex.one / result : result
+    }
+
+    /// zˣ on the principal branch: |z|ˣ · e^{i·x·arg z}. Zero for z == 0 and x > 0.
+    static func pow(_ z: Complex, _ x: Double) -> Complex {
+        if z == .zero {
+            precondition(x > 0, "Zero raised to a non-positive power")
+            return .zero
+        }
+        return Complex(magnitude: Foundation.pow(z.magnitude, x), argument: x * z.argument)
+    }
+}
+
 // MARK: - CustomStringConvertible
 extension Complex: CustomStringConvertible {
     public var description: String {
