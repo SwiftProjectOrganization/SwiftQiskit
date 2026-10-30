@@ -776,6 +776,16 @@ Also in this module: `BlochSphereView(label:bloch:size:)` (2D oblique projection
 a coordinate plane), `BlochExplorerView()` (a `Bloch3DView` with θ/φ sliders),
 `CHSHChartView`, and `TensorNetworkView`.
 
+Any of these views can be saved to disk via `ViewExport.swift`'s `@MainActor` `View` extension
+(built on `ImageRenderer`; drawn in light mode on a white, 8 pt padded background by default):
+
+```swift
+func writePNG(to url: URL, scale: CGFloat = 2, background: Color? = .white) throws
+func writePDF(to url: URL, background: Color? = .white) throws   // single-page vector PDF
+enum ViewExportError: Error { case renderFailed, cannotCreateFile(URL), encodeFailed }
+// try BlochSphereView(label: "|+⟩", bloch: BlochVector(Ket.plus)).writePDF(to: url)
+```
+
 ```swift
 public struct BlochVector: Equatable, Sendable {
     public let x: Double
