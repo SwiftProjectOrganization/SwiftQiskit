@@ -8,7 +8,7 @@ Differences between this forked repository ("**fork**") and Ali Nasser's [parent
 1. A separate App, [SwiftQiskitApp](https://github.com/SwiftProjectOrganization/SwiftQiskitApp), targeting macOS, iOS and iPadOS, is the SwiftUI "drag and drop" front-end for this package. SwiftQiskitGUI has been dropped from this fork.
 2. Another project, [SwiftQiskitPlaygrounds](https://github.com/SwiftProjectOrganization/SwiftQiskitPlaygrounds) picks up where the App can't go and enables experimentation using Swift in Xcode playgrounds.
 3. A template system is available to generate Swift apps, e.g. see the [SwiftQiskitWalkDemo](https://github.com/SwiftProjectOrganization/SwiftQiskitWalkDemo) application as an example. Or you can generate these by an AI coding solution, e.g. Claude Code+Sonnet.
-4. A second library product, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds presentational SwiftUI types (`BlochVector`, the Bloch-sphere views, `CHSHChartView`, `TensorNetworkView`) shared by `SwiftQiskitApp` and `SwiftQiskitPlaygrounds`, keeping the core `SwiftQiskit` module UI-free.
+4. A second library product in this repo, `SwiftQiskitViews` (`import SwiftQiskitViews`), holds presentational SwiftUI types (`BlochVector`, the Bloch-sphere views, `CHSHChartView`, `TensorNetworkView`) shared by `SwiftQiskitApp` and `SwiftQiskitPlaygrounds`, keeping the core `SwiftQiskit` module UI-free.
 5. Using Swift Testing.
 
 ---
