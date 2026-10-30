@@ -7,7 +7,7 @@ product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
 Learners should start with SwiftQiskitApp and SwiftQiskitPlaygrounds, the primary educational
 components; this document is the library reference both build on.
 
-SwiftQiskit is v0.8.1 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.9.1 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions

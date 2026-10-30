@@ -5,7 +5,7 @@ plus this fork's working TODO list.
 
 ## Project Status
 
-**SwiftQiskit is currently in an early experimental stage (v0.8.1).**
+**SwiftQiskit is currently in an early experimental stage (v0.9.1).**
 
 - Core quantum simulation is implemented
 - API is subject to change
@@ -132,7 +132,7 @@ Core: mid-circuit measurement (P4) → `18Teleportation`/`19ErrorCorrection`; re
 tomography (P3) → `22Tomography`; the v1.0 API review (P4) → re-verify every page. Every public-API
 change needs a tag plus a version bump (and `Documentation/` update) in that repo.
 
-## What Works (v0.8.1)
+## What Works (v0.9.1)
 
 - QuantumCircuit abstraction
 - Single-qubit gates: H, X, Y, Z, S, S†, T, T†, the general phase gate P(θ), and

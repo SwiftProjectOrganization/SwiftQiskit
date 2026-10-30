@@ -340,7 +340,7 @@ This project is built **step by step** and open for exploration.
 ---
 ##  Status & Roadmap
 
-Project status, what works in v0.8.1, and the roadmap live in
+Project status, what works in v0.9.1, and the roadmap live in
 [STATUSandTODO.md](STATUSandTODO.md), together with this fork's working TODO list.
 
 ---
