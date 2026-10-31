@@ -7,7 +7,7 @@ product you get from `import SwiftQiskit`. The shared, UI-free-Core-preserving
 Learners should start with SwiftQiskitApp and SwiftQiskitPlaygrounds, the primary educational
 components; this document is the library reference both build on.
 
-SwiftQiskit is v0.9.1 — the API is unstable and correctness is prioritized over performance.
+SwiftQiskit is v0.9.2 — the API is unstable and correctness is prioritized over performance.
 Keep this document in sync with the source when the public API changes.
 
 ## Conventions
@@ -801,6 +801,11 @@ public struct BlochVector: Equatable, Sendable {
     public var magnitude: Double   // 1 for a pure state, < 1 for mixed/entangled
     public var theta: Double       // polar angle from +Z, radians
     public var phi: Double         // azimuthal angle in the XY plane, radians
+
+    /// α, β with global phase fixed so α = cos(θ/2) is real ≥ 0 and β = e^{iφ}·sin(θ/2);
+    /// nil unless |r| ≈ 1 (a mixed/reduced qubit has no amplitudes). The Bloch-sphere
+    /// views print these on the third readout line.
+    public func amplitudes(tolerance: Double = 1e-6) -> (alpha: Complex, beta: Complex)?
 }
 ```
 

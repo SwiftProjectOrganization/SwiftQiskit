@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Overview
 
 SwiftQiskit is a lightweight, educational quantum-computing simulator written in pure Swift,
-offering a Qiskit-like API. It is experimental (v0.9.1): the API is unstable and correctness is
+offering a Qiskit-like API. It is experimental (v0.9.2): the API is unstable and correctness is
 prioritized over performance. The fork's former `Playgrounds.playground`/`PlaygroundDocs/` were removed (recoverable at the
 `pre-playground-removal` git tag).
 
@@ -242,7 +242,8 @@ the sibling `SwiftQiskitApp` and `SwiftQiskitPlaygrounds` repos:
   partial-trace qubit of a multi-qubit pure state), `init?(_:DensityMatrix)` (nil unless
   2×2 — via `DensityMatrix.blochVector`), `init(_:DensityMatrix, qubit:)` (reduced qubit via
   `partialTrace(keeping:)`), and `init(x:y:z:)` (raw coordinates, for `|r| < 1`); plus
-  `magnitude`/`theta`/`phi`. Replaces the three previously hand-vendored copies
+  `magnitude`/`theta`/`phi`, and `amplitudes(tolerance:)` (α real ≥ 0, β = e^{iφ}sin(θ/2); nil
+  unless pure — shown on the sphere views' readout). Replaces the three previously hand-vendored copies
   (the playground's `BlochVector.swift`, `SwiftQiskitApp/BlochVector.swift`,
   and the app's `blochOf(_:Matrix)`).
 - `BlochSphereView.swift`, `BlochProjectionView.swift`, `Bloch3DView.swift`,

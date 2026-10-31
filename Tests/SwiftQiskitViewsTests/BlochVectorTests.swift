@@ -164,4 +164,41 @@ struct BlochVectorTests {
         expectClose(bloch.phi, 0)
         expectClose(bloch.magnitude, 1)
     }
+
+    // MARK: - Amplitudes
+
+    @Test("amplitudes of basis states")
+    func amplitudesBasis() throws {
+        let zero = try #require(BlochVector(Ket.zero).amplitudes())
+        expectClose(zero.alpha.real, 1)
+        expectClose(zero.beta.magnitude, 0)
+
+        let one = try #require(BlochVector(Ket.one).amplitudes())
+        expectClose(one.alpha.magnitude, 0)
+        expectClose(one.beta.magnitude, 1)
+
+        let plusI = try #require(BlochVector(Ket.plusI).amplitudes())
+        expectClose(plusI.alpha.real, 1 / 2.0.squareRoot())
+        expectClose(plusI.beta.real, 0)
+        expectClose(plusI.beta.imag, 1 / 2.0.squareRoot())
+    }
+
+    @Test("amplitudes round-trip to the same Bloch vector despite global phase")
+    func amplitudesRoundTrip() throws {
+        // |ψ⟩ with an arbitrary global phase e^{i·0.7}
+        let phase = Complex(cos(0.7), sin(0.7))
+        let original = StateVector([phase * Complex(0.6, 0), phase * Complex(0, 0.8)])
+        let bloch = BlochVector(original)
+        let amps = try #require(bloch.amplitudes())
+        let rebuilt = BlochVector(StateVector([amps.alpha, amps.beta]))
+        expectClose(rebuilt.x, bloch.x)
+        expectClose(rebuilt.y, bloch.y)
+        expectClose(rebuilt.z, bloch.z)
+    }
+
+    @Test("mixed Bloch vector has no amplitudes")
+    func amplitudesMixed() {
+        #expect(BlochVector(x: 0.5, y: 0, z: 0).amplitudes() == nil)
+        #expect(BlochVector(x: 0.5, y: 0, z: 0).readout.contains("undefined"))
+    }
 }

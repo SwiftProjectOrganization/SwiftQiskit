@@ -40,12 +40,7 @@ public struct BlochSphereView: View {
         }
     }
 
-    private var readout: String {
-        String(
-            format: "x %+.3f  y %+.3f  z %+.3f\nθ %.3f rad  φ %.3f rad",
-            bloch.x, bloch.y, bloch.z, bloch.theta, bloch.phi
-        )
-    }
+    private var readout: String { bloch.readout }
 
     /// Project a 3D point on the unit sphere to canvas coordinates
     private func project(

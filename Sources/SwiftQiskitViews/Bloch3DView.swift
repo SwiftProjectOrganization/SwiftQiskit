@@ -58,12 +58,7 @@ public struct Bloch3DView: View {
         }
     }
 
-    private var readout: String {
-        String(
-            format: "x %+.3f  y %+.3f  z %+.3f\nθ %.3f rad  φ %.3f rad",
-            bloch.x, bloch.y, bloch.z, bloch.theta, bloch.phi
-        )
-    }
+    private var readout: String { bloch.readout }
 
     private var orbitGesture: some Gesture {
         DragGesture()

@@ -100,4 +100,28 @@ public struct BlochVector: Equatable, Sendable {
 
     /// Azimuthal angle in the XY plane, in radians
     public var phi: Double { atan2(y, x) }
+
+    /// α, β of |ψ⟩ = α|0⟩ + β|1⟩, with the global phase chosen so α is real and ≥ 0:
+    /// α = cos(θ/2), β = e^{iφ}·sin(θ/2). `nil` unless the vector is pure (|r| ≈ 1),
+    /// since a mixed or reduced qubit has no amplitudes.
+    public func amplitudes(tolerance: Double = 1e-6) -> (alpha: Complex, beta: Complex)? {
+        guard abs(magnitude - 1) <= tolerance else { return nil }
+        let half = theta / 2
+        let sine = sin(half)
+        return (Complex(cos(half), 0), Complex(sine * cos(phi), sine * sin(phi)))
+    }
+
+    /// Three-line text shown beneath the Bloch-sphere views: coordinates, angles, amplitudes.
+    var readout: String {
+        let coordinates = String(
+            format: "x %+.3f  y %+.3f  z %+.3f\nθ %.3f rad  φ %.3f rad",
+            x, y, z, theta, phi
+        )
+        guard let (alpha, beta) = amplitudes() else {
+            return coordinates + String(format: "\nα, β undefined (mixed, |r| %.3f)", magnitude)
+        }
+        return coordinates + String(
+            format: "\nα %.3f  β %+.3f%+.3fi", alpha.real, beta.real, beta.imag
+        )
+    }
 }
